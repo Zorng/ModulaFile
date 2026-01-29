@@ -1,6 +1,6 @@
 # ModSpec (modspec_new) Versions
 
-This file records the **Version** (and current **Status**, when present) declared in each document under `modspec_new/`.
+This file records the **Version** (and current **Status**, when present) declared in each document under `modspec/`.
 
 Notes:
 - Some specs contain multiple embedded headers (e.g., patched versions appended). For those files, the table uses the **latest** `**Version:**` found in the file.
