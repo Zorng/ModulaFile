@@ -329,7 +329,7 @@ The policy keys remain the same (see “Policies Used”), but **their values mu
 
 ---
 
-### UC-10: View X Report
+### UC-10: View X Report (Flagged)
 
 **Actors:** Cashier, Manager, Admin
 
@@ -347,7 +347,7 @@ The policy keys remain the same (see “Policies Used”), but **their values mu
 
 ---
 
-### UC-11: View Z Report
+### UC-11: View Z Report (Flagged)
 
 **Actors:** Cashier, Manager, Admin
 
