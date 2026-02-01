@@ -52,14 +52,14 @@ BusinessLogic
 │   ├── oversight_and_accountability
 │   └── _maps
 │
-├── domain
+├── 2_domain
 │   ├── 30_POSOperation
 │   └── _archived
 │
-├── process
+├── 3_process
 │   └── cross-module workflows
 │
-├── modSpec
+├── 4_modSpec
 │   ├── 00_guide
 │   ├── 10_IdentityAccess
 │   ├── 20_OrgAccount
@@ -115,7 +115,7 @@ Stories represent **user requirements**, not system design.
 
 ---
 
-## 2. Domain Models (`domain/`) — System Truth
+## 2. Domain Models (`2_domain/`) — System Truth
 
 **Question answered:**
 
@@ -143,7 +143,7 @@ If a rule is not stated in a domain document, it is **not guaranteed** by the sy
 
 ---
 
-## 3. Cross-Module Processes (`process/`) — Coordination Over Time
+## 3. Cross-Module Processes (`3_process/`) — Coordination Over Time
 
 **Question answered:**
 
@@ -170,7 +170,7 @@ If logic spans more than one domain and is **not** in a process doc, it is a des
 
 ---
 
-## 4. Module Specifications (`modSpec/`) — Implementation Contract
+## 4. Module Specifications (`4_modSpec/`) — Implementation Contract
 
 **Question answered:**
 
