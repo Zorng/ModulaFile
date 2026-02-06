@@ -2,8 +2,8 @@
 
 ## Module: Staff Management (Feature Module)
 
-**Version:** 1.2  
-**Status:** Patched (Adds staff shift scheduling; aligned with Branch creation model + Capstone 1 boundaries)  
+**Version:** 1.4  
+**Status:** Patched (Owner-provisioned onboarding; user-owned credentials; aligned with Branch creation model + Capstone 1 boundaries)  
 **Module Type:** Feature Module  
 **Depends on:** Auth & Authorization (Core), Tenant & Branch Context (Core), Policy & Configuration (Core), Audit Logging (Core)  
 **Related Modules:** Staff Attendance, Cash Session, Reporting, Branch (Core/Context)
@@ -26,11 +26,10 @@ Personal account data (password, OTP verification, phone ownership, account reco
 ## 2. Scope (Capstone I)
 
 ### Included
-- Inviting staff into a tenant
+- Creating staff accounts (owner-provisioned; no invitation acceptance flow)
 - Assigning branch and role (from existing branches)
 - Assigning weekly shift schedules to staff (per branch)
 - Activating, disabling, archiving, and reactivating staff memberships
-- Enforcing staff seat limits (soft & hard limits)
 - Viewing staff list and status
 - Audit logging of staff lifecycle changes
 
@@ -67,14 +66,13 @@ A record linking a **User Account** to a **Tenant**, defining:
 - Branch assignment (where applicable)
 - Membership status
 
-### 4.2 Invitation
-A temporary record created by Admin to onboard staff into a tenant.
-
-### 4.3 Staff Status
-- **INVITED**: Invitation sent, not yet accepted
+### 4.2 Staff Status
 - **ACTIVE**: Staff can access POS
-- **DISABLED**: Temporarily blocked from access (does not consume an active slot)
-- **ARCHIVED**: Permanently removed from active use (counts toward hard limit)
+- **DISABLED**: Temporarily blocked from access (history preserved)
+- **ARCHIVED**: Permanently removed from active use (history preserved; not reactivated)
+
+Note:
+- Concurrent staff capacity is enforced at **work start / operational sessions** (outside this module), not when creating staff records.
 
 ---
 
@@ -102,7 +100,7 @@ A temporary record created by Admin to onboard staff into a tenant.
    - Identifier (e.g., phone)
    - Role
    - Branch assignment
-   - Status (Invited / Active / Disabled / Archived)
+   - Status (Active / Disabled / Archived)
 
 #### Postconditions
 - None (read-only)
@@ -114,54 +112,34 @@ A temporary record created by Admin to onboard staff into a tenant.
 
 ---
 
-### UC-2: Invite Staff
+### UC-2: Create Staff Account (Owner Provisioned)
 
 **Actors:** Admin
 
 #### Preconditions
 - Admin is authenticated
-- Tenant has not exceeded **hard staff limit**
 - Selected branch (if required) **exists** and is **not frozen**
 
 #### Main Flow
-1. Admin selects “Invite Staff”.
+1. Admin selects “Create Staff”.
 2. Admin inputs:
-   - Phone number
+   - Phone number (login identifier)
    - Role
-   - Branch assignment (chosen from tenant’s existing branches)
-3. System creates an invitation.
-4. Invitation is sent to staff for onboarding.
+   - Branch assignment(s) (chosen from tenant’s existing branches)
+3. System resolves Authentication identity by phone:
+   - If an AuthenticationAccount already exists for the phone, reuse it (do not reset credentials).
+   - Otherwise provision a new AuthenticationAccount (phone identifier only; unverified; no password yet) and trigger Authentication-managed OTP flow so the staff member can set their own password.
+4. System creates the staff membership/profile for the tenant with status `ACTIVE`.
 
 #### Postconditions
-- Staff membership created with status `INVITED`.
+- Staff membership exists immediately; the staff member can log in and start work after completing Authentication verification/password setup (subject to assignment, authorization, and capacity gates).
 
 #### Acceptance Criteria
-- Cannot invite if hard limit reached.
 - Cannot assign to a frozen branch.
-- Invitation can expire or be revoked.
+- Creation does not fail just because the phone number already exists globally (it links to the existing identity).
+- Creation fails if the staff member already has an active membership/profile in this tenant (no duplicates).
+- Creation does not consume a concurrent staff slot.
 - Action is written to the audit log.
-
----
-
-### UC-3: Accept Invitation (Onboarding)
-
-**Actors:** System (triggered by staff)
-
-#### Preconditions
-- Valid invitation exists
-- Invitation not expired or revoked
-- Tenant has available **active staff slots** (soft limit)
-
-#### Main Flow
-1. Staff completes authentication via Auth module.
-2. System activates staff membership.
-
-#### Postconditions
-- Staff status becomes `ACTIVE`.
-
-#### Acceptance Criteria
-- Staff is assigned correct role and branch.
-- Activation fails if soft limit is exceeded.
 
 ---
 
@@ -181,7 +159,6 @@ A temporary record created by Admin to onboard staff into a tenant.
 - Staff access to POS is blocked.
 
 #### Acceptance Criteria
-- Disabled staff does **not** count toward soft (active) slots.
 - Historical attendance and sales remain unchanged.
 - Action is written to the audit log.
 
@@ -193,7 +170,6 @@ A temporary record created by Admin to onboard staff into a tenant.
 
 #### Preconditions
 - Staff status is `DISABLED`
-- Tenant has available active staff slots (soft limit)
 
 #### Main Flow
 1. Admin selects staff member.
@@ -204,7 +180,6 @@ A temporary record created by Admin to onboard staff into a tenant.
 - Staff regains access.
 
 #### Acceptance Criteria
-- Reactivation fails if soft limit is exceeded.
 - Action is written to the audit log.
 
 ---
@@ -215,7 +190,6 @@ A temporary record created by Admin to onboard staff into a tenant.
 
 #### Preconditions
 - Staff status is `ACTIVE` or `DISABLED`
-- Tenant has not exceeded hard staff limit
 
 #### Main Flow
 1. Admin selects staff member.
@@ -227,6 +201,7 @@ A temporary record created by Admin to onboard staff into a tenant.
 
 #### Acceptance Criteria
 - Archived staff cannot access POS.
+- Archived staff cannot be reactivated.
 - Historical data remains intact.
 - Action is written to the audit log.
 
@@ -297,10 +272,8 @@ A temporary record created by Admin to onboard staff into a tenant.
 
 ## 8. Requirements
 
-- R1: Only Admin can invite, disable, archive, reactivate, or reassign staff.
-- R2: Staff limits are enforced via:
-  - Soft limit = maximum ACTIVE staff memberships
-  - Hard limit = maximum ACTIVE + ARCHIVED staff memberships
+- R1: Only Admin can create, disable, archive, reactivate, or reassign staff.
+- R2: Concurrent staff capacity is enforced at work start / operational sessions (Attendance / POS session / Cash session), not at staff record creation.
 - R3: Managers have read-only visibility for their branch staff.
 - R4: Staff Management does not handle credentials or account identity data.
 - R5: All staff lifecycle changes must be audit logged.
@@ -321,9 +294,7 @@ A temporary record created by Admin to onboard staff into a tenant.
 
 ## Audit Events Emitted (Minimum)
 
-- `STAFF_INVITED`
-- `STAFF_INVITE_REVOKED` (if implemented)
-- `STAFF_INVITE_ACCEPTED`
+- `STAFF_ACCOUNT_CREATED`
 - `STAFF_DISABLED`
 - `STAFF_REACTIVATED`
 - `STAFF_ARCHIVED`

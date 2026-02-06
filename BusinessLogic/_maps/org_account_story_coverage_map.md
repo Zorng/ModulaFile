@@ -11,17 +11,20 @@ It complements the Identity+HR overhaul by covering the **Org Account maintenanc
 ---
 
 ## Inputs
-- Tenant modspec: `tenant_module_patched_v2.md` (found)
-- Branch modspec: `branch_module.md` (found)
+- Tenant modspec: `BusinessLogic/5_modSpec/tenant_module_patched_v2.md` (found)
+- Branch modspec: `BusinessLogic/5_modSpec/20_OrgAccount/branch_module.md` (found)
 
 > Note: UC numbering in existing modspecs may not cover all maintenance needs. This map prioritizes **real operational goals** for March.
 
 ---
 
 ## Folder Placement (recommended)
-- `BusinessLogic/1_stories/20_org_account/`
-- Later: derive/patch domains in `BusinessLogic/2_domain/20_org_account/`
-- Ensure modspecs in `BusinessLogic/4_modSpec/20_OrgAccount/` align
+- Tenant + branch profile stories: `BusinessLogic/1_stories/handling_branding/`
+- Branch workplace location (GPS) stories: `BusinessLogic/1_stories/handling_staff&attendance/`
+- Later: derive/patch domains in:
+  - Tenant: `BusinessLogic/2_domain/10_Identity&Authorization/tenant_domain_consistency_patched.md`
+  - Branch: `BusinessLogic/2_domain/branch_domain.md`
+- Ensure modspecs in `BusinessLogic/5_modSpec/20_OrgAccount/` (and the patched tenant spec) align
 
 ---
 
@@ -67,7 +70,7 @@ It complements the Identity+HR overhaul by covering the **Org Account maintenanc
   - ongoing sale session (optional)
 
 **This story ties to contracts**:
-- Add to `contracts/10_edge_cases/` once finalized.
+- Add to `BusinessLogic/3_contract/10_edgecases/` once finalized.
 
 ---
 

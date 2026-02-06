@@ -7,7 +7,7 @@ Attendance (Actual Work)
 HR / Operational Reality Domain
 
 ## Status
-Draft (Refined — supports location confirmation and capability gating)
+Draft — rewritten (supports dual location verification + capability gating)
 
 ---
 
@@ -15,226 +15,301 @@ Draft (Refined — supports location confirmation and capability gating)
 
 The Attendance domain represents **what actually happened during work**.
 
-Attendance records the moments when a staff member **starts** and **ends** working at a branch. It captures reality as it occurred, regardless of what was planned.
+Attendance records the moments when a staff member **starts** and **ends** working at a branch.  
+It captures reality as it occurred, regardless of what was planned.
 
 This domain exists to:
-- establish a reliable source of truth for actual work,
-- support operational control during the day,
-- enable later review of time respecting and behavior,
-- free or consume operational capacity correctly.
+
+- establish a reliable source of truth for actual work
+- support operational control during the day
+- enforce concurrent staff capacity
+- enable later review of time respecting and behaviour
+
+Attendance is about **events that happened**, not what should have happened.
 
 ---
 
 ## Why This Exists (Story Traceability)
 
-This domain is derived directly from:
+Derived from anchor stories:
 
-- **Anchor A3 — Starting Work at a Branch**  
-  Work begins when a person actually arrives and starts working.
+- Starting Work at a Branch  
+- Ending Work and Leaving the System Clean  
+- Reviewing Attendance and Time Respecting  
 
-- **Anchor A4 — Ending Work and Leaving the System Clean**  
-  Work ends explicitly and must leave the system in a consistent state.
+Without Attendance, the system cannot know:
 
-- **Anchor A6 — Reviewing Attendance and Time Respecting**  
-  Actual behavior must be reviewable and comparable to planned expectations.
-
-Without an Attendance domain, the system cannot reliably know:
-- who is working right now,
-- when responsibility started or ended,
-- or what actually happened over time.
+- who is currently working
+- when responsibility started or ended
+- whether capacity limits are respected
+- what actually happened over time
 
 ---
 
-## Core Concepts
+## Key Design Philosophy
+
+Attendance provides **operational evidence**, not surveillance.
+
+Modula intentionally avoids continuous tracking.  
+Instead, the system captures **verification points**.
+
+This approach balances:
+
+- privacy
+- battery usage
+- reliability
+- product positioning (POS ≠ surveillance tool)
+
+This model is commonly used in modern retail systems and is called:
+
+**Point Verification Attendance**
+
+---
+
+## Core Concept
 
 ### Attendance Record
 
-An **Attendance Record** represents a continuous period of actual work by a staff member at a specific branch.
+An **Attendance Record** represents a continuous period of real work by a staff member at a branch.
 
-It answers the questions:
-- who worked,
-- where they worked,
-- when they started,
-- when they stopped.
+It answers:
+
+- Who worked?
+- Where did they work?
+- When did they start?
+- When did they finish?
 
 An attendance record may or may not correspond to a planned shift.
 
 ---
 
-### Check-In Location Attestation (Optional Enrichment)
+## Dual Location Verification (Optional Capability)
 
-For March delivery, attendance check-in can optionally support **location confirmation** (GPS or equivalent signal).
+Attendance may include **location verification at two moments**:
 
-A **Check-In Location Attestation** is the recorded evidence of where the device believed it was at the moment a staff member checked in, and how that compared to the expected workplace location (the branch).
+1. Check-in verification  
+2. Check-out verification  
 
-**Important:** Location attestation is an *enrichment*, not the definition of attendance.  
-Because Modula follows the philosophy “you only pay for what you use,” some tenants will not enable or purchase GPS-based attendance. Therefore:
+These checkpoints provide reasonable confidence that work happened at the workplace.
 
-- Attendance must work correctly **with or without** location attestation.
-- If location attestation is not enabled, not available, or not permitted, attendance is still valid.
+The system **does not attempt continuous tracking**.
 
-This concept exists because real-world location signals are imperfect. The system must be able to record:
-- what evidence was available,
-- what comparison was performed,
-- and what the outcome was,
-without pretending it is always perfectly accurate.
+---
+
+## Why Dual Verification Exists
+
+Without checkout verification, the system cannot distinguish between:
+
+- staff who worked until the end of shift
+- staff who left early but returned to tap “checkout”
+
+Dual verification provides **start and end anchors** without invasive tracking.
+
+This is the recommended configuration for Modula POS.
+
+---
+
+## Capability Gating
+
+Attendance location verification is controlled by tenant capability:
+`attendance.location_verification_mode`
+
+Possible values:
+
+| Mode                 | Meaning                                  |
+| -------------------- | ---------------------------------------- |
+| disabled             | No GPS verification                      |
+| checkin_only         | Verify location at start of work         |
+| checkin_and_checkout | Verify location at start and end of work |
+
+This supports Modula’s philosophy:
+
+> You only pay for what you use.
+
+Attendance must function correctly in all three modes.
+
+---
+
+## Attendance Confidence Levels
+
+### Level 1 — Unverified Attendance
+Evidence:
+- check-in time
+- check-out time
+
+Used by small or trust-based teams.
+
+---
+
+### Level 2 — Start-Verified Attendance
+Evidence:
+- verified check-in location
+- declared check-out time
+
+Provides moderate confidence.
+
+---
+
+### Level 3 — Start & End Verified Attendance (Recommended)
+Evidence:
+- verified check-in location
+- verified check-out location
+- full work duration
+
+Provides strong operational confidence.
+
+---
+
+## Location Verification Model
+
+Location verification records **evidence**, not judgment.
+
+Verification captures:
+
+- observed device location
+- comparison with branch workplace boundary
+- accuracy and method (optional metadata)
+- comparison result: MATCH / MISMATCH / UNKNOWN
+
+Important:
+- Location verification is **evidence-first**. It does not block check-in or check-out.
+- The result is used for visibility and later review by managers/admins.
+
+UNKNOWN must always be possible:
+- permission denied
+- weak signal
+- indoor GPS drift
+- branch workplace location not configured
+- capability disabled
+
+The system records evidence without assuming perfect accuracy.
 
 ---
 
 ## Key Attributes
 
-An Attendance Record minimally contains:
-- `attendance_id`
-- `tenant_id`
-- `staff_id`
-- `branch_id`
-- `actual_start_time`
-- `actual_end_time` (nullable while working)
-- `status` (ACTIVE, COMPLETED)
-- `created_at`
-- `updated_at`
+### Attendance Record
 
-A Check-In Location Attestation (captured at start time) may contain:
-- `expected_branch_location_ref` (reference to the branch’s stored workplace boundary)
-- `observed_location` (lat/lng or equivalent location representation)
-- `observed_accuracy` (optional; meters or comparable measure)
-- `observed_method` (e.g., gps, network, manual — conceptual only)
-- `comparison_result` (MATCH, MISMATCH, UNKNOWN)
-- `captured_at` (timestamp; usually equal to actual_start_time)
-- `notes` (optional; e.g., “permission denied”, “low accuracy”, “not enabled”)
+- attendance_id
+- tenant_id
+- staff_id
+- branch_id
+- actual_start_time
+- actual_end_time (nullable while active)
+- status (ACTIVE | COMPLETED)
+- created_at
+- updated_at
+
+### Check-In Verification (optional)
+
+- checkin_observed_location
+- checkin_accuracy
+- checkin_method
+- checkin_result (MATCH / MISMATCH / UNKNOWN)
+
+### Check-Out Verification (optional)
+
+- checkout_observed_location
+- checkout_accuracy
+- checkout_method
+- checkout_result (MATCH / MISMATCH / UNKNOWN)
 
 ---
 
-## Invariants
+## Core Invariants
 
-Core invariants:
-- An attendance record always belongs to exactly one tenant.
-- An attendance record is always associated with exactly one staff member.
-- An attendance record is always tied to exactly one branch.
-- A staff member can have **at most one ACTIVE attendance record at a time**.
-- An attendance record always has a start time.
-- An attendance record may end later than planned or earlier than planned.
+- Attendance belongs to exactly one tenant.
+- Attendance belongs to exactly one staff member.
+- Attendance occurs at exactly one branch.
+- A staff member may have **at most one ACTIVE attendance record**.
+- Attendance always has a start time.
 - Attendance describes **reality**, not permission.
-
-Location attestation invariants (only when attestation exists):
-- A check-in attestation may be absent (capability disabled or signal unavailable).
-- If present, comparison outcome must be one of: **MATCH**, **MISMATCH**, **UNKNOWN**.
-- UNKNOWN must be representable (e.g., no permission, no signal, or unreliable accuracy).
-- Attestation records evidence and outcome; it does not define punishment or enforcement.
+- Attendance records are never deleted.
 
 ---
 
 ## Attendance Lifecycle
 
-An attendance record typically moves through these states:
+States:
 
-- **ACTIVE** — staff has started work and is currently working
-- **COMPLETED** — staff has ended work
+- ACTIVE — work has started
+- COMPLETED — work has ended
 
-Attendance records are never deleted. They represent historical facts.
+Attendance is historical fact and must remain immutable after completion.
 
 ---
 
-## What Attendance Is NOT
+## What Attendance Does NOT Do
 
-The Attendance domain does **not**:
-- decide whether a staff member is allowed to start work,
-- enforce branch access rules,
-- enforce staff capacity limits,
-- define what work is expected,
-- manage payroll or compensation,
-- decide which tenants are entitled to location confirmation.
+Attendance does **not**:
 
-Those concerns belong to other domains.
+- decide who is allowed to start work (Access Control)
+- plan schedules (Shift domain)
+- enforce staff capacity policies (Licensing / Capability domain)
+- interpret performance (Work Review domain)
+- handle payroll or compensation
+- enforce subscriptions or billing
+
+Attendance records events only.
 
 ---
 
 ## Relationship to Other Domains
 
-### Attendance ↔ Shift (Planned Work)
-- Shift defines what was expected.
-- Attendance defines what actually happened.
-- Attendance may exist without a corresponding shift.
-- Shifts may exist with no corresponding attendance.
+### Attendance ↔ Shift
+Shift = expectation  
+Attendance = reality  
 
----
-
-### Attendance ↔ Staff Profile
-- Attendance references a staff member.
-- Attendance remains valid even if staff status changes later.
-
----
-
-### Attendance ↔ Branch
-- Attendance always occurs at a specific branch.
-- Branch identity is referenced, not owned.
-- Workplace location boundaries are owned by Branch (or Org configuration), referenced here for comparison.
+They are compared later.
 
 ---
 
 ### Attendance ↔ Access Control
-- Access Control decides whether work may begin.
-- Attendance records work **after** authorization has succeeded.
+Authorization happens **before** attendance begins.
 
 ---
 
-### Attendance ↔ Work Capacity / Licensing
-- ACTIVE attendance contributes to concurrent staff capacity.
-- COMPLETED attendance frees capacity.
+### Attendance ↔ Capacity / Licensing
+ACTIVE attendance consumes staff capacity.  
+COMPLETED attendance frees capacity.
 
 ---
 
-### Attendance ↔ Capabilities / Entitlements (Future)
-- Whether location attestation is required/collected is controlled by tenant capabilities.
-- Attendance remains valid without location attestation.
-
-(Implementation of capabilities is out of scope for March delivery.)
+### Attendance ↔ Branch
+Attendance references the branch workplace and its location boundary.
 
 ---
 
 ### Attendance ↔ Work Review
-- Attendance provides raw data for review.
-- Interpretation happens elsewhere.
+Attendance provides raw data for evaluation.  
+Interpretation happens in another domain.
 
 ---
 
-## Reality Considerations
+## Real-World Considerations
 
 - Staff may start work without a planned shift.
-- Staff may end work late, early, or unexpectedly.
-- Mistakes happen (forgotten check-out).
-- GPS/location signals may be inaccurate indoors.
+- Staff may forget to check out.
+- GPS may be inaccurate indoors.
 - Permissions may be denied.
-- Some tenants may not enable GPS attendance at all.
+- Some tenants may disable GPS entirely.
 
-Manual correction may be required later (handled by separate processes).
-
-The Attendance domain records facts, even when those facts are imperfect.
-
----
-
-## Out of Scope
-
-- Shift planning
-- Authorization logic
-- Capacity policy definition
-- Payroll and labor law enforcement
-- Automated correction or judgment of behavior
-- Billing, subscriptions, and entitlement enforcement
+Attendance must remain reliable even when signals are imperfect.
 
 ---
 
 ## Summary
 
-The Attendance domain captures **what actually happened** during work.
+The Attendance domain records **what actually happened during work**.
 
 It provides:
-- a clear boundary for responsibility,
-- reliable signals for operational control,
-- factual input for later review,
-- and optional evidence for check-in location confirmation when enabled.
 
-By separating Attendance from planning, permission, and billing, the system remains fair, auditable, and adaptable.
+- operational awareness
+- capacity control
+- factual historical records
+- optional location verification evidence
+
+It intentionally avoids surveillance while providing strong operational signals.
 
 ---
 

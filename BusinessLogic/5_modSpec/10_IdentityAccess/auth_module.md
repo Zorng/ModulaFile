@@ -2,8 +2,8 @@
 
 ## Module: Authentication & Authorization (Core Module)
 
-**Version:** 1.3  
-**Status:** Revised (Aligned with system-created Tenant + Branch; locked phone-first verification; clarified Account vs Membership boundaries)  
+**Version:** 1.4  
+**Status:** Revised (Supports provisioned account activation; aligns credential ownership with Staff onboarding; preserves multi-tenant per account)  
 **Module Type:** Core Module  
 **Depends on:** Tenant & Branch Context (Core), Audit Logging (Core)  
 **Related Modules:** Branch (Core), Staff Management, Policy & Configuration, Sync & Offline, Cash Session, Sale, Staff Attendance
@@ -27,7 +27,7 @@ This module is phone-first (no email) and supports **multi-tenant per account**.
 ## 2. Scope (Capstone I)
 
 ### Included
-- Account registration (phone verification via SMS OTP)
+- Account registration/activation (phone verification via SMS OTP)
 - Login (phone + password)
 - Token-based session management (access/refresh tokens)
 - Logout (single device session)
@@ -50,7 +50,11 @@ This module is phone-first (no email) and supports **multi-tenant per account**.
 ## 3. Core Concepts
 
 ### 3.1 Account
-A unique login identity represented by phone + password (and account status).
+A unique login identity represented by a phone identifier and credentials.
+
+Note:
+- An account may be **provisioned** by the system (e.g., staff onboarding) before the user sets a password.
+- Credential setup/reset remains owned by Auth (OTP/self-service); tenant admins do not set passwords.
 
 ### 3.2 Membership
 A link between an Account and a Tenant, defining:
@@ -74,11 +78,10 @@ A session-scoped value representing “which branch the user is currently operat
 
 ## 4. Use Cases
 
-### UC-1: Register Account (Phone-first with SMS OTP)
+### UC-1: Register / Activate Account (Phone-first with SMS OTP)
 Actor: Visitor (new user), System
 
 #### Preconditions
-- Phone number not already registered
 - SMS OTP service available (or fallback is defined)
 
 #### Main Flow
@@ -86,8 +89,11 @@ Actor: Visitor (new user), System
 2. System sends SMS OTP to that phone number.
 3. User enters OTP.
 4. System verifies OTP (valid + not expired + within attempt limits).
-5. User sets password.
-6. System creates the Account and signs the user in.
+5. System ensures the Account exists:
+   - If it already exists (provisioned or existing user), mark phone identifier verified (if not already).
+   - If it does not exist, create the Account and mark identifier verified.
+6. If password is not set yet, user sets password.
+7. System signs the user in.
 
 #### Postconditions
 - Account exists in ACTIVE status

@@ -8,15 +8,15 @@
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/domain/30_POSOperation/cashSession_domain.md`
-- **ModSpec:** `BusinessLogic/modSpec/30_POSOperation/cashSession_module_patched_v2.md`
+- **Domain:** `BusinessLogic/2_domain/30_POSOperation/cashSession_domain.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/cashSession_module_patched_v2.md`
 
 ---
 
 ## 2) Operational Context (Where These Stories Live)
 
 Recommended location (human context):
-- `BusinessLogic/usecase/handling_money/`
+- `BusinessLogic/1_stories/handling_money/`
 
 This context is chosen because Cash Session is experienced by staff as **cash drawer responsibility** across a shift.
 
@@ -27,19 +27,19 @@ This context is chosen because Cash Session is experienced by staff as **cash dr
 These are the **minimum** stories that cover the module’s use cases without exploding into “one story per UC”.
 
 1. **Opening the Cash Drawer**  
-   File: `usecase/handling_money/opening_the_cash_drawer.md`  
+   File: `BusinessLogic/1_stories/handling_money/opening_cash_drawer.md`  
    Human situation: starting a shift/accountability window with an opening float.
 
 2. **Handling Cash During the Shift**  
-   File: `usecase/handling_money/handling_cash_during_the_shift.md`  
+   File: `BusinessLogic/1_stories/handling_money/handling_cash_during_session.md`  
    Human situation: day-to-day cash movements, corrections, and mid-shift visibility.
 
 3. **Closing the Cash Drawer**  
-   File: `usecase/handling_money/closing_the_cash_drawer.md`  
+   File: `BusinessLogic/1_stories/handling_money/closing_cash_drawer.md`  
    Human situation: end-of-shift reconciliation, counted cash, variance, closure.
 
 4. **Force Closing a Cash Session (Exception Handling)**  
-   File: `usecase/handling_money/force_closing_a_cash_session.md`  
+   File: `BusinessLogic/1_stories/handling_money/force_close_cash_session.md`  
    Human situation: manager/admin needs to end a session despite imperfect conditions.
 
 ---
@@ -118,10 +118,10 @@ Notes:
 
 | Story | File | Status | Notes |
 |---|---|---|---|
-| Opening the Cash Drawer | `opening_the_cash_drawer.md` |  ok | |
-| Handling Cash During the Shift | `handling_cash_during_the_shift.md` | ok | |
-| Closing the Cash Drawer | `closing_the_cash_drawer.md` | ok| |
-| Force Closing a Cash Session | `force_closing_a_cash_session.md` | ok | |
+| Opening the Cash Drawer | `BusinessLogic/1_stories/handling_money/opening_cash_drawer.md` |  ok | |
+| Handling Cash During the Shift | `BusinessLogic/1_stories/handling_money/handling_cash_during_session.md` | ok | |
+| Closing the Cash Drawer | `BusinessLogic/1_stories/handling_money/closing_cash_drawer.md` | ok| |
+| Force Closing a Cash Session | `BusinessLogic/1_stories/handling_money/force_close_cash_session.md` | ok | |
 
 Legend:
 - ⬜ Not written

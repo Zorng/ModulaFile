@@ -89,15 +89,18 @@ Historical records remain traceable even after removal.
 ### Invitation / Onboarding Method (March Delivery)
 
 For March delivery, staff onboarding is simplified:
-- The owner/admin creates the account and sets an initial password.
-- No invitation acceptance flow is required.
+- The owner/admin **adds a member** by phone number (owner-provisioned).
+- The system links that member to an existing Authentication identity (if one already exists for the phone),
+  or **provisions** a new Authentication identity (phone identifier only; unverified; no password set).
+- Authentication handles **phone verification + password setup** using OTP/self-service flows.
+- No membership acceptance/decline workflow is required (membership is created immediately).
 
 Tenant Membership stores the fact:
 - this person was created/added as a tenant member,
 - who created them,
 - and when.
 
-Authentication handles the password reset flow afterward.
+Authentication handles password setup/reset and account recovery (Staff Management never sets or knows passwords).
 
 ---
 
@@ -105,7 +108,7 @@ Authentication handles the password reset flow afterward.
 
 A Tenant Member typically includes:
 - `tenant_id`
-- `member_id`
+- `member_id` (tenant-scoped membership id; the same person may have different `member_id`s in other tenants)
 - `auth_identity_ref` (link to Authentication identity)
 - `membership_type` (OWNER, ADMIN, STAFF)
 - `membership_status` (ACTIVE, DISABLED, REMOVED)
@@ -122,8 +125,9 @@ Optional:
 ## Invariants
 
 - Every tenant must have at least one OWNER membership.
-- A tenant member belongs to exactly one tenant (for simplicity in March delivery).
-  - Cross-tenant membership can be added later if needed.
+- An authentication identity may belong to multiple tenants (multi-tenant SaaS).
+  - This enables a person to work for multiple businesses using one login identity.
+- Membership must be unique per `(tenant_id, auth_identity_ref)` (no duplicate memberships for the same person in the same tenant).
 - A tenant member’s identity must be unique within tenant constraints (Authentication enforces credential uniqueness).
 - Removing membership must not delete historical records (attendance, sales, audit).
 
@@ -188,7 +192,7 @@ The domain keeps belonging explicit so later conflicts (“who had access?”) c
 
 ## Out of Scope
 
-- Multi-tenant identity (one person belonging to many tenants)
+- Enterprise account hierarchies (grouped tenants, franchise org trees)
 - Advanced invitation workflows (explicitly removed for March)
 - External SSO
 - Subscription billing implementation
@@ -203,7 +207,7 @@ It provides the stable foundation that:
 - Staff Profile builds on,
 - Access Control evaluates,
 - Attendance records against,
-while staying compatible with modular service and future subscription entitlements.
+while staying compatible with multi-tenant SaaS (one identity can belong to multiple tenants) and future subscription entitlements.
 
 ---
 

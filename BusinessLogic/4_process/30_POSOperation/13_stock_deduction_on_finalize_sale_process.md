@@ -166,6 +166,14 @@ Audit records must include:
 
 ---
 
+## Related
+- Entry point orchestration:
+  - `10_finalize_sale_orch.md`
+- Void/reversal counterpart:
+  - `20_void_sale_orch.md`
+
+---
+
 ## 12. Design Notes (Why This Exists)
 
 This process exists to reflect **real operational behavior**:

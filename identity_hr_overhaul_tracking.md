@@ -1,190 +1,191 @@
-# Identity & HR Overhaul — Tracking Document
+# Identity + HR Overhaul Tracking
 
-**Project:** Modula POS  
-**Area:** Identity & Access + HR  
-**Goal:** Rebuild Identity & HR with clean layering and story-first methodology  
-**Status:** In Progress (Phase 1)
+This document tracks the progress of the **Identity, Authorization, HR, and OrgAccount overhaul**.
 
----
+The goal of this overhaul is to rebuild the people/work/business foundation of Modula using the proper layer order:
 
-## 1. Why This Document Exists
+Stories → Domains → Processes → ModSpec
 
-This document exists to:
-- keep the overhaul **trackable and non-chaotic**
-- prevent design drift or circular debates
-- make progress visible over time
-- allow pausing and resuming work confidently
+This tracker is the source of truth for **where we are in the overhaul**.
 
-This is a **process artifact**, not a design artifact.
+This overhaul and the KnowledgeBase itself are a direct response to earlier backlash from poor design and coordination.
+The KB exists to preserve alignment, prevent hidden assumptions, and keep the product vision consistent as the system grows.
 
 ---
 
-## 2. Overhaul Principles (Locked)
+# Why This Overhaul Exists
 
-These principles are agreed and must not be re-debated during this overhaul.
+Earlier versions of the system mixed:
+- identity and authorization,
+- staff and tenant concepts,
+- operational workflows and account structures.
 
-1. **Stories are the source of truth**
-   - Stories describe real human situations.
-   - They do not mirror modules or implementation details.
+As the POS matured, the boundaries became unclear and risky for future SaaS capabilities.
 
-2. **Artifacts are derived in order**
-   ```
-   Stories → Domain → Process → ModSpec
-   ```
-
-3. **No forced 1:1 mapping**
-   - Stories ≠ Modules
-   - Modules may serve multiple stories.
-   - Stories may span multiple modules.
-
-4. **Plan vs Reality separation**
-   - Shift = planned work
-   - Attendance = actual work
-   - Neither replaces the other.
-
-5. **Access Control is a gate, not business logic**
-   - Centralized
-   - Deterministic
-   - Cross-cutting by design
-
-6. **Shipping by March is a constraint**
-   - Overhaul must remain minimal and intentional.
-   - No payroll, no optimization, no enterprise HR.
+This overhaul ensures the system can support:
+- multi-tenant SaaS growth
+- modular capabilities (“pay for what you use”)
+- staff workflows and attendance
+- clean authorization boundaries
+- consistent cross-module orchestration
 
 ---
 
-## 3. Overhaul Scope
+# Phase Overview
 
-### In Scope
-- Authentication (phone + password)
-- Tenant membership & roles
-- Branch-scoped access
-- Staff profile & lifecycle
-- Shift (planned schedule)
-- Attendance (check-in / check-out)
-- Foundations for staff performance & behavior reports
-
-### Out of Scope
-- Billing engine / subscription payments
-- Marketing notifications
-- Payroll and labor law enforcement
-- Enterprise SSO
-- Advanced scheduling optimization
+| Phase     | Description                    | Status      |
+| --------- | ------------------------------ | ----------- |
+| Phase 1   | Anchor Stories (Human reality) | ✅ Completed |
+| Phase 2   | Domain Derivation              | ✅ Completed |
+| Phase 2.5 | Edge Case Sweep                | ✅ Completed |
+| Phase 2.6 | OrgAccount Alignment           | ✅ Completed |
+| Phase 3   | Process Definition             | ⏳ Next      |
+| Phase 4   | ModSpec Revamp                 | 🔜 Later     |
 
 ---
 
-## 4. Current Phase
+# Phase 1 — Anchor Stories (Completed)
 
-### 🟨 Phase 1 — Anchor Stories (Current)
+Six anchor stories were created and later rewritten to align with the narrative style of the repository.
 
-**Objective:**  
-Describe core human situations that define Identity & HR behavior.
+They describe the **human lifecycle of work**:
 
-**Rules:**
-- Essay-style stories
-- No implementation detail
-- No technical vocabulary
-- Focus on intent, expectation, and reality
+A1 — Setting up the business team quickly  
+A2 — Planning who is expected to work and where  
+A3 — Starting work at a branch  
+A4 — Ending work and leaving the system clean  
+A5 — Preventing unauthorized or excessive work  
+A6 — Reviewing attendance and time respecting  
 
----
-
-## 5. Anchor Stories (Planned)
-
-| ID | Anchor Story Title | Status |
-|---|---|---|
-| A1 | Setting Up the Business Team Quickly | ⬜ |
-| A2 | Planning Who Is Expected to Work and Where | ⬜ |
-| A3 | Starting Work at a Branch | ⬜ |
-| A4 | Ending Work and Leaving the System Clean | ⬜ |
-| A5 | Preventing Unauthorized or Excessive Work | ⬜ |
-| A6 | Reviewing Attendance and Time Respecting | ⬜ |
-
-Legend:
-- ⬜ Not started
-- 🟨 Drafted
-- ✅ Final
+These stories define the **real-world foundation** for Identity + HR.
 
 ---
 
-## 6. Upcoming Phases (Locked Sequence)
+# Phase 2 — Domain Derivation (Completed)
 
-### Phase 2 — Domain Derivation
-From anchor stories, derive domain documents:
-- Authentication
-- Tenant Membership
-- Staff Profile & Assignment
-- Shift (Planned Work)
-- Attendance (Actual Work)
-- Access Control
-- Staff Licensing (Concurrency)
+From the stories, the following domains were derived:
 
----
+Identity & Authorization:
+1. Authentication (global identity)
+2. Access Control (authorization gate)
 
-### Phase 3 — Process Definition
-Define cross-module flows:
-- Start Work orchestration
-- End Work orchestration
-- Shift vs Attendance evaluation
-- Authorization & capacity gates
+HR & Workforce:
+3. Tenant Membership
+4. Staff Profile & Assignment
+5. Shift (planned work)
+6. Attendance (actual work)
+7. Work Review (interpretation of work history)
+
+These domains establish the conceptual model of **people and work** in Modula.
 
 ---
 
-### Phase 4 — ModSpec Writing
-Produce implementation-facing specs:
+# Phase 2.5 — Edge Case Sweep (Completed)
+
+Several critical edge-case documents were produced and normalized:
+
+Edge case contracts:
+- identity_hr_edge_case_sweep.md
+- identity_hr_pos_boundary_edge_cases.md
+
+UX specifications:
+- identity_tenant_workflow_ux_spec.md
+
+These documents ensure:
+- cross-module consistency
+- safe multi-tenant behavior
+- clear login and tenant selection flows
+
+This phase strengthened the reliability of the domains before moving to processes.
+
+---
+
+# Phase 2.6 — OrgAccount Alignment (Completed)
+
+During the overhaul, a major gap was discovered:
+
+Branch and Tenant concepts were not fully aligned with the new Identity + HR model.
+
+OrgAccount was therefore **added to the overhaul bus**.
+
+New/updated work:
+- Stories written for:
+  - Updating tenant profile (branding)
+  - Updating branch profile
+  - Configuring branch location for attendance
+- Branch domain reconstructed from:
+  - stories
+  - attendance requirements
+  - authorization scope
+  - receipt usage
+  - existing branch modspec
+
+Result:
+- `branch_domain.md` created under `BusinessLogic/2_domain/`
+
+At this point, the **organizational foundation is aligned** with the new people/work model.
+
+---
+
+# Current Status
+
+We now have a consistent foundation across:
+
+Stories  
+Domains  
+Edge cases  
+OrgAccount alignment  
+
+The system is ready to move to the next layer.
+
+Context reminder:
+- Modules under `POSOperation` are stabilized (with potential patches as new discoveries appear).
+- We are actively overhauling Identity & Authorization, HR, and OrgAccount to make Modula a real SaaS.
+- Next after this is System/Platform.
+
+---
+
+# Phase 3 — Process Definition (Next)
+
+We now begin defining cross-domain orchestration for the work lifecycle.
+
+Planned process documents:
+
+1. Work Start / Check-in orchestration
+2. Work End / Check-out orchestration
+3. Shift vs Attendance evaluation
+4. Authorization + capacity gating during work start
+
+These processes will connect:
+Authentication → Membership → Branch → Shift → Attendance → Access Control.
+
+This phase is the equivalent of **Finalize Sale orchestration** for POS.
+
+---
+
+# Phase 4 — ModSpec Revamp (Future)
+
+After processes are defined, the following modules will be rewritten:
+
+Identity & Authorization:
+- authentication_module
+- accessControl_module
+
+HR:
 - staffManagement_module
-- shift_module
-- attendance_module
-- accessControl_module (minor alignment)
-- authentication_module (minor alignment)
+- staffAttendance_module
+
+OrgAccount:
+- tenant_module
+- branch_module
+
+This will complete the overhaul.
 
 ---
 
-## 7. Explicit Pauses & Checkpoints
+# Guiding Reminder
 
-The overhaul **must pause** at these checkpoints:
-- After all anchor stories are finalized
-- After domains are derived
-- Before writing any modspec
+This overhaul is intentionally slow and layered.
 
-No phase skipping is allowed.
-
----
-
-## 8. Known Risks & Guardrails
-
-### Risks
-- Reintroducing module-first thinking
-- Writing stories that explain system behavior
-- Over-expanding HR scope
-- Mixing scheduling with payroll logic
-
-### Guardrails
-- Always ask: “Is this plan or reality?”
-- Always ask: “Is this human expectation or system mechanism?”
-- If unclear, stop and write a story instead of a spec.
-
----
-
-## 9. Definition of Success
-
-This overhaul is successful if:
-- Stories read naturally to non-technical readers
-- Domains feel obvious when derived
-- Processes explain real-world flows cleanly
-- ModSpecs are smaller and less shaky than before
-- No major rework is needed before March delivery
-
----
-
-## 10. Notes & Decisions Log
-
-(Use this section to log key decisions as they happen.)
-
-- [ ] Shift included to support future performance reporting
-- [ ] Stories are no longer mirrored to modules
-- [ ] Branch treated as supporting noun, not protagonist
-- [ ] Attendance is actual, Shift is planned
-
----
-
-_End of Tracking Document_
+The goal is not speed.  
+The goal is a foundation that will not collapse as Modula grows into a SaaS platform.

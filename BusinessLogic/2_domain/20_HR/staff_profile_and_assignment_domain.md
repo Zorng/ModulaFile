@@ -165,13 +165,14 @@ It only stores stable facts about people and their workplace eligibility.
 ### Staff Profile ↔ Authentication
 - Authentication proves identity and manages credentials.
 - Staff Profile represents membership and business identity within the tenant.
-- A staff profile links to an authentication identity (e.g., via phone number).
+- A staff profile links to an authentication identity via `auth_account_id` (phone number is an identifier, not a stable key).
 
 ---
 
 ### Staff Profile ↔ Tenant Membership
 - Tenant Membership defines who belongs to the tenant and their ownership relationships.
 - Staff Profile is the concrete representation of staff members under that tenant.
+- In multi-tenant SaaS, the same authentication identity may have multiple StaffProfiles (one per tenant membership).
 
 (Depending on design, Tenant Membership may be merged or remain distinct. For March delivery, Staff Profile is the operational view.)
 

@@ -19,6 +19,7 @@ FinalizeOrderService (application layer)
 ## 5. Preconditions
 - Order exists in draft-equivalent state
 - Cash session is OPEN
+- Branch is active (not frozen)
 - Required snapshots available
 
 ## 6. Process Steps
@@ -33,7 +34,7 @@ FinalizeOrderService (application layer)
 Single transactional boundary (modular monolith)
 
 ## 8. Idempotency
-- sale_id as idempotency key
+- (branch_id, sale_id) as idempotency key
 - inventory and cash are replay-safe
 
 ## 9. Failure Modes
@@ -44,3 +45,9 @@ Single transactional boundary (modular monolith)
 - Order PAID
 - Inventory updated
 - Cash recorded
+
+## Related
+- Entry point orchestration:
+  - `10_finalize_sale_orch.md`
+- Inventory deduction detail:
+  - `13_stock_deduction_on_finalize_sale_process.md`

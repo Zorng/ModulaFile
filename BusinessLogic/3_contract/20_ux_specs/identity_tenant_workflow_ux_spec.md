@@ -32,8 +32,23 @@ This spec assumes all **domain + edge-case decisions are already locked**.
 ## 1. Login Screen
 
 ### Entry
-- Credential: phone number + password (or OTP/reset).
+- Primary credential: phone number + password.
+- Self-service recovery/activation: SMS OTP + set password.
 - Login authenticates **Identity only**.
+
+### Provisioned Staff (No Password Yet)
+Staff may be provisioned by a tenant admin before they ever log in.
+
+UX rule:
+- Admins/owners never set or know staff passwords.
+- If the user does not have a password yet (or forgot it), the UI must support **Activate/Reset via OTP**.
+
+Expected flow:
+1. User enters phone number.
+2. User selects `Activate / Forgot password`.
+3. System sends OTP and verifies phone ownership.
+4. User sets a password.
+5. User is signed in (or returned to login with password set).
 
 ### Success Outcome
 - User is authenticated as an Identity.

@@ -2,8 +2,11 @@
 
 ## Module: Staff Management
 
-**Version:** 3.0  
-**Status:** Patched (simplified onboarding, aligned with Authentication, Access Control, Tenant, and Concurrent Staff Licensing)  
+> Status note: superseded for March delivery by `BusinessLogic/5_modSpec/10_IdentityAccess/staffManagement_module.md`.  
+> Kept for historical context; do not treat as the canonical spec.
+
+**Version:** 3.1  
+**Status:** Patched (simplified onboarding; user-owned credentials; aligned with Authentication, Access Control, Tenant, and Concurrent Staff Licensing)  
 **Module Type:** Supporting Domain (Org Operations / HR-light)  
 **Depends on:** Authentication (identity & credentials), Tenant (membership & roles), Branch (branch entity), Access Control (authorization), Attendance (signals), Audit (logging)  
 **Related Modules:** Staff Attendance, Cash Session, Sale, Access Control, Staff Licensing, Subscription/Entitlements (future)
@@ -30,10 +33,9 @@ To prioritize shipping and reduce onboarding complexity, Modula adopts **owner-p
 - **Staff Management** owns staff profiles, lifecycle, and branch assignments.
 
 **Critical rule**
-- Admins/owners may **set an initial password at creation time only**.
-- Passwords are never readable by anyone and are never directly editable after creation; all subsequent changes must occur through Authentication-managed change or reset workflows.
-- Staff members may change their own password at any time using Authentication self-service flows.
-- After creation, only **password reset** is allowed via Authentication workflows.
+- Admins/owners must **never** set, view, or reset staff passwords.
+- Passwords are owned by Authentication and are always set via Authentication-managed self-service workflows (OTP verification + password setup/reset).
+- Staff Management may trigger Authentication to send an OTP for credential setup, but it does not handle credentials directly.
 
 ---
 
@@ -138,25 +140,28 @@ The storage mechanism is an implementation detail; the definition is canonical.
 ## 6. Self-Contained Processes
 
 ### UC-SM1 — Create Staff Account (Owner Provisioned)
-**Goal:** Owner/admin creates a staff account with initial credentials.
+**Goal:** Owner/admin provisions staff access for a phone number (membership/profile), while credentials remain user-owned.
 
 **Inputs**
 - tenant_id
 - phone_number (login identifier)
-- initial_password (write-only)
 - display_name
 - initial role (Tenant membership)
 - initial branch assignments (one or more)
 
 **Steps**
-1. Create Authentication account with phone number + initial password.
-2. Create StaffProfile linked to `auth_account_id` with status ACTIVE.
-3. Ensure TenantMembership exists with selected role.
-4. Create BranchAssignment(s).
+1. Resolve Authentication account by phone number:
+   - If it exists, reuse it (do not change credentials).
+   - Otherwise provision an Authentication account (phone identifier only; unverified; no password yet).
+2. Trigger Authentication-managed OTP flow for phone verification + password setup (if needed).
+3. Create StaffProfile linked to `auth_account_id` with status ACTIVE.
+4. Ensure TenantMembership exists with selected role.
+5. Create BranchAssignment(s).
 
 **Rules**
 - Password is never stored or retrievable by Staff Management.
-- Creation fails if phone number already exists.
+- Creation does not fail just because phone number already exists globally.
+- Creation fails if the staff member already has a membership/profile in this tenant (no duplicates).
 - Creation does not consume a concurrent staff slot.
 
 **Audit**

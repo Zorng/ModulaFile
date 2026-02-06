@@ -166,11 +166,18 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 - **Owner**: Work Review
 - **March**: Yes
 
+### EC-IDH-18 — Location Mismatch (Outside Allowed Radius)
+- **Scenario**: Device location is available but clearly outside the branch allowed radius.
+- **Trigger**: Check-in (or check-out) with location feature enabled and workplace location configured.
+- **Expected Behavior**: Attendance is created/closed; attestation MISMATCH is recorded; work is not blocked by GPS.
+- **Owner**: Attendance + Work Review
+- **March**: Yes
+
 ---
 
 ## Summary
 - Most risk lies in orchestration, idempotency, and cross-boundary responsibilities.
-- March delivery is feasible with explicit degradation rules (UNKNOWN attestation, partial atomicity).
+- March delivery is feasible with explicit degradation rules (UNKNOWN/MISMATCH attestation, partial atomicity).
 - Cross-boundary rules are centralized in `contracts/10_edge_cases/identity_hr_pos_boundary_edge_cases.md`.
 
 _End of Identity & HR edge case contract_

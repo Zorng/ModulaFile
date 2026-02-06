@@ -4,8 +4,8 @@
 Identify human-centered stories for Menu behavior and map them to technical use cases, ensuring complete coverage without “one story per UC”.
 
 **Scope:**  
-- Menu Domain (`menu_domain_patched_v2.md`)
-- Menu Module Spec (`menu_module_patched.md`)
+- Menu Domain (`BusinessLogic/2_domain/30_POSOperation/menu_domain_patched_v2.md`)
+- Menu Module Spec (`BusinessLogic/5_modSpec/30_POSOperation/menu_module_patched.md`)
 
 **Rule:**  
 Stories are grouped by **human operational context**, not by modules or CRUD operations.
@@ -14,8 +14,8 @@ Stories are grouped by **human operational context**, not by modules or CRUD ope
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/domain/30_POSOperation/menu_domain_patched_v2.md`
-- **ModSpec:** `BusinessLogic/modSpec/30_POSOperation/menu_module_patched.md`
+- **Domain:** `BusinessLogic/2_domain/30_POSOperation/menu_domain_patched_v2.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/menu_module_patched.md`
 
 ---
 
@@ -37,7 +37,7 @@ These contexts are stable across cafés and retail-like stores.
 ### Context: Defining What the Store Sells
 
 1. **Creating and Managing Menu Items**  
-   File: `usecase/selling_and_checkout/creating_and_managing_menu_items.md`  
+   File: `BusinessLogic/1_stories/handling_menu/creating_and_managing_menu_items.md`  
    Human situation: deciding what products exist, their names, prices, and whether they are active.
 
 ---
@@ -45,11 +45,11 @@ These contexts are stable across cafés and retail-like stores.
 ### Context: Organizing and Presenting the Menu
 
 2. **Organizing Items into Categories**  
-   File: `usecase/selling_and_checkout/organizing_menu_categories.md`  
+   File: `BusinessLogic/1_stories/handling_menu/organizing_menu_categories.md`  
    Human situation: keeping the menu readable and navigable for staff and customers.
 
 3. **Controlling Which Branch Can Sell What**  
-   File: `usecase/selling_and_checkout/controlling_menu_visibility_by_branch.md`  
+   File: `BusinessLogic/1_stories/handling_menu/menu_visibility.md`  
    Human situation: hiding or showing items depending on location or readiness.
 
 ---
@@ -57,7 +57,7 @@ These contexts are stable across cafés and retail-like stores.
 ### Context: Configuring Customization Options
 
 4. **Allowing Customers to Customize Items**  
-   File: `usecase/selling_and_checkout/configuring_item_customizations.md`  
+   File: `BusinessLogic/1_stories/handling_menu/configuring_item_customizations.md`  
    Human situation: defining sizes, toppings, and options that change how an item is ordered.
 
 ---
@@ -65,11 +65,11 @@ These contexts are stable across cafés and retail-like stores.
 ### Context: Connecting Menu Items to Stock Reality
 
 5. **Defining How an Item Is Made**  
-   File: `usecase/handling_money_or_stock/defining_item_composition.md`  
+   File: `BusinessLogic/1_stories/handling_menu/define_item_compostion.md`  
    Human situation: describing ingredients, packaging, or retail units without worrying about deduction timing.
 
 6. **Deciding What Should Be Automatically Tracked**  
-   File: `usecase/handling_money_or_stock/deciding_what_inventory_is_tracked.md`  
+   File: `BusinessLogic/1_stories/handling_menu/deciding_what_inventory_is_tracked.md`  
    Human situation: choosing which components are precise enough to auto-deduct and which are operational.
 
 ---
@@ -154,12 +154,12 @@ Notes:
 
 | Story | File | Status | Notes |
 |---|---|---|---|
-| Creating and Managing Menu Items | `creating_and_managing_menu_items.md` | ⬜ | |
-| Organizing Items into Categories | `organizing_menu_categories.md` | ⬜ | |
-| Controlling Which Branch Can Sell What | `controlling_menu_visibility_by_branch.md` | ⬜ | |
-| Allowing Customers to Customize Items | `configuring_item_customizations.md` | ⬜ | |
-| Defining How an Item Is Made | `defining_item_composition.md` | ⬜ | |
-| Deciding What Inventory Is Automatically Tracked | `deciding_what_inventory_is_tracked.md` | ⬜ | |
+| Creating and Managing Menu Items | `BusinessLogic/1_stories/handling_menu/creating_and_managing_menu_items.md` | ⬜ | |
+| Organizing Items into Categories | `BusinessLogic/1_stories/handling_menu/organizing_menu_categories.md` | ⬜ | |
+| Controlling Which Branch Can Sell What | `BusinessLogic/1_stories/handling_menu/menu_visibility.md` | ⬜ | |
+| Allowing Customers to Customize Items | `BusinessLogic/1_stories/handling_menu/configuring_item_customizations.md` | ⬜ | |
+| Defining How an Item Is Made | `BusinessLogic/1_stories/handling_menu/define_item_compostion.md` | ⬜ | |
+| Deciding What Inventory Is Automatically Tracked | `BusinessLogic/1_stories/handling_menu/deciding_what_inventory_is_tracked.md` | ⬜ | |
 
 Legend:
 - ⬜ Not written

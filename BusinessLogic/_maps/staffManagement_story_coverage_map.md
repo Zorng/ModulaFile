@@ -4,8 +4,9 @@
 Identify human-centered stories for Staff Management behavior and map them to technical use cases, ensuring full coverage without “one story per UC”, while explicitly capturing cross-module stories (authorization, attendance, licensing).
 
 **Scope:**  
-- Staff Licensing Domain (Concurrent Staff)  
-- Staff Management Module Spec (v3, simplified onboarding)
+- Staff Profile & Assignment Domain (people + branch eligibility)  
+- Staff Management Module Spec (v3, simplified onboarding)  
+- Cross-cutting: Attendance + concurrent staff capacity
 
 **Rule:**  
 Stories are grouped by **human operational context**, not by CRUD actions or internal mechanics.
@@ -14,8 +15,9 @@ Stories are grouped by **human operational context**, not by CRUD actions or int
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/domain/10_IdentityAccess/staff_licensing_domain.md`
-- **ModSpec:** `BusinessLogic/modSpec/10_IdentityAccess/staffManagement_module_patched_v3.md`
+- **Domain (staff facts):** `BusinessLogic/2_domain/20_HR/staff_profile_and_assignment_domain.md`
+- **Domain (attendance + capacity gates):** `BusinessLogic/2_domain/20_HR/attendance_domain_capability_gated.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/staffManagement_module_patched_v3.md`
 
 ---
 
@@ -37,123 +39,118 @@ These contexts reflect how cafés actually run: shift-based staffing, frequent c
 
 ### Context: Onboarding Staff Quickly (Owner Provisioned)
 
-1. **Creating a Staff Account for Someone New**  
-   File: `1_stories/identity_and_access/creating_staff_account.md`  
-   Human situation: the owner needs to add a new staff member today, set their initial password once, and let them start work without a complicated invite flow.
-
-2. **Updating Basic Staff Information**  
-   File: `1_stories/identity_and_access/updating_staff_information.md`  
-   Human situation: names, codes, and labels change; the system should stay accurate without touching credentials.
+1. **Setting Up the Business Team Quickly**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/setup_staff.md`  
+   Human situation: the owner needs to add staff quickly and stay in control (no invite flow).
 
 ---
 
-### Context: Controlling Where People Can Work (Branch Assignment)
+### Context: Controlling Where People Can Work (Branch + Time)
 
-3. **Assigning a Staff Member to One or More Branches**  
-   File: `1_stories/identity_and_access/assigning_staff_to_branches.md`  
-   Human situation: staff are only allowed to operate in certain locations; assignments must be explicit and easy to review.
-
-4. **Removing a Staff Member’s Access to a Branch**  
-   File: `1_stories/identity_and_access/removing_branch_access.md`  
-   Human situation: staffing changes happen; access must be removed cleanly without deleting history.
+2. **Planning Who Is Expected to Work and Where**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/planning_work_for_staff.md`  
+   Human situation: managers plan who should work, when, and at which branch.
 
 ---
 
-### Context: Stopping Access Immediately (Disable / Revoke)
+### Context: Starting and Ending Work (Reality)
 
-5. **Disabling a Staff Member Immediately**  
-   File: `1_stories/identity_and_access/disabling_staff_immediately.md`  
-   Human situation: a staff member should be blocked right now; the owner expects the next action to be denied.
+3. **Starting Work at a Branch**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/starting_shift.md`  
+   Human situation: work begins; the system records the moment and enforces basic boundaries.
 
----
-
-### Context: Keeping Clean History (Archive / Audit)
-
-6. **Archiving a Staff Member While Keeping History**  
-   File: `1_stories/identity_and_access/archiving_staff.md`  
-   Human situation: old staff should disappear from daily lists, but past receipts/reports should still make sense.
-
-7. **Reviewing Staff Changes When Something Goes Wrong**  
-   File: `1_stories/identity_and_access/reviewing_staff_audit_trail.md`  
-   Human situation: when conflicts occur (“why was this blocked?”), the owner wants a clear trail of staffing and access changes.
+4. **Ending Work and Leaving the System Clean**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/ending_shift.md`  
+   Human situation: work ends; responsibility and capacity are released.
 
 ---
 
-### Context: Operating Under Fair Limits (Concurrent Staff Capacity)
+### Context: Operating Under Fair Limits (Guardrails)
 
-8. **Being Blocked When Too Many Staff Are Active**  
-   File: `1_stories/identity_and_access/concurrent_staff_limit_block.md`  
-   Human situation: the café is busy and someone tries to start working, but the system blocks it fairly and clearly.
+5. **Preventing Unauthorized or Excessive Work**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/prevent_unauthorized&excess_work.md`  
+   Human situation: the system blocks clearly invalid conditions early (wrong branch, capacity reached).
 
-9. **Freeing Capacity When Someone Finishes Work**  
-   File: `1_stories/identity_and_access/freeing_concurrent_capacity.md`  
-   Human situation: once someone checks out / ends their shift, the next staff should be able to start without confusion.
+---
+
+### Context: Optional Location Confirmation (Evidence, Not Surveillance)
+
+6. **Configuring Branch Location for Attendance Confirmation**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/set_branch_gps_location.md`  
+   Human situation: define workplace location used to verify check-in/out presence.
+
+---
+
+### Context: Review (Planned vs Actual)
+
+7. **Reviewing Attendance and Time Respecting**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/review_attendance&time_respection.md`  
+   Human situation: managers compare planned shifts vs actual attendance over time.
+
+---
+
+**Coverage gaps (not yet explicit as stories):**
+- Administrative actions to disable/archive staff (UC-SM2, UC-SM3).
+- Reviewing staff change audit trail (staff lifecycle + branch assignment changes).
 
 ---
 
 ## 4) Coverage Mapping (Use Case → Story)
 
-### Story 1 — Creating a Staff Account for Someone New
+### Story 1 — Setting Up the Business Team Quickly
 Covers:
 - UC-SM1 Create Staff Account (Owner Provisioned)
+- UC-SM4 Assign Staff to Branch (initial assignment)
+
+Notes:
+- Creation does not consume concurrent capacity; concurrency gates operational activity (Attendance / sessions).
 
 ---
 
-### Story 2 — Updating Basic Staff Information
+### Story 2 — Planning Who Is Expected to Work and Where
 Covers:
-- (implicit) Update StaffProfile fields (display_name, staff_code, PIN setup rules)
-- “No credential handling” boundary (staff profile edits do not touch passwords)
+- Branch assignment as an explicit business decision (supports UC-SM4 / UC-SM5 semantics)
+- Planned shift expectations (owned by Shift domain, but referenced here)
 
 ---
 
-### Story 3 — Assigning a Staff Member to One or More Branches
+### Story 3 — Starting Work at a Branch
 Covers:
-- UC-SM4 Assign Staff to Branch
-- BranchAssignment is explicit for all roles (no admin bypass)
+- Cross-module: Attendance check-in uses StaffProfile + BranchAssignment facts.
+- Cross-module: licensing gates (STAFF_LIMIT_REACHED) are visible at work start.
 
 ---
 
-### Story 4 — Removing a Staff Member’s Access to a Branch
+### Story 4 — Preventing Unauthorized or Excessive Work
 Covers:
-- UC-SM5 Revoke Staff from Branch
-- Immediate effect semantics (deny on next request)
+- Failure modes seen by staff at runtime: `NO_BRANCH_ASSIGNMENT`, `STAFF_LIMIT_REACHED`
+- Cross-module: deny semantics after disable/unassign (ties to UC-SM2 and UC-SM5 outcomes)
 
 ---
 
-### Story 5 — Disabling a Staff Member Immediately
+### Story 5 — Ending Work and Leaving the System Clean
 Covers:
-- UC-SM2 Disable Staff (Immediate Block)
-- Immediate effect semantics (deny on next request)
+- Cross-module: capacity is freed when operational activity ends (check-out / end work).
+- Cross-module: reduced risk of “phantom active staff”.
 
 ---
 
-### Story 6 — Archiving a Staff Member While Keeping History
+### Story 6 — Configuring Branch Location for Attendance Confirmation
 Covers:
-- UC-SM3 Archive Staff
-- “Archive is historical and irreversible” rule (if adopted)
+- Branch workplace location configuration (used only when location confirmation capability is enabled).
 
 ---
 
-### Story 7 — Reviewing Staff Changes When Something Goes Wrong
+### Story 7 — Reviewing Attendance and Time Respecting
 Covers:
-- Audit & observability expectations:
-  - STAFF_ACCOUNT_CREATED / DISABLED / ARCHIVED
-  - BRANCH_ACCESS_GRANTED / REVOKED
-  - STAFF_LIMIT_REACHED
+- Review/reporting: planned shift vs actual attendance evaluation (Work Review domain).
 
 ---
 
-### Story 8 — Being Blocked When Too Many Staff Are Active
-Covers:
-- Staff Licensing enforcement points (check-in / operating session / cash session open)
-- Failure mode: STAFF_LIMIT_REACHED
-
----
-
-### Story 9 — Freeing Capacity When Someone Finishes Work
-Covers:
-- Licensing invariant: capacity is freed when operational activity ends
-- Human expectation: “someone ended work, now it should work”
+### Not Yet Covered As Dedicated Stories
+- UC-SM2 Disable Staff (Administrative action)
+- UC-SM3 Archive Staff (Administrative action)
+- Reviewing staff change audit trail (staff lifecycle + branch assignment changes)
 
 ---
 
@@ -186,15 +183,18 @@ They should be written under the operational context where users experience them
 
 | Story | File | Status |
 |---|---|---|
-| Creating a Staff Account for Someone New | `creating_staff_account.md` | ⬜ |
-| Updating Basic Staff Information | `updating_staff_information.md` | ⬜ |
-| Assigning a Staff Member to One or More Branches | `assigning_staff_to_branches.md` | ⬜ |
-| Removing a Staff Member’s Access to a Branch | `removing_branch_access.md` | ⬜ |
-| Disabling a Staff Member Immediately | `disabling_staff_immediately.md` | ⬜ |
-| Archiving a Staff Member While Keeping History | `archiving_staff.md` | ⬜ |
-| Reviewing Staff Changes When Something Goes Wrong | `reviewing_staff_audit_trail.md` | ⬜ |
-| Being Blocked When Too Many Staff Are Active | `concurrent_staff_limit_block.md` | ⬜ |
-| Freeing Capacity When Someone Finishes Work | `freeing_concurrent_capacity.md` | ⬜ |
+| Setting Up the Business Team Quickly | `BusinessLogic/1_stories/handling_staff&attendance/setup_staff.md` | ok |
+| Planning Who Is Expected to Work and Where | `BusinessLogic/1_stories/handling_staff&attendance/planning_work_for_staff.md` | ok |
+| Starting Work at a Branch | `BusinessLogic/1_stories/handling_staff&attendance/starting_shift.md` | ok |
+| Ending Work and Leaving the System Clean | `BusinessLogic/1_stories/handling_staff&attendance/ending_shift.md` | ok |
+| Preventing Unauthorized or Excessive Work | `BusinessLogic/1_stories/handling_staff&attendance/prevent_unauthorized&excess_work.md` | ok |
+| Configuring Branch Location for Attendance Confirmation | `BusinessLogic/1_stories/handling_staff&attendance/set_branch_gps_location.md` | ok |
+| Reviewing Attendance and Time Respecting | `BusinessLogic/1_stories/handling_staff&attendance/review_attendance&time_respection.md` | ok |
+
+Gaps (stories to add later):
+- Disable staff (UC-SM2)
+- Archive staff (UC-SM3)
+- Review staff change audit trail
 
 Legend:
 - ⬜ Not written

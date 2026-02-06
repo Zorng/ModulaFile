@@ -64,6 +64,10 @@ Modula separates concerns so the system stays explainable:
 
 Auth produces a trustworthy **actor identity** and **authenticated session**. Other modules interpret that identity in context.
 
+**Credential ownership rule (SaaS baseline):**
+- Passwords/credentials are owned by the person (AuthenticationAccount).
+- Tenant owners/admins may provision access (memberships), but they must **not** set, view, or reset a staff member’s password.
+
 ---
 
 ## 2. Ubiquitous Language
@@ -165,6 +169,7 @@ Auth may assist the client in selecting context:
 
 Self-contained commands:
 - RegisterAuthenticationAccount (phone + OTP verification)
+- ProvisionAuthenticationAccount (phone only; unverified; no password yet) *(internal, used by staff provisioning)*
 - SetPassword / ChangePassword
 - Login (phone + password)
 - RefreshSession

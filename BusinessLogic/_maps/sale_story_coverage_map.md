@@ -4,8 +4,8 @@
 Identify human-centered stories for Order/Sale behavior and map them to technical use cases, ensuring complete coverage without “one story per UC”.
 
 **Scope:**  
-- Order Domain (`order_domain_patched.md`)
-- Sale Module Spec (`sale_module_patched.md`)
+- Order Domain (`BusinessLogic/2_domain/30_POSOperation/order_domain_patched.md`)
+- Sale Module Spec (`BusinessLogic/5_modSpec/30_POSOperation/sale_module_patched.md`)
 
 **Rule:**  
 Stories are grouped by **human operational context**, not by system modules.
@@ -14,8 +14,8 @@ Stories are grouped by **human operational context**, not by system modules.
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/domain/30_POSOperation/order_domain_patched.md`
-- **ModSpec:** `BusinessLogic/modSpec/30_POSOperation/sale_module_patched.md`
+- **Domain:** `BusinessLogic/2_domain/30_POSOperation/order_domain_patched.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/sale_module_patched.md`
 
 ---
 
@@ -37,11 +37,11 @@ These contexts are stable and human-recognizable.
 ### Context: Selling & Checkout
 
 1. **Completing a Sale at the Counter**  
-   File: `usecase/selling_and_checkout/completing_a_sale.md`  
+   File: `BusinessLogic/1_stories/selling_and_checkout/completeing_a_sale.md`  
    Human situation: serving a customer, taking payment, committing the sale.
 
 2. **Building and Reviewing an Order Before Checkout**  
-   File: `usecase/selling_and_checkout/reviewing_an_order_before_checkout.md`  
+   File: `BusinessLogic/1_stories/selling_and_checkout/review_order_pre-checkout.md`  
    Human situation: adjusting items, quantities, discounts, and payment method before committing.
 
 ---
@@ -49,7 +49,7 @@ These contexts are stable and human-recognizable.
 ### Context: Fulfilling Orders
 
 3. **Preparing and Delivering an Order**  
-   File: `usecase/selling_and_checkout/preparing_and_delivering_an_order.md`  
+   File: `BusinessLogic/1_stories/selling_and_checkout/prep_and_deliver_order.md`  
    Human situation: kitchen or staff preparing items and marking progress until delivery.
 
 ---
@@ -57,7 +57,7 @@ These contexts are stable and human-recognizable.
 ### Context: Correcting Mistakes
 
 4. **Voiding a Sale When a Mistake Happens**  
-   File: `usecase/correcting_mistakes/voiding_a_sale.md`  
+   File: `BusinessLogic/1_stories/correcting_mistakes/voiding_a_sale.md`  
    Human situation: correcting a completed sale via request and approval.
 
 ---
@@ -65,7 +65,7 @@ These contexts are stable and human-recognizable.
 ### Context: Operating Under Constraints
 
 5. **Completing a Sale When the System Is Offline**  
-   File: `usecase/selling_and_checkout/selling_while_offline.md`  
+   File: `BusinessLogic/1_stories/selling_and_checkout/selling_while_offline.md`  
    Human situation: continuing to serve customers despite connectivity issues.
 
 ---
@@ -145,11 +145,11 @@ Notes:
 
 | Story | File | Status | Notes |
 |---|---|---|---|
-| Completing a Sale at the Counter | `completing_a_sale.md` | ok | |
-| Building and Reviewing an Order Before Checkout | `reviewing_an_order_before_checkout.md` | ok | |
-| Preparing and Delivering an Order | `preparing_and_delivering_an_order.md` | ⬜ | |
-| Voiding a Sale When a Mistake Happens | `voiding_a_sale.md` | ok | |
-| Completing a Sale When Offline | `selling_while_offline.md` | ok | |
+| Completing a Sale at the Counter | `BusinessLogic/1_stories/selling_and_checkout/completeing_a_sale.md` | ok | |
+| Building and Reviewing an Order Before Checkout | `BusinessLogic/1_stories/selling_and_checkout/review_order_pre-checkout.md` | ok | |
+| Preparing and Delivering an Order | `BusinessLogic/1_stories/selling_and_checkout/prep_and_deliver_order.md` | ⬜ | |
+| Voiding a Sale When a Mistake Happens | `BusinessLogic/1_stories/correcting_mistakes/voiding_a_sale.md` | ok | |
+| Completing a Sale When Offline | `BusinessLogic/1_stories/selling_and_checkout/selling_while_offline.md` | ok | |
 
 Legend:
 - ⬜ Not written

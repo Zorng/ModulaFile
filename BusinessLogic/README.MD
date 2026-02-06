@@ -41,34 +41,54 @@ Those belong elsewhere.
 ## High-Level Structure
 ```
 BusinessLogic
-├── README.md
+├── README.MD
 │
 ├── 1_stories
-│   ├── selling_and_checkout
-│   ├── defining_products
-│   ├── managing_stock
-│   ├── handling_money
+│   ├── README.md
 │   ├── correcting_mistakes
-│   ├── oversight_and_accountability
-│   └── _maps
+│   ├── handling_branding
+│   ├── handling_menu
+│   ├── handling_money
+│   ├── handling_staff&attendance
+│   ├── managing_stock
+│   ├── running_promotions
+│   ├── saas_governance
+│   └── selling_and_checkout
 │
 ├── 2_domain
+│   ├── README.md
+│   ├── branch_domain.md
+│   ├── 10_Identity&Authorization
+│   ├── 20_HR
 │   ├── 30_POSOperation
+│   ├── OrgAccount
 │   └── _archived
 │
-├── 3_process
-│   └── cross-module workflows
+├── 3_contract
+│   ├── 10_edgecases
+│   ├── 20_ux_specs
+│   └── _archive
 │
-├── 4_modSpec
+├── 4_process
+│   ├── README.md
+│   ├── 10_WorkForce
+│   └── 30_POSOperation
+│
+├── 5_modSpec
 │   ├── 00_guide
 │   ├── 10_IdentityAccess
 │   ├── 20_OrgAccount
 │   ├── 30_POSOperation
 │   ├── 40_Reporting
 │   ├── 50_PlatformSystems
-│   └── _archived
+│   ├── _archived
+│   ├── accessControl_module_v2.md
+│   ├── authentication_module.md
+│   ├── staffManagement_module_patched_v3.md
+│   └── tenant_module_patched_v2.md
 │
-└── playbooks
+└── _maps
+    └── *_story_coverage_map.md
 ```
 
 ---
@@ -143,7 +163,7 @@ If a rule is not stated in a domain document, it is **not guaranteed** by the sy
 
 ---
 
-## 3. Cross-Module Processes (`3_process/`) — Coordination Over Time
+## 3. Cross-Module Processes (`4_process/`) — Coordination Over Time
 
 **Question answered:**
 
@@ -170,7 +190,7 @@ If logic spans more than one domain and is **not** in a process doc, it is a des
 
 ---
 
-## 4. Module Specifications (`4_modSpec/`) — Implementation Contract
+## 4. Module Specifications (`5_modSpec/`) — Implementation Contract
 
 **Question answered:**
 

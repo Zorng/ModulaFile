@@ -14,8 +14,8 @@ Stories are grouped by **human operational context**, not by CRUD actions or int
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/domain/30_POSOperation/inventory_domain.md`
-- **ModSpec:** `BusinessLogic/modSpec/30_POSOperation/inventory_module_patched.md`
+- **Domain:** `BusinessLogic/2_domain/30_POSOperation/inventory_domain.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/inventory_module_patched.md`
 
 ---
 
@@ -38,11 +38,11 @@ These contexts reflect how cafés and small retailers actually work.
 ### Context: Defining What Is Tracked
 
 1. **Creating and Managing Stock Items**  
-   File: `usecase/managing_stock/creating_and_managing_stock_items.md`  
+   File: `BusinessLogic/1_stories/managing_stock/creating&managing_stock_item.md`  
    Human situation: deciding what materials exist, their units, and whether they are active.
 
 2. **Organizing Stock Items into Categories**  
-   File: `usecase/managing_stock/organizing_stock_categories.md`  
+   File: `BusinessLogic/1_stories/managing_stock/creating_managing_stock_category.md`  
    Human situation: grouping stock items to make inventory easier to understand.
 
 ---
@@ -50,11 +50,11 @@ These contexts reflect how cafés and small retailers actually work.
 ### Context: Receiving Stock
 
 3. **Receiving New Stock into the Store**  
-   File: `usecase/managing_stock/receiving_stock.md`  
+   File: `BusinessLogic/1_stories/managing_stock/receiving_stock.md`  
    Human situation: recording delivered items and acknowledging that stock has arrived.
 
 4. **Recording Expiry Information When Relevant**  
-   File: `usecase/managing_stock/recording_stock_expiry.md`  
+   File: `BusinessLogic/1_stories/managing_stock/recording_stock_expiry.md`  
    Human situation: adding expiry information when it matters, without enforcing it everywhere.
 
 ---
@@ -62,11 +62,11 @@ These contexts reflect how cafés and small retailers actually work.
 ### Context: Correcting Stock Reality
 
 5. **Adjusting Stock When Reality Differs**  
-   File: `usecase/managing_stock/adjusting_stock.md`  
+   File: `BusinessLogic/1_stories/managing_stock/adjusting_stock.md`  
    Human situation: correcting mistakes, waste, damage, or count differences.
 
 6. **Force-Correcting Stock After Serious Issues**  
-   File: `usecase/managing_stock/force_correcting_stock.md`  
+   File: `BusinessLogic/1_stories/managing_stock/force_correcting_stock.md`  
    Human situation: dealing with abnormal situations while preserving audit history.
 
 ---
@@ -74,11 +74,11 @@ These contexts reflect how cafés and small retailers actually work.
 ### Context: Seeing What Is Available
 
 7. **Checking Current Stock Levels**  
-   File: `usecase/managing_stock/checking_current_stock_levels.md`  
+   File: `BusinessLogic/1_stories/managing_stock/checking_current_stock_levels.md`  
    Human situation: seeing what is available right now to support operations.
 
 8. **Reviewing Stock History and Movements**  
-   File: `usecase/managing_stock/reviewing_stock_history.md`  
+   File: `BusinessLogic/1_stories/managing_stock/reviewing_stock_history.md`  
    Human situation: understanding how stock changed over time.
 
 ---
@@ -86,11 +86,11 @@ These contexts reflect how cafés and small retailers actually work.
 ### Context: Handling Stock Changes Caused by Sales
 
 9. **Having Stock Automatically Updated by Sales**  
-   File: `usecase/managing_stock/stock_changes_from_sales.md`  
+   File: `BusinessLogic/1_stories/managing_stock/stock_changes_from_sales.md`  
    Human situation: trusting the system to reflect sales without manual intervention.
 
 10. **Restoring Stock When a Sale Is Voided**  
-    File: `usecase/managing_stock/restoring_stock_after_void.md`  
+    File: `BusinessLogic/1_stories/managing_stock/restoring_stock_after_void.md`  
     Human situation: seeing stock return when a sale is undone.
 
 ---
@@ -190,16 +190,16 @@ All domain and modspec behaviors are accounted for.
 
 | Story | File | Status |
 |---|---|---|
-| Creating and Managing Stock Items | `creating_and_managing_stock_items.md` | ⬜ |
-| Organizing Stock Items into Categories | `organizing_stock_categories.md` | ⬜ |
-| Receiving New Stock into the Store | `receiving_stock.md` | ⬜ |
-| Recording Expiry Information When Relevant | `recording_stock_expiry.md` | ⬜ |
-| Adjusting Stock When Reality Differs | `adjusting_stock.md` | ⬜ |
-| Force-Correcting Stock After Serious Issues | `force_correcting_stock.md` | ⬜ |
-| Checking Current Stock Levels | `checking_current_stock_levels.md` | ⬜ |
-| Reviewing Stock History and Movements | `reviewing_stock_history.md` | ⬜ |
-| Having Stock Automatically Updated by Sales | `stock_changes_from_sales.md` | ⬜ |
-| Restoring Stock When a Sale Is Voided | `restoring_stock_after_void.md` | ⬜ |
+| Creating and Managing Stock Items | `BusinessLogic/1_stories/managing_stock/creating&managing_stock_item.md` | ⬜ |
+| Organizing Stock Items into Categories | `BusinessLogic/1_stories/managing_stock/creating_managing_stock_category.md` | ⬜ |
+| Receiving New Stock into the Store | `BusinessLogic/1_stories/managing_stock/receiving_stock.md` | ⬜ |
+| Recording Expiry Information When Relevant | `BusinessLogic/1_stories/managing_stock/recording_stock_expiry.md` | ⬜ |
+| Adjusting Stock When Reality Differs | `BusinessLogic/1_stories/managing_stock/adjusting_stock.md` | ⬜ |
+| Force-Correcting Stock After Serious Issues | `BusinessLogic/1_stories/managing_stock/force_correcting_stock.md` | ⬜ |
+| Checking Current Stock Levels | `BusinessLogic/1_stories/managing_stock/checking_current_stock_levels.md` | ⬜ |
+| Reviewing Stock History and Movements | `BusinessLogic/1_stories/managing_stock/reviewing_stock_history.md` | ⬜ |
+| Having Stock Automatically Updated by Sales | `BusinessLogic/1_stories/managing_stock/stock_changes_from_sales.md` | ⬜ |
+| Restoring Stock When a Sale Is Voided | `BusinessLogic/1_stories/managing_stock/restoring_stock_after_void.md` | ⬜ |
 
 Legend:
 - ⬜ Not written
