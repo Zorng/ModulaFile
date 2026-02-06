@@ -6,6 +6,9 @@ Tenant (Business Workspace)
 ## Domain Type
 Core Domain (Organizational Boundary)
 
+## Domain Group
+OrgAccount (Tenant + Branch)
+
 ## Status
 Draft (Baseline for Capstone 1; SaaS-ready)
 

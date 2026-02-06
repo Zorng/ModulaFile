@@ -6,6 +6,9 @@ Branch (Physical Operating Location)
 ## Domain Type
 Core Domain (Organizational + Operational Context)
 
+## Domain Group
+OrgAccount (Tenant + Branch)
+
 ## Status
 Draft (Aligned with Identity/HR overhaul; Baseline for Capstone 1; SaaS-ready)
 
