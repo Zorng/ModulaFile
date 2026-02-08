@@ -53,7 +53,7 @@ Each branch may have **at most one OPEN cash session** at a time.
 ### 3.2 Cash Movement (Ledger)
 An append-only record representing a cash change:
 - SALE_IN
-- REFUND_OUT
+- REFUND_CASH
 - MANUAL_IN
 - MANUAL_OUT
 

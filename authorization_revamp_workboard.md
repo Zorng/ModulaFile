@@ -1,4 +1,7 @@
-# Identity & Access Revamp Workboard (Temporary)
+# Identity & Access Revamp Workboard (Archived)
+
+**Status:** Archived (2026-02-08). Superseded by `AgentPlanDoc/businesslogic_alignment_tracker.md`.  
+Kept for historical context; do not use as the active tracker.
 
 **Goal:** Solidify Authorization by making Tenant + Staff/Branch facts explicit, consistent, and implementable (March MVP).
 
@@ -13,13 +16,13 @@ This file exists to prevent drift/hallucination by:
 ## 0) Locked Decisions (Do Not Re-debate Unless Needed)
 
 1. **Auth is renamed to Authentication**
-   - Domain file: `authentication.md` (renamed by you)
-   - Modspec file: `authentication_module.md` (patched)
+   - Domain file: `BusinessLogic/2_domain/10_Identity&Authorization/authentication_domain_consistency_patched.md`
+   - Modspec file: `BusinessLogic/5_modSpec/10_IdentityAccess/authentication_module.md`
 
 2. **Authorization is a separate concern named Access Control**
    - Files:
-     - `accessControl_domain_v2.md`
-     - `accessControl_module_v2.md`
+     - `BusinessLogic/2_domain/10_Identity&Authorization/accessControl_domain_consistency_patched.md`
+     - `BusinessLogic/5_modSpec/10_IdentityAccess/accessControl_module.md`
 
 3. **Branch access is mandatory**
    - Every operational action must have `{tenant_id, branch_id}` context.
@@ -37,14 +40,14 @@ This file exists to prevent drift/hallucination by:
 ## 1) Inputs We Will Use (Source Artifacts)
 
 ### Existing module specs (to patch)
-- `tenant_module.md`
-- `staffManagement_module.md`
-- `branch_module.md`
+- `BusinessLogic/5_modSpec/20_OrgAccount/tenant_module.md`
+- `BusinessLogic/5_modSpec/30_HR/staffManagement_module.md`
+- `BusinessLogic/5_modSpec/20_OrgAccount/branch_module.md`
 
 ### Already patched / baseline references
-- `authentication_module.md`
-- `accessControl_domain_v2.md`
-- `accessControl_module_v2.md`
+- `BusinessLogic/5_modSpec/10_IdentityAccess/authentication_module.md`
+- `BusinessLogic/2_domain/10_Identity&Authorization/accessControl_domain_consistency_patched.md`
+- `BusinessLogic/5_modSpec/10_IdentityAccess/accessControl_module.md`
 
 ---
 
@@ -54,7 +57,7 @@ This file exists to prevent drift/hallucination by:
 **Why:** Access Control needs tenant membership + role truth.
 
 **Output file**
-- `tenant_module_patched_v2.md`
+- `BusinessLogic/5_modSpec/20_OrgAccount/tenant_module.md`
 
 **What must exist in the patched module**
 - Explicit entity: `TenantMembership`
@@ -87,7 +90,7 @@ This file exists to prevent drift/hallucination by:
 **Why:** Access Control needs branch assignment truth (mandatory) and explicit assignment for Admin/Manager.
 
 **Output file**
-- `staffManagement_module_patched_v2.md`
+- `BusinessLogic/5_modSpec/30_HR/staffManagement_module.md`
 
 **What must exist**
 - Explicit concept: `BranchAssignment` (or `StaffBranchAccess`)
@@ -117,7 +120,7 @@ This file exists to prevent drift/hallucination by:
 **Why:** Keep boundaries clean: Branch module describes the branch; access is elsewhere.
 
 **Output file**
-- `branch_module_patched_v2.md`
+- `BusinessLogic/5_modSpec/20_OrgAccount/branch_module.md`
 
 **What must exist**
 - Branch lifecycle:
@@ -154,9 +157,9 @@ This file exists to prevent drift/hallucination by:
 
 | Step | Artifact | Status |
 |---|---|---|
-| 1 | tenant_module_patched_v2.md | TODO |
-| 2 | staffManagement_module_patched_v2.md | TODO |
-| 3 | branch_module_patched_v2.md | TODO |
+| 1 | `BusinessLogic/5_modSpec/20_OrgAccount/tenant_module.md` | DONE |
+| 2 | `BusinessLogic/5_modSpec/30_HR/staffManagement_module.md` | DONE |
+| 3 | `BusinessLogic/5_modSpec/20_OrgAccount/branch_module.md` | DONE |
 | 4 | small consistency patches (POS ops modules) | TODO |
 
 ---

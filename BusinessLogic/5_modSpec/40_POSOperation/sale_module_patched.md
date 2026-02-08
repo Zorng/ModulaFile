@@ -457,7 +457,7 @@ If payment method is Cash:
 4. System executes void:
    - Sale status → VOIDED
    - Order status → VOIDED
-   - Cash reversal movement recorded (via Cash Session module)
+   - Cash refund movement (`REFUND_CASH`) recorded (via Cash Session module)
    - Inventory reversal executed (if `inventoryAutoSubtractOnSale = true`)
 5. System marks void request as APPROVED.
 6. System logs action (audit).

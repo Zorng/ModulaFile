@@ -23,6 +23,10 @@ It is the **spine of POS operations**, responsible for:
 
 This document exists because finalize-sale behavior spans multiple domains and **must not be inferred by reading individual module specs**.
 
+Related contracts:
+- `BusinessLogic/3_contract/10_edgecases/pos_operation_edge_case_sweep_patched.md`
+- `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md` (HR ↔ POS boundary)
+
 ---
 
 ## 2. Trigger

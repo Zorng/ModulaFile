@@ -1,15 +1,12 @@
-# staffManagement_module_patched_v3.md
+# staffManagement_module.md
 
 ## Module: Staff Management
-
-> Status note: superseded for March delivery by `BusinessLogic/5_modSpec/10_IdentityAccess/staffManagement_module.md`.  
-> Kept for historical context; do not treat as the canonical spec.
 
 **Version:** 3.1  
 **Status:** Patched (simplified onboarding; user-owned credentials; aligned with Authentication, Access Control, Tenant, and Concurrent Staff Licensing)  
 **Module Type:** Supporting Domain (Org Operations / HR-light)  
 **Depends on:** Authentication (identity & credentials), Tenant (membership & roles), Branch (branch entity), Access Control (authorization), Attendance (signals), Audit (logging)  
-**Related Modules:** Staff Attendance, Cash Session, Sale, Access Control, Staff Licensing, Subscription/Entitlements (future)
+**Related Modules:** Attendance, Cash Session, Sale, Access Control, Staff Licensing, Subscription/Entitlements (future)
 
 ---
 

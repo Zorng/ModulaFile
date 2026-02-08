@@ -1,4 +1,4 @@
-# staffAttendance_module.md
+# attendance_module.md
 
 **Version:** 1.4  
 **Status:** Patched (Shift schedules added in Staff Management; attendance shift evaluation staged)  
@@ -8,13 +8,13 @@
 
 ---
 
-## Module: Staff Attendance (Feature Module)
+## Module: Attendance (Feature Module)
 
 ---
 
 ## Purpose
 
-The Staff Attendance module records and manages staff presence at branches by capturing check-in and check-out events. It enforces attendance-related policies, supports offline-first operation, and provides visibility to managers and administrators without allowing mutation of recorded attendance data.
+The Attendance module records and manages staff presence at branches by capturing check-in and check-out events. It enforces attendance-related policies, supports offline-first operation, and provides visibility to managers and administrators without allowing mutation of recorded attendance data.
 
 This module is designed for small to medium F&B businesses where attendance must be simple to operate yet auditable and policy-driven.
 
@@ -32,10 +32,15 @@ Included:
 
 Excluded (Capstone II+):
 - Automated reminders / notifications
-- GPS-based verification
 - Auto check-out
 - Attendance analytics and anomaly detection
 - Editing or deleting attendance records
+
+Location verification is an **optional** capability:
+- check-in only, or
+- check-in and check-out
+
+Design rule (locked): location verification is **evidence-first** and must not block check-in/out. The system records `MATCH/MISMATCH/UNKNOWN` and lets managers/admins interpret the flags.
 
 ---
 

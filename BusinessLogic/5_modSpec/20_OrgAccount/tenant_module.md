@@ -1,198 +1,256 @@
-# Tenant Module — Core Module (Capstone 1)
+# tenant_module.md
 
-**Version:** 1.1  
-**Status:** Updated (Branch creation clarified; aligned with system-driven provisioning)  
-**Module Type:** Core Module  
-**Depends on:** Authentication & Authorization (Core), Audit Logging (Core)  
-**Related Modules:** Branch (Core), Policy & Configuration (Core), Staff Management, Menu, Inventory, Sale, Receipt, Reporting  
+## Module: Tenant (Business Workspace)
+
+**Version:** 2.0  
+**Status:** Patched to support Access Control + future SaaS (without implementing billing yet)  
+**Module Type:** Core / Organizational Boundary  
+**Depends on:** Authentication (identity), Access Control (authorization decisions), Audit (logging), Policy (optional), Offline Sync (optional)  
+**Related Modules:** Branch, Staff Management, Staff Attendance, Sale, Cash Session, Inventory, Menu, Reporting, Access Control
 
 ---
 
 ## 1. Purpose
 
-The Tenant module represents the **business workspace** within Modula.
+The Tenant module defines the **business workspace boundary** in Modula.
 
-A **tenant** is a distinct business environment where:
-- Data is isolated from other tenants
-- Roles, staff membership, branches, policies, menu, inventory, sales, attendance, cash sessions, and reports operate under the tenant boundary
-- Capabilities (e.g., multi-branch) are enabled by the tenant’s subscription/build (Billing in Capstone 2; simulated in Capstone 1)
+A **Tenant** represents a real business using the POS. It is the root context for:
+- data isolation (no cross-tenant access),
+- organizational configuration,
+- future subscription ownership (later),
+- and authorization context (Access Control consumes tenant facts).
 
-Tenant is the **root context** that all feature modules operate within.
-
----
-
-## 2. Scope & Boundaries
-
-### In scope (Capstone 1)
-- Tenant representation (business identity):
-  - Business name
-  - Business logo (optional upload)
-  - Contact info (tenant-level “business contact”, optional)
-- Tenant metadata retrieval for other modules (fast read)
-- Tenant lifecycle (minimal for Capstone 1):
-  - System provisioning (creation)
-  - Admin profile update
-  - Status field reserved for future billing freeze (not enforced in Capstone 1)
-
-### Explicitly out of scope / not owned by this module
-- **Branch creation / additional branch provisioning**
-  - Branches are **system-provisioned** based on the subscription/build.
-  - Branch CRUD and branch freeze live in the **Branch module**.
-- Authentication, sessions, tokens, password/OTP flows → Auth module
-- Staff invites/membership workflows → Staff Management module
-- Subscription, billing, automated freeze/unfreeze → Billing module (Capstone 2+)
-- Policy configuration UI and persistence → Policy module
-- Sales, menu, inventory, cash, attendance, receipts, reporting logic → Feature modules
-
-### Key boundary rule
-A tenant **cannot be directly created by an end user via a “Create Tenant” UI**.  
-Tenant provisioning is performed by the **System** (or by developers/admin scripts during Capstone 1).
+This module is intentionally **not** a billing system and does not implement payments.
 
 ---
 
-## 3. Use Cases (with actor + permissions)
+## 2. Key Boundaries (Avoid “Auth = Everything”)
 
-### UC-1: System provisions a tenant from a subscription/build (and creates the initial branch)
+### 2.1 Authentication vs Tenant
+- **Authentication** proves identity and issues sessions.
+- **Tenant** defines the business workspace and its lifecycle.
 
-**Actor:** System (internal provisioning flow; developer-run command in Capstone 1)  
-**Permissions:** System-level
+### 2.2 Tenant vs Staff Management (Membership Workflows)
+- **Tenant owns the truth of membership + role as tenant-scoped facts** (needed for authorization).
+- **Staff Management owns the workflows and staff profile** (inviting, onboarding, disabling staff, etc.).
+- Access Control reads:
+  - tenant status (from Tenant)
+  - tenant membership + role (from Tenant)
+  - branch assignment (from Staff Management)
 
-**Preconditions:**
-- A build/subscription is completed (Capstone 2), OR
-- Developer/admin executes provisioning command (Capstone 1 workaround)
+This separation prevents business-critical authorization facts from being scattered.
 
-**Main Flow:**
-1. System creates a tenant with:
-   - `business_name` (from onboarding/build input)
-   - `logo_url` empty (optional)
-   - `status = ACTIVE`
-2. System provisions the **initial branch** for the tenant (delegated to Branch module).
-3. System assigns the creator as **Admin** in Auth/membership context.
-4. Audit event recorded: `TENANT_CREATED`.
-
-**Postconditions:**
-- Tenant exists and is ACTIVE.
-- Tenant has at least **one branch**.
-- Creator has Admin access within the tenant.
-
-**Exceptions:**
-- If any step fails, provisioning must not leave a partially created tenant without a usable branch/admin membership.
+### 2.3 Tenant vs Access Control
+- Tenant does **not** decide permissions.
+- Tenant provides facts (tenant status, membership roles) that Access Control uses to decide.
 
 ---
 
-### UC-2: Admin updates tenant profile (business name, logo, contact info)
+## 3. Core Data Model
 
-**Actor:** Admin  
-**Permissions:** Admin-only
+### 3.1 Tenant (Aggregate Root)
+Represents one business workspace.
 
-**Preconditions:**
-- Actor is authenticated and scoped to the tenant.
+Minimum fields:
+- `tenant_id`
+- `business_name`
+- `logo_url?`
+- `contact_info?` (phone/email/address optional)
+- `status` = ACTIVE | (reserved) FROZEN
+- `created_at`, `updated_at`
 
-**Main Flow:**
-1. Admin opens **Business Profile**.
-2. Admin updates allowed fields:
-   - business name
-   - logo (upload)
-   - tenant-level contact info (optional)
-3. System validates fields and persists updates.
-4. Audit event recorded: `TENANT_PROFILE_UPDATED` and/or `TENANT_LOGO_UPDATED`.
+### 3.2 TenantMembership (Tenant-scoped Fact)
+Represents a user’s relationship to a tenant and their role.
 
-**Postconditions:**
-- Updated tenant profile is reflected in tenant-scoped UI where applicable (e.g., admin portal header, reports).
+Minimum fields:
+- `tenant_id`
+- `auth_account_id` (actor id from Authentication)
+- `role` = ADMIN | MANAGER | CASHIER (extend later)
+- `status` = ACTIVE | REVOKED | (optional) SUSPENDED
+- `created_at`, `updated_at`
 
-**Exceptions:**
-- Non-admin attempt → forbidden
-- Invalid image/size/type → validation error
-
----
-
-### UC-3: Retrieve tenant metadata for cross-module display
-
-**Actor:** Any authenticated module / frontend client  
-**Permissions:** Authenticated within tenant context
-
-**Preconditions:**
-- Auth context provides `tenant_id`.
-
-**Main Flow:**
-1. Request tenant metadata by tenant_id.
-2. Return lightweight metadata used by other modules:
-   - business name
-   - logo url
-   - tenant status (reserved)
-   - created time (optional)
-
-**Postconditions:**
-- Modules can display consistent tenant identity and apply tenant-scoped access validation.
+**Design rule:** Membership is keyed by `auth_account_id` to keep authorization deterministic.
 
 ---
 
-### UC-4: Tenant status check (reserved for future billing enforcement)
+## 4. Invariants
 
-**Actor:** System / other modules  
-**Permissions:** System-level or internal service calls
-
-**Notes (future):**
-- Billing may mark tenant as `FROZEN`.
-- Modules will consult status to restrict operations (Capstone 2+).
-
----
-
-## 4. Functional Requirements (FR)
-
-### Tenant representation
-- **FR-1:** Store tenant business name (required), logo URL (optional), tenant-level contact info (optional), timestamps, status.
-- **FR-2:** Business name must be non-empty.
-
-### Provisioning rule
-- **FR-3:** Tenant is provisioned by the system (or developer provisioning script for Capstone 1).
-- **FR-4:** Tenant must always have at least **one branch** provisioned by the system.
-
-### Updates & permissions
-- **FR-5:** Only Admin may update tenant profile fields.
-- **FR-6:** Tenant module must not implement membership/roles; those remain in Auth.
-
-### Isolation
-- **FR-7:** All tenant operations must be tenant-scoped; cross-tenant access must be rejected.
-
-### Metadata access
-- **FR-8:** Expose a lightweight method/API to fetch tenant metadata efficiently (cacheable).
+- INV-T1: All operational data belongs to exactly one tenant.
+- INV-T2: Cross-tenant data access is forbidden.
+- INV-T3: Tenant status is a fact; Access Control enforces behavior based on it.
+- INV-T4: Membership must be tenant-scoped (not global).
+- INV-T5: A revoked/suspended membership must be reflected immediately in authorization decisions.
+- INV-T6: A tenant should have at least one branch provisioned (enforced via provisioning workflow).
+- INV-T7: A tenant must have at least one ADMIN membership (MVP rule).
 
 ---
 
-## 5. Acceptance Criteria (AC)
+## 5. Self-Contained Processes (Owned by Tenant)
 
-- **AC-1:** Tenant cannot be created via end-user UI. It is system-provisioned.
-- **AC-2:** Provisioning creates a tenant with at least one branch and one admin membership.
-- **AC-3:** Admin can update tenant business name and logo; changes reflect across relevant UI.
-- **AC-4:** Non-admin cannot update tenant profile.
-- **AC-5:** Tenant data is isolated; requests cannot access another tenant’s data.
-- **AC-6:** Other modules can reliably retrieve tenant metadata.
+### UC-T1 — Provision Tenant (System Provisioning)
+**Goal:** Create a tenant workspace in the system.
 
----
+**Trigger:** internal provisioning flow (manual/paper onboarding at launch is fine).  
+**Inputs:** business name, initial owner identity (auth_account_id), optional metadata.  
+**Steps:**
+- create Tenant (status ACTIVE)
+- create initial ADMIN membership for owner
+- (recommended) create first branch via Branch module provisioning
+- log to Audit
 
-## 6. Out of Scope (Capstone 1)
+**Outputs:**
+- tenant_id
+- initial membership created
 
-- Billing engine integration / auto provisioning from payments
-- Tenant freeze/unfreeze enforcement
-- Tenant deletion and ownership transfer
-- Cross-tenant corporate grouping / multi-business dashboard
-- Advanced branding (themes/colors per tenant)
-
----
-
-## 7. Notes for Developers
-
-- Treat Tenant as a **stable root boundary**.
-- Keep Tenant minimal: identity + metadata + status placeholder.
-- Branch lifecycle is not handled here. Provisioning may *call* Branch module, but Branch remains the owner of branch data and branch lifecycle rules.
+**Notes:** Tenant creation is system-level. End users do not “sign up and auto-create tenants” for March MVP.
 
 ---
 
-## Audit Events Emitted
+### UC-T2 — Update Tenant Profile
+**Goal:** Update business-facing metadata.
 
-- `TENANT_CREATED`
-- `TENANT_PROFILE_UPDATED`
-- `TENANT_LOGO_UPDATED`
+**Allowed fields:** business name, logo, contact info.  
+**Authorization:** Access Control action `tenant.updateProfile` (typically ADMIN).  
+**Audit:** record previous + new values (or diffs).
 
-(Branch-related audit events are owned by the Branch module.)
+---
+
+### UC-T3 — Change Tenant Status (Reserved)
+**Goal:** Allow future subscription enforcement (freeze/unfreeze).
+
+**Status states:**
+- ACTIVE
+- FROZEN (reserved for SaaS enforcement)
+
+**Authorization:** `tenant.changeStatus` (ADMIN / system operator)  
+**Effect:** Access Control denies operational actions when tenant is not ACTIVE.
+
+---
+
+## 6. Tenant Membership Processes (Facts owned here; workflows may be driven by Staff Management)
+
+> This section defines membership facts and their lifecycle. Staff Management may provide the UI/workflow to trigger these operations.
+
+### UC-T4 — Grant Membership (Add a User to Tenant)
+**Goal:** Add an actor to tenant with a role.
+
+**Inputs:** tenant_id, auth_account_id, role  
+**Rules:**
+- cannot grant membership if tenant is FROZEN (optional MVP)
+- role must be in allowed set
+- if membership already exists and ACTIVE → idempotent no-op or return conflict
+
+**Outputs:** membership record ACTIVE
+
+**Audit:** MEMBER_ADDED
+
+---
+
+### UC-T5 — Change Member Role
+**Goal:** Promote/demote role.
+
+**Rules:**
+- cannot change role of last remaining ADMIN (INV-T7)
+- changes take effect immediately for authorization
+
+**Audit:** MEMBER_ROLE_CHANGED
+
+---
+
+### UC-T6 — Revoke Membership
+**Goal:** Remove actor from tenant.
+
+**Rules:**
+- cannot revoke last ADMIN
+- revocation takes effect immediately (Access Control must deny next request)
+
+**Audit:** MEMBER_REVOKED
+
+---
+
+### UC-T7 — Suspend/Reactivate Membership (Optional)
+**Goal:** Temporarily disable a member without deleting history.
+
+**Why:** Useful for HR discipline or temporary leave.
+
+**Rule:** SUSPENDED behaves like REVOKED for authorization.
+
+---
+
+## 7. Read APIs (What other modules need)
+
+### Tenant queries
+- Get tenant by id (for headers, receipts, reports)
+- List tenants for actor (for tenant selection at login)
+
+### Membership queries (critical for Access Control)
+- Get membership(role, status) by (tenant_id, auth_account_id)
+- List memberships for tenant (admin UI)
+- List tenants for actor (where membership ACTIVE)
+
+---
+
+## 8. Events & Audit Hooks
+
+Recommended events (or audit logs):
+- TENANT_CREATED
+- TENANT_PROFILE_UPDATED
+- TENANT_STATUS_CHANGED
+- TENANT_MEMBER_GRANTED
+- TENANT_MEMBER_ROLE_CHANGED
+- TENANT_MEMBER_REVOKED
+- TENANT_MEMBER_SUSPENDED / REACTIVATED
+
+These support traceability for academic defense and debugging.
+
+---
+
+## 9. Failure Modes
+
+- TENANT_NOT_FOUND
+- TENANT_NOT_ACTIVE (when status is FROZEN; enforcement by Access Control)
+- MEMBER_NOT_FOUND
+- MEMBER_NOT_ACTIVE
+- ROLE_INVALID
+- CANNOT_REMOVE_LAST_ADMIN
+- DUPLICATE_MEMBERSHIP
+
+---
+
+## 10. Data & Performance Notes
+
+- Membership lookups must be fast (hot path for authorization).
+  - Index recommended: `(tenant_id, auth_account_id)` unique.
+- Tenant read model should be cacheable.
+- Membership history should be auditable (do not hard-delete; use status changes).
+
+---
+
+## 11. Out of Scope (March MVP)
+
+- Subscription billing engine / payments
+- Automated tenant creation from public website
+- Entitlements/plan limits enforcement (will plug in later)
+- Cross-tenant enterprise accounts
+- Ownership transfer flows
+
+---
+
+## 12. Integration Notes (How Authorization Uses This)
+
+Access Control middleware calls:
+- Tenant: `tenant.status`
+- TenantMembership: membership existence + role + status
+
+Access Control separately checks:
+- Branch assignment (from Staff Management)
+
+**Branch access is mandatory and explicit assignment is required** (even for ADMIN/MANAGER).
+
+---
+
+## Appendix: Minimal Action Keys (for Access Control)
+
+- `tenant.updateProfile`
+- `tenant.manageMembers` (grant/revoke/changeRole)
+- `tenant.changeStatus` (reserved)

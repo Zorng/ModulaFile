@@ -22,6 +22,10 @@ Voiding a sale is an **exceptional, policy-driven workflow** that:
 
 This document exists to ensure that void behavior is **explicit and explainable**, not inferred from individual module specs.
 
+Related contracts:
+- `BusinessLogic/3_contract/10_edgecases/pos_operation_edge_case_sweep_patched.md`
+- `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md` (HR ↔ POS boundary)
+
 ---
 
 ## 2. Trigger
@@ -55,6 +59,9 @@ This preserves financial correctness and prevents unauthorized truth changes.
 - Void has been **explicitly approved** by an authorized role
 - Sale has not already been VOIDED
 - Branch context is valid
+- March baseline business rules:
+  - Payment method must be CASH (QR void/refund is blocked)
+  - Related cash session must be OPEN (void is blocked if session is CLOSED)
 
 Failure to meet preconditions aborts the process with **no partial reversals**.
 
@@ -67,6 +74,8 @@ Failure to meet preconditions aborts the process with **no partial reversals**.
 - `VOIDED` is a **truth change**
 
 No inventory or cash reversal occurs before approval.
+
+**March safety rule:** sale becomes `VOIDED` only when required compensating effects (inventory + cash) are recorded successfully.
 
 ---
 
@@ -86,10 +95,9 @@ All reversal effects must be idempotent per:
 
 ## 6. Orchestration Steps (Happy Path)
 
-### Step 1 — Approve Void (Sale / Order)
+### Step 1 — Approve Void + Lock Execution (Sale / Order)
 - Authorized actor approves void request
-- Sale transitions:
-  - `VOID_PENDING` → `VOIDED`
+- Validate March business rules (CASH only + related cash session OPEN)
 - Actor and reason recorded
 
 > This step authorizes truth reversal but does not yet perform effects.
@@ -101,21 +109,26 @@ All reversal effects must be idempotent per:
 - Reversal is based on **what was actually deducted**, not menu re-evaluation
 
 See:
-- `22_void_sale_inventory_reversal.md`
-  (formerly `void_sale_inventory_reversal_process.md`)
+- `22_void_sale_inventory_reversal_process.md`
 
 ---
 
 ### Step 3 — Reverse Cash Effects (If Applicable)
-- If sale involved cash:
-  - append compensating cash movement(s)
+- Trigger cash refund sub-process
 - Idempotent per `(branch_id, sale_id)`
 
-(Exact refund mechanics may vary by policy and payment method.)
+Note: In our ledger model, “cash reversal” is implemented by recording a compensating cash-out movement (e.g., `REFUND_CASH`) that offsets the original sale cash-in. There is no separate “extra refund” beyond this movement.
+
+See:
+- `23_void_sale_cash_reversal_process.md`
 
 ---
 
 ### Step 4 — Complete Void
+- Persist void state changes:
+  - Sale status → `VOIDED`
+  - Order status → `VOIDED`
+  - Void request status → APPROVED
 - Sale is fully VOIDED
 - Order/fulfillment record is VOIDED
 - Receipt reflects VOIDED state (watermark / status)
@@ -156,9 +169,11 @@ After successful completion:
 ## 9. Related Sub-Processes
 
 - Inventory Reversal:
-  - `22_void_sale_inventory_reversal.md`
+  - `22_void_sale_inventory_reversal_process.md`
+- Cash Refund:
+  - `23_void_sale_cash_reversal_process.md`
 - Order Void Handling:
-  - `21_void_order_process.md`
+  - `21_voidOrder_process.md`
 
 This orchestration document is the **entry point** for understanding sale void behavior.
 

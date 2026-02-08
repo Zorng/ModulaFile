@@ -14,6 +14,7 @@
   - `BusinessLogic/4_process/30_POSOperation/13_stock_deduction_on_finalize_sale_process.md`
   - `BusinessLogic/4_process/30_POSOperation/20_void_sale_orch.md`
   - `BusinessLogic/4_process/30_POSOperation/22_void_sale_inventory_reversal_process.md`
+  - `BusinessLogic/4_process/30_POSOperation/23_void_sale_cash_reversal_process.md`
   - `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md` (HR ↔ POS boundary)
 
 ---
@@ -151,13 +152,37 @@ It exists to prevent “hidden logic” scattered across module specs and to mak
 - **Owner**: Application/UX layer + Device draft process
 - **March**: Yes
 
+### EC-POS-11 — Void Cash Sale When Related Cash Session Is CLOSED
+- **Scenario**: Manager/Admin attempts to approve a void for a cash sale that belongs to a CLOSED cash session.
+- **Trigger**: Approve void request while `sale.cash_session_id` is not OPEN.
+- **Expected Behavior**:
+  - Deny void approval for March baseline.
+  - Surface a clear UX message: “This sale belongs to a closed cash session.”
+  - Direct the business to a separate refund workflow (explicitly deferred).
+- **Owner**: Void Sale orchestration + Cash Session
+- **March**: Yes
+
+### EC-POS-12 — Void Approved but Cash Refund Recording Fails
+- **Scenario**: Void is approved/executed, but the cash refund movement cannot be recorded (DB error, invariant violation).
+- **Trigger**: Cash refund step fails.
+- **Expected Behavior**:
+  - Avoid “partial void” exposure.
+  - Prefer `VOID_PENDING` until refund is recorded successfully (or a single transactional boundary).
+  - System retries idempotently; audit the failure.
+- **Owner**: Void Sale orchestration + Cash Session
+- **March**: Yes
+
+---
+
+## March-Locked Policy (Refund vs Void)
+
+- For March baseline, **void approval is blocked** when the related cash session is CLOSED.
+- “Refund after close” is treated as a **separate workflow** (explicitly deferred; see contract out-of-scope).
+
 ---
 
 ## Open Questions (Intentionally Not Locked Here Yet)
 
-- **Void after cash session closed**:
-  - Cash Session cannot accept movements after close; a true “refund” workflow may be needed.
-  - For March, prefer a clear restriction (deny void after close) unless a compensating cash-adjustment policy is explicitly designed.
 - **Branch frozen semantics for corrective writes**:
   - Finalize sale should be blocked when branch is frozen.
   - Corrective reversals (inventory reversal, void completion) may need to be allow-listed with audit (policy decision).
@@ -170,4 +195,3 @@ This contract provides a shared list of POS-critical edge cases with expected be
 Processes (`BusinessLogic/4_process/30_POSOperation/*.md`) should reference these cases so QA can test behavior without reverse-engineering module specs.
 
 _End of POS Operations edge case contract_
-

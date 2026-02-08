@@ -1,26 +1,27 @@
-# ModSpec (modspec_new) Versions
+# ModSpec Versions
 
-This file records the **Version** (and current **Status**, when present) declared in each document under `modspec/`.
+This file records the declared `**Version:**` and `**Status:**` headers for the canonical ModSpecs under `BusinessLogic/5_modSpec/`.
 
 Notes:
-- Some specs contain multiple embedded headers (e.g., patched versions appended). For those files, the table uses the **latest** `**Version:**` found in the file.
+- If a spec contains multiple embedded headers (patched versions appended), this table uses the latest `**Version:**` / `**Status:**` that appear in the file.
+- Legacy specs live in `BusinessLogic/5_modSpec/_archived/`.
 
 | Reading order | Spec | Version | Status |
 | --- | --- | --- | --- |
-| 0 | `backend_guide.md` | — | — |
-| 1 | `auth_module.md` | 1.4 | Revised (Supports provisioned account activation; aligns credential ownership with Staff onboarding; preserves multi-tenant per account) |
-| 2 | `tenant_module.md` | 1.1 | Updated (Branch creation clarified; aligned with system-driven provisioning) |
-| — | `branch_module.md` | 1.1 | Revised (Branch provisioning is system-driven) |
-| 3 | `policy_module.md` | 1.3 | Patched (Branch-scoped policies + cash session requirement is product-enforced) |
-| 4 | `offlineSync_module.md` | 1.2 | Patched (Cash sessions required for sales; frozen-branch enforcement) |
-| 5 | `audit_module.md` | 1.1 | Patched (Branch lifecycle + frozen-branch denials added) |
-| 6 | `cashSession_module.md` | 1.7 | Patched (Cash sessions required for sales; branch system-provisioning alignment) |
-| 7 | `sale_module.md` | 2.4 | Patched (Cash session required for cart/sales; removes optional “no session” path for Capstone 1 build) |
-| 8 | `discount_module.md` | 1.2 | Revised (Branch-scoped discounts clarified; stacking preserved; sale lock-in enforced) |
-| 9 | `inventory_module.md` | 1.6 | Patched (Aligns with Sale integrity guarantees; removes optional cash-session wording) |
-| 10 | `menu_module.md` | 1.2 | Revised & Approved |
-| 11 | `staffAttendance_module.md` | 1.4 | Patched (Shift schedules added in Staff Management; attendance shift evaluation staged) |
-| 12 | `staffManagement_module.md` | 1.4 | Patched (Owner-provisioned onboarding; user-owned credentials; aligned with Branch creation model + Capstone 1 boundaries) |
-| 13 | `receipt_module.md` | 1.0 | Defined (Aligned with Capstone 1 boundaries) |
-| 14 | `report_module.md` | 1.3 | Patched (Demo scope: Cash X + Z reports; access rules aligned to implementation) |
-| — | `temp.md` | — | — |
+| 1 | `10_IdentityAccess/authentication_module.md` | 2.0 | Patched (Renamed from `auth_module`; explicit AuthN vs AuthZ separation) |
+| 2 | `10_IdentityAccess/accessControl_module.md` | 1.0 | Draft (Branch access is mandatory) |
+| 3 | `20_OrgAccount/tenant_module.md` | 2.0 | Patched to support Access Control + future SaaS (without implementing billing yet) |
+| 4 | `20_OrgAccount/branch_module.md` | 1.1 | Revised (Branch provisioning is system-driven) |
+| 5 | `30_HR/staffManagement_module.md` | 3.1 | Patched (simplified onboarding; user-owned credentials; aligned with Authentication, Access Control, Tenant, and Concurrent Staff Licensing) |
+| 6 | `30_HR/attendance_module.md` | 1.4 | Patched (Shift schedules added in Staff Management; attendance shift evaluation staged) |
+| 7 | `50_PlatformSystems/policy_module.md` | 1.3 | Patched (Branch-scoped policies + cash session requirement is product-enforced) |
+| 8 | `50_PlatformSystems/offlineSync_module.md` | 1.2 | Patched (Cash sessions required for sales; frozen-branch enforcement) |
+| 9 | `50_PlatformSystems/audit_module.md` | 1.1 | Patched (Branch lifecycle + frozen-branch denials added) |
+| 10 | `30_POSOperation/cashSession_module_patched_v2.md` | 1.3 (Patched) | Clarified to distinguish operational reconciliation (X/Z) from analytics reporting |
+| 11 | `30_POSOperation/sale_module_patched.md` | 2.4 | Patched (Clarifies order lifecycle and draft persistence rules; preserves existing pricing/discount/cash-session integrity rules) |
+| 12 | `30_POSOperation/discount_module_patched.md` | 1.3 (Patched) | Patched to align with `discount_domain.md` (eligibility + scope, no money math) and the Self-Contained vs Cross-Module structure |
+| 13 | `30_POSOperation/inventory_module_patched.md` | 1.7 (Patched) | Patched to align with **Inventory Domain (ledger + projections)** and the new **Self-Contained vs Cross-Module** structure |
+| 14 | `30_POSOperation/menu_module_patched.md` | 1.3 (Patched) | Patched to align with Menu Domain (composition + TRACKED components) |
+| 15 | `30_POSOperation/receipt_module_patched.md` | 1.1 (Patched) | Clarified to align with snapshot-based Sale lifecycle and cross-module processes |
+| 16 | `30_POSOperation/receipt_module.md` | 1.0 | Defined (Aligned with Capstone 1 boundaries) |
+| 17 | `40_Reporting/report_module.md` | 1.3 | Patched (Demo scope: Cash X + Z reports; access rules aligned to implementation) |

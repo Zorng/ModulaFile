@@ -11,7 +11,7 @@ It complements the Identity+HR overhaul by covering the **Org Account maintenanc
 ---
 
 ## Inputs
-- Tenant modspec: `BusinessLogic/5_modSpec/tenant_module_patched_v2.md` (found)
+- Tenant modspec: `BusinessLogic/5_modSpec/20_OrgAccount/tenant_module.md` (found)
 - Branch modspec: `BusinessLogic/5_modSpec/20_OrgAccount/branch_module.md` (found)
 
 > Note: UC numbering in existing modspecs may not cover all maintenance needs. This map prioritizes **real operational goals** for March.
@@ -24,7 +24,7 @@ It complements the Identity+HR overhaul by covering the **Org Account maintenanc
 - Later: derive/patch domains in:
   - Tenant: `BusinessLogic/2_domain/20_OrgAccount/tenant_domain_consistency_patched.md`
   - Branch: `BusinessLogic/2_domain/20_OrgAccount/branch_domain.md`
-- Ensure modspecs in `BusinessLogic/5_modSpec/20_OrgAccount/` (and the patched tenant spec) align
+- Ensure modspecs in `BusinessLogic/5_modSpec/20_OrgAccount/` align
 
 ---
 

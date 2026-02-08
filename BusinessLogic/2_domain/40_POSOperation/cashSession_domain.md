@@ -18,7 +18,7 @@ The Cash Session domain is responsible for:
 - defining when cash handling begins and ends,
 - recording all cash inflows and outflows immutably,
 - computing reconciliation results (expected vs counted),
-- enforcing integrity constraints for cash-based sales and voids.
+- enforcing integrity constraints for cash-based sales and cash refunds (including approved voids).
 
 The Cash Session domain exists to protect **financial accountability**, not to manage sales logic, attendance, or inventory behavior.
 
@@ -30,7 +30,7 @@ The Cash Session domain exists to protect **financial accountability**, not to m
 - The lifecycle of a cash accountability window for a branch.
 - The append-only ledger of cash movements.
 - Reconciliation results and discrepancy tracking.
-- Enforcement of “cash session must be OPEN” for cash-based order finalization.
+- Enforcement of “cash session must be OPEN” for sale finalization (Capstone I product rule) and for any cash-out refund movement.
 
 ### 2.2 What This Domain Does NOT Own
 - Pricing, discounts, VAT, FX, or rounding (Order domain).
@@ -65,12 +65,14 @@ The CashSession aggregate defines the **consistency boundary** for all cash move
 - cash_session_id
 - tenant_id
 - branch_id
-- opened_by_user_id
+- opened_by_auth_account_id
 - opened_at
 - status (OPEN | CLOSED | FORCE_CLOSED)
 - opening_float (Money snapshot)
 - closed_at (nullable)
 - close_note (optional)
+
+Note: `*_auth_account_id` refers to the global actor identity key from the Authentication domain (not a phone number identifier).
 
 #### Child Entity: **CashMovement**
 - cash_movement_id
@@ -78,7 +80,8 @@ The CashSession aggregate defines the **consistency boundary** for all cash move
 - movement_type
 - amount (Money)
 - reason
-- source_reference (order_id / void_id / manual)
+- source_reference (sale_id / void_id / manual)
+- recorded_by_auth_account_id
 - created_at
 - idempotency_key (required for replay-safe movements)
 
@@ -125,13 +128,15 @@ CashMovement is **append-only** and immutable.
 
 | Command | Intent |
 |----|----|
-| RecordSaleCashIn | Cash received from finalized order |
-| RecordVoidCashOut | Cash reversed from approved void |
+| RecordSaleCashIn | Cash received from finalized sale |
+| RecordRefundCashOut | Cash refunded for an approved void/refund (append-only) |
 | RecordPaidIn | Manual cash added |
 | RecordPaidOut | Manual cash removed |
 | RecordAdjustment | Explicit correction (restricted) |
 
 All movement commands **append new records** only.
+
+Terminology note: “Reverse cash effects” for a voided cash sale means appending a refund cash-out movement (e.g., `REFUND_CASH`) that compensates the original sale cash-in movement. Nothing in the cash ledger is edited or deleted.
 
 ---
 
@@ -140,9 +145,11 @@ All movement commands **append new records** only.
 - **CS-INV-1:** At most **one OPEN cash session per branch** at any time.
 - **CS-INV-2:** CashMovements are immutable and append-only.
 - **CS-INV-3:** A CLOSED or FORCE_CLOSED session cannot accept new movements.
-- **CS-INV-4:** Cash-based order finalization requires an OPEN cash session.
+- **CS-INV-4:** Sale finalization requires an OPEN cash session (Capstone I product rule).
 - **CS-INV-5:** Cash movement creation must be idempotent.
 - **CS-INV-6:** Reconciliation is a result, not a mutation of history.
+- **CS-INV-7:** A cash refund movement (e.g., `REFUND_CASH`) must reference an approved void/refund and must be idempotent per the sale anchor (e.g., `(branch_id, sale_id)`).
+- **CS-INV-8:** A cash refund movement must be recorded only to an OPEN cash session. It must never be appended to a CLOSED/FORCE_CLOSED session.
 
 ---
 
@@ -194,7 +201,7 @@ Offline sync **must not bypass invariants**.
 |----|----|
 | Duplicate movement replay | Idempotency returns existing result |
 | Sale finalize without open session | Rejected |
-| Void approved after session closed | Rejected |
+| Refund/void execution after session closed | Rejected |
 | Network drop during movement | Safe retry |
 | Forced close | Session ends, history preserved |
 

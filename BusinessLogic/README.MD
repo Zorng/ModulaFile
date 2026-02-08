@@ -79,14 +79,11 @@ BusinessLogic
 │   ├── 00_guide
 │   ├── 10_IdentityAccess
 │   ├── 20_OrgAccount
+│   ├── 30_HR
 │   ├── 30_POSOperation
 │   ├── 40_Reporting
 │   ├── 50_PlatformSystems
-│   ├── _archived
-│   ├── accessControl_module_v2.md
-│   ├── authentication_module.md
-│   ├── staffManagement_module_patched_v3.md
-│   └── tenant_module_patched_v2.md
+│   └── _archived
 │
 └── _maps
     └── *_story_coverage_map.md
