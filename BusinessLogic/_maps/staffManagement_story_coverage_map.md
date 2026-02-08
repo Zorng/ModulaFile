@@ -89,9 +89,23 @@ These contexts reflect how cafés actually run: shift-based staffing, frequent c
 
 ---
 
-**Coverage gaps (not yet explicit as stories):**
-- Administrative actions to disable/archive staff (UC-SM2, UC-SM3).
-- Reviewing staff change audit trail (staff lifecycle + branch assignment changes).
+### Context: Stopping Access Immediately (Safety)
+
+8. **Disabling a Staff Member Immediately**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/disable_staff.md`  
+   Human situation: the owner needs to block someone from operating right now without deleting history.
+
+---
+
+### Context: Keeping Clean History (Roster + Accountability)
+
+9. **Archiving a Staff Member (History Preserved)**  
+   File: `BusinessLogic/1_stories/handling_staff&attendance/archive_staff.md`  
+   Human situation: remove someone from active lists while preserving traceability of past work.
+
+10. **Reviewing Staff Changes (Who Had Access, and When)**  
+    File: `BusinessLogic/1_stories/handling_staff&attendance/review_staff_changes.md`  
+    Human situation: understand staff changes without guessing (who changed what, when).
 
 ---
 
@@ -147,10 +161,22 @@ Covers:
 
 ---
 
-### Not Yet Covered As Dedicated Stories
-- UC-SM2 Disable Staff (Administrative action)
-- UC-SM3 Archive Staff (Administrative action)
-- Reviewing staff change audit trail (staff lifecycle + branch assignment changes)
+### Story 8 — Disabling a Staff Member Immediately
+Covers:
+- UC-SM2 Disable Staff (immediate block)
+- Cross-module: deny semantics on next sensitive request
+
+---
+
+### Story 9 — Archiving a Staff Member (History Preserved)
+Covers:
+- UC-SM3 Archive Staff (remove from active roster; keep history)
+
+---
+
+### Story 10 — Reviewing Staff Changes (Who Had Access, and When)
+Covers:
+- Reviewing staff lifecycle and branch assignment changes (audit trail narrative)
 
 ---
 
@@ -190,11 +216,12 @@ They should be written under the operational context where users experience them
 | Preventing Unauthorized or Excessive Work | `BusinessLogic/1_stories/handling_staff&attendance/prevent_unauthorized&excess_work.md` | ok |
 | Configuring Branch Location for Attendance Confirmation | `BusinessLogic/1_stories/handling_staff&attendance/set_branch_gps_location.md` | ok |
 | Reviewing Attendance and Time Respecting | `BusinessLogic/1_stories/handling_staff&attendance/review_attendance&time_respection.md` | ok |
+| Disabling a Staff Member Immediately | `BusinessLogic/1_stories/handling_staff&attendance/disable_staff.md` | ok |
+| Archiving a Staff Member (History Preserved) | `BusinessLogic/1_stories/handling_staff&attendance/archive_staff.md` | ok |
+| Reviewing Staff Changes (Who Had Access, and When) | `BusinessLogic/1_stories/handling_staff&attendance/review_staff_changes.md` | ok |
 
 Gaps (stories to add later):
-- Disable staff (UC-SM2)
-- Archive staff (UC-SM3)
-- Review staff change audit trail
+- (none for staff lifecycle; revisit when new HR workflows are added)
 
 Legend:
 - ⬜ Not written

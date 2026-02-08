@@ -43,6 +43,7 @@ Domain models must **not**:
 - guess real-world outcomes (e.g., whether an item was physically consumed)
 
 Those belong to:
+- `3_contract/` (cross-layer agreements, edge cases, required behavioral states)
 - `4_process/` (coordination over time)
 - `5_modSpec/` (implementation contracts)
 
@@ -56,7 +57,7 @@ Domain models sit **between stories and processes**.
 
 The correct conceptual order is:
 
-> **Stories → Domain → Process → ModSpec**
+> **Stories → Domain → Contract → Process → ModSpec**
 
 ### Stories (`1_stories/`)
 - describe human intent and operational reality
@@ -65,6 +66,10 @@ The correct conceptual order is:
 ### Domain (`2_domain/`)
 - defines *what must always be true*
 - establishes ownership and boundaries
+
+### Contract (`3_contract/`)
+- defines *cross-layer agreements*
+- locks edge cases and boundary behavior (without dictating UI layouts)
 
 ### Process (`4_process/`)
 - defines *how domains coordinate*
@@ -75,7 +80,7 @@ The correct conceptual order is:
 - must obey domain and process rules
 
 **Priority rule:**
-Domain > Process > ModSpec
+Domain > Contract > Process > ModSpec
 
 If a ModSpec contradicts a Domain, the ModSpec is wrong.  
 If a Process contradicts a Domain, the Process is wrong.

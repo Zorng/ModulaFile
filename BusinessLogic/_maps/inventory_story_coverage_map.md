@@ -15,7 +15,7 @@ Stories are grouped by **human operational context**, not by CRUD actions or int
 ## 1) Source Artifacts (Authoritative)
 
 - **Domain:** `BusinessLogic/2_domain/40_POSOperation/inventory_domain.md`
-- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/inventory_module_patched.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/40_POSOperation/inventory_module_patched.md`
 
 ---
 

@@ -5,13 +5,16 @@
 - **Scope**: Login → tenant selection → branch selection → work entry + loss of access
 - **Primary Audience**: Frontend, Backend, QA
 - **Owner(s)**: Authentication, Tenant Membership, Staff Profile & Assignment, Access Control, Work Start/End Orchestration
-- **Last Updated**: 2026-02-06
+- **Last Updated**: 2026-02-08
 - **Delivery Level**:
   - **March**: baseline behavior
   - **Later**: explicitly deferred
 - **Related Contracts**:
   - `BusinessLogic/3_contract/10_edgecases/identity_hr_edge_case_sweep_patched.md`
   - `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`
+- **Related Processes**:
+  - `BusinessLogic/4_process/20_IdentityAccess/10_identity_activation_recovery_orchestration.md`
+  - `BusinessLogic/4_process/10_WorkForce/10_work_start_end_orchestration.md`
 
 ---
 
@@ -87,7 +90,7 @@ Expected flow:
 Each list item shows:
 - Tenant name
 - Optional logo
-- Role label (Owner / Admin / Staff)
+- Role label (derived from membership facts: `membership_kind` + `role_key`; examples: Owner / Admin / Manager / Cashier / Inventory Clerk)
 
 **Only memberships with status = ACTIVE are shown.**
 

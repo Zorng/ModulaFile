@@ -13,7 +13,7 @@ Processes describe **how multiple domains work together over time**:
 
 If a behavior spans more than one domain, it **must** be described here.
 
-This directory is the **spine of POS operations**.
+This directory is the **spine of cross-module behavior**.
 
 ---
 
@@ -44,12 +44,10 @@ Where:
 
 ### Example
 ```
-10_finalize_sale_orchestration.md   ← start here
+10_finalize_sale_orch.md   ← start here
 11_deviceDraft_process.md
-12_finalize_order_process.md
-13_stock_deduction_on_finalize_sale.md
-14_cash_movement_on_finalize_sale.md
-15_receipt_creation_process.md
+12_finalizeOrder_process.md
+13_stock_deduction_on_finalize_sale_process.md
 ```
 
 This means:
@@ -60,32 +58,32 @@ This means:
 
 ## High-Level Structure
 ```
-process/
+BusinessLogic/4_process
 ├── README.md   ← you are here
 │
+├── 10_WorkForce
+│   ├── 05_staff_provisioning_orchestration.md
+│   ├── 10_work_start_end_orchestration.md
+│   ├── 20_work_end_orchestrastion.md
+│   ├── 30_shift_vs_attendance_evaluation.md
+│   └── 40_attendance_report.md
+│
+├── 20_IdentityAccess
+│   └── 10_identity_activation_recovery_orchestration.md
+│
+├── 20_OrgAccount
+│   └── 10_tenant_membership_administration_process.md
+│
 ├── 30_POSOperation
-│   ├── 10_finalize_sale_orchestration.md
+│   ├── 10_finalize_sale_orch.md
 │   ├── 11_deviceDraft_process.md
-│   ├── 12_finalize_order_process.md
-│   ├── 13_stock_deduction_on_finalize_sale.md
-│   ├── 14_cash_movement_on_finalize_sale.md
-│   ├── 15_receipt_creation_process.md
-│   ├── 16_hardware_effects_process.md
+│   ├── 12_finalizeOrder_process.md
+│   ├── 13_stock_deduction_on_finalize_sale_process.md
 │
-│   ├── 20_void_sale_orchestration.md
-│   ├── 21_void_order_process.md
-│   ├── 22_void_sale_inventory_reversal.md
-│   ├── 23_void_sale_cash_reversal.md
-│
-│   ├── 30_cash_session_lifecycle.md
-│   ├── 31_open_cash_session.md
-│   ├── 32_close_cash_session.md
-│   ├── 33_x_report_process.md
-│   ├── 34_z_report_process.md
-│
-│   └── _archived
-│
-└── _archived
+│   ├── 20_void_sale_orch.md
+│   ├── 21_voidOrder_process.md
+│   ├── 22_void_sale_inventory_reversal_process.md
+│   └── 23_void_sale_cash_reversal_process.md
 ```
 
 This structure is designed to scale without becoming unreadable.
@@ -96,7 +94,7 @@ This structure is designed to scale without becoming unreadable.
 
 ### 1️⃣ Read Orchestration First (Always)
 
-Files ending with `_orchestration.md` are **entry points**.
+Files with orchestration intent (typically `10_*` and named `*_orch.md` or `*_orchestration.md`) are **entry points**.
 
 They answer:
 - *What business event starts this flow?*
@@ -107,8 +105,8 @@ They answer:
 ➡️ **Always start with the orchestration file.**
 
 Example:
-- `10_finalize_sale_orchestration.md`
-- `20_void_sale_orchestration.md`
+- `30_POSOperation/10_finalize_sale_orch.md`
+- `30_POSOperation/20_void_sale_orch.md`
 
 If you skip orchestration, you will misunderstand the system.
 
@@ -167,15 +165,17 @@ If logic spans domains and is not documented here, it is a **design smell**.
 
 ## Relationship to Other BusinessLogic Directories
 
-- **Domain (`BusinessLogic/domain`)**
+- **Domain (`BusinessLogic/2_domain/`)**
   - defines *truth*, invariants, ownership
-- **Process (`BusinessLogic/process`)**
+- **Contract (`BusinessLogic/3_contract/`)**
+  - defines *cross-layer agreements* (edge cases, required behavioral states)
+- **Process (`BusinessLogic/4_process/`)**
   - defines *coordination, timing, and orchestration*
-- **ModSpec (`BusinessLogic/modSpec`)**
+- **ModSpec (`BusinessLogic/5_modSpec/`)**
   - defines *how behavior is implemented*
 
 Priority order:
-`Domain > Process > ModSpec`
+`Domain > Contract > Process > ModSpec`
 
 If a ModSpec contradicts a Process, the Process wins.  
 If a Process contradicts a Domain, the Domain wins.

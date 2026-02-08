@@ -1,10 +1,10 @@
 # attendance_module.md
 
-**Version:** 1.4  
-**Status:** Patched (Shift schedules added in Staff Management; attendance shift evaluation staged)  
+**Version:** 1.5  
+**Status:** Patched (Aligned to Work Start/End orchestration; evidence-first location verification; shift alignment is soft)  
 **Module Type:** Feature Module  
-**Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Policy & Configuration (Core), Sync & Offline Support (Core), Audit Logging (Core)  
-**Related Modules:** Staff Management, Cash Session, Branch (Core/Context)
+**Depends on:** Authentication, Access Control, Tenant (membership facts), Staff Management (assignment facts), Branch, Shift, Policy (optional), Sync & Offline, Audit Logging  
+**Related Modules:** Work Review, Cash Session (boundary), Sale (boundary), Reporting (future)
 
 ---
 
@@ -14,7 +14,7 @@
 
 ## Purpose
 
-The Attendance module records and manages staff presence at branches by capturing check-in and check-out events. It enforces attendance-related policies, supports offline-first operation, and provides visibility to managers and administrators without allowing mutation of recorded attendance data.
+The Attendance module records and manages staff presence at branches by capturing check-in and check-out events. It supports offline-first operation and provides visibility to managers and administrators without allowing mutation of recorded attendance data.
 
 This module is designed for small to medium F&B businesses where attendance must be simple to operate yet auditable and policy-driven.
 
@@ -23,22 +23,24 @@ This module is designed for small to medium F&B businesses where attendance must
 ## Scope (Capstone I)
 
 Included:
-- Staff check-in and check-out
-- Attendance always recorded in **branch context**
-- **Branch-scoped** policy enforcement for attendance behavior
-- Out-of-shift check-in approval workflow
-- Role-based access to attendance history
-- Offline-first attendance recording with later synchronization
+- Start work (check-in) and end work (check-out)
+- Attendance is always recorded in **tenant + branch context**
+- One ACTIVE work session per staff (per tenant); idempotent under retries/offline replay
+- Optional location verification evidence (capability-gated; never blocks check-in/out)
+- Role-scoped read access to attendance history
+- Manager/Admin forced checkout (correction) with audit logging
+- Offline-first capture with later synchronization
 
 Excluded (Capstone II+):
 - Automated reminders / notifications
 - Auto check-out
 - Attendance analytics and anomaly detection
 - Editing or deleting attendance records
+- Out-of-shift approval workflows (deferred; handled as review signals instead of real-time enforcement)
 
-Location verification is an **optional** capability:
-- check-in only, or
-- check-in and check-out
+Location verification is an **optional** capability (point verification attendance):
+- check-in only (`checkin_only`)
+- check-in and check-out (`checkin_and_checkout`)
 
 Design rule (locked): location verification is **evidence-first** and must not block check-in/out. The system records `MATCH/MISMATCH/UNKNOWN` and lets managers/admins interpret the flags.
 
@@ -46,26 +48,30 @@ Design rule (locked): location verification is **evidence-first** and must not b
 
 ## Key Concepts
 
-- **Attendance Record**: An immutable record representing a staff check-in or check-out.
-- **Check-in Request**: A temporary state created when a staff attempts to check in outside allowed policy (e.g., out of shift) and requires approval.
-- **Branch Context (System-owned)**:
-  - Staff do **not** create or select branches.
-  - A branch exists because the **system created it** (e.g., tenant provisioning + subscription add-branch in future scope).
-  - A staff member’s effective branch is determined by their membership/assignment in Staff Management / Tenant & Branch Context.
+- **Attendance Record (Work Session)**: An immutable record representing a continuous period of actual work (ACTIVE → COMPLETED).
+- **Branch Context (System-created, user-selected when needed)**:
+  - Branch records are system-provisioned (not created by staff).
+  - A staff member may be assigned to one or multiple branches.
+  - If multiple branch assignments exist, the user must select a branch context before starting work (validated by Access Control).
+  - Branch switching mid-shift is not allowed: END_WORK at Branch A before START_WORK at Branch B.
 - **Branch Status**:
-  - If a branch is **Frozen/Inactive**, attendance actions must be blocked for that branch.
-- **Policy Enforcement (Branch-scoped)**:
-  - Attendance behavior is controlled by policies defined in the Policy & Configuration module **per branch**.
-  - The effective attendance policy is resolved by `(tenant_id, branch_id)`.
-  - Different branches under the same tenant may have different policy values.
+  - If a branch is **FROZEN** (not ACTIVE), start-work/check-in must be blocked for that branch.
+- **Shift Alignment (Soft)**:
+  - Shift schedules represent planned expectations (Shift domain).
+  - Attendance does not hard-block out-of-shift work; it records timestamps and (optionally) shift alignment context for later Work Review.
+- **Location Verification Evidence (Capability-gated)**:
+  - When enabled, the system captures device location at check-in and/or check-out and records:
+    - observed location + accuracy (if available)
+    - evaluation result: `MATCH` / `MISMATCH` / `UNKNOWN`
+  - UNKNOWN is valid when permission is denied, signal is weak, or branch workplace location is not configured.
 
-- **Shift Schedule (Branch-scoped)**:
-  - Weekly staff shift schedules are assigned by Admin via Staff Management (per staff + branch).
-  - Attendance uses shift schedules to determine early / out-of-shift behavior.
-
-**Implementation note (Capstone 1, current backend):**
-- Shift evaluation is staged. The attendance check-in API currently accepts a client-provided `shiftStatus` (`IN_SHIFT | EARLY | OUT_OF_SHIFT`) and optional `earlyMinutes` as an interim input.
-- Future work: backend computes shiftStatus from stored shift schedules + policy buffer rules.
+**Authoritative processes and contracts**
+- Work start orchestration: `BusinessLogic/4_process/10_WorkForce/10_work_start_end_orchestration.md`
+- Work end orchestration: `BusinessLogic/4_process/10_WorkForce/20_work_end_orchestrastion.md`
+- Shift vs attendance evaluation: `BusinessLogic/4_process/10_WorkForce/30_shift_vs_attendance_evaluation.md`
+- Work review reporting: `BusinessLogic/4_process/10_WorkForce/40_attendance_report.md`
+- HR edge cases: `BusinessLogic/3_contract/10_edgecases/identity_hr_edge_case_sweep_patched.md`
+- HR ↔ POS boundary: `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`
 
 ---
 
@@ -80,64 +86,89 @@ Design rule (locked): location verification is **evidence-first** and must not b
 
 ## Use Cases
 
-### UC-1: Staff Check-in (Cashier / Manager)
+### UC-1: Start Work (Check-in)
 
-**Actors**: Cashier, Manager  
+**Actors**: Cashier, Manager, (Admin if operational)  
 **Preconditions**:
-- User is authenticated
-- User is assigned to a branch (branch_id resolved from membership/assignment)
-- Assigned branch is ACTIVE (not frozen)
-- User is not currently checked in
-- If offline: device has cached branch assignment (last known) and policies (last known)
+- User is authenticated (Authentication)
+- Tenant context is selected
+- Branch context is selected/resolved (required if multiple assignments exist)
+- Access Control authorizes START_WORK in `{tenant_id, branch_id}`
+- Staff has ACTIVE membership + ACTIVE staff profile + ACTIVE branch assignment for the branch
+- Branch is ACTIVE (not FROZEN)
+- Staff has no existing ACTIVE attendance session in this tenant
+- Concurrent staff capacity is available (Staff Licensing gate via orchestration)
 
 **Main Flow**:
-1. User initiates check-in from their portal.
-2. System resolves `branch_id` from the user’s assignment (no branch selection UI).
-3. System resolves effective **branch-scoped** attendance policies for `(tenant_id, branch_id)`.
-4. System evaluates policy constraints:
-   - Early check-in buffer
-   - Shift assignment
-   - Out-of-shift approval requirement
-5. If policy allows:
-   - Attendance record is created (CHECK_IN).
-6. If out-of-shift and approval is required:
-   - A check-in request is created with status `PENDING_APPROVAL`.
+1. User taps **Start Work / Check In**.
+2. System executes Work Start orchestration:
+   - `BusinessLogic/4_process/10_WorkForce/10_work_start_end_orchestration.md`
+3. (Soft) Shift alignment is evaluated if shift planning exists and recorded as context (not a hard gate).
+4. (Capability) If `attendance.location_verification_mode` is `checkin_only` or `checkin_and_checkout`, capture and evaluate location:
+   - record `MATCH/MISMATCH/UNKNOWN`
+   - do not block check-in on GPS issues
+5. Attendance record is created as ACTIVE (check-in time + branch + evidence/context).
 
 **Postconditions**:
-- User is either checked in (active attendance) or has a pending approval request.
+- Staff has one ACTIVE attendance session for the tenant (in the selected branch).
+- Capacity slot is consumed (concurrent staff).
 
 **Acceptance Criteria**:
-- User cannot check in to a different branch.
-- System prevents duplicate active check-ins.
-- If branch is frozen/inactive, check-in is blocked with a clear message.
-- Offline check-ins are stored locally and synced later.
-- Policy evaluation uses the branch the user is assigned to at the time of check-in.
+- Duplicate check-in is idempotent (returns the existing ACTIVE session).
+- If branch is FROZEN, check-in is blocked with a clear reason.
+- If GPS permission is denied / signal weak / branch workplace location missing, check-in succeeds and evidence result is UNKNOWN.
+- If staff is assigned to multiple branches, the branch must be selected before check-in.
 
 ---
 
-### UC-2: Staff Check-out (Cashier / Manager)
+### UC-2: End Work (Check-out)
 
-**Actors**: Cashier, Manager  
+**Actors**: Cashier, Manager, (Admin if operational)  
 **Preconditions**:
-- User has an active check-in
-- Assigned branch is ACTIVE (not frozen)  
-  (If branch becomes frozen after check-in, check-out is still allowed to close attendance cleanly.)
+- User has an ACTIVE attendance session in the current tenant + branch context
+- Work End orchestration confirms there are no unresolved responsibilities (e.g., open cash session)
+- If branch becomes frozen after check-in, check-out is still allowed to close attendance cleanly
 
 **Main Flow**:
-1. User initiates check-out.
-2. System records check-out timestamp (CHECK_OUT).
+1. User taps **End Work / Check Out**.
+2. System executes Work End orchestration:
+   - `BusinessLogic/4_process/10_WorkForce/20_work_end_orchestrastion.md`
+3. System blocks end-work if responsibilities remain open (see boundary contract):
+   - `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`
+4. (Capability) If `attendance.location_verification_mode` is `checkin_and_checkout`, capture and evaluate checkout location evidence (never blocks).
+5. Attendance session is closed (ACTIVE → COMPLETED) with check-out time; capacity slot is released.
 
 **Postconditions**:
 - Attendance session is closed.
 
 **Acceptance Criteria**:
 - Late check-out is allowed.
-- No automatic or forced check-out occurs.
+- Duplicate end-work is idempotent (returns success without double-closing).
+- Checkout is blocked if cash session (or other responsibilities) are still open.
 - Timestamps are immutable after creation.
 
 ---
 
-### UC-3: View Own Attendance History
+### UC-3: Force End Work (Manager/Admin)
+
+**Actors**: Manager, Admin  
+**Preconditions**:
+- A target staff member has an ACTIVE attendance session
+- Approver is authorized for the tenant/branch context
+- Forced end-work must not erase open responsibilities (e.g., cash session must be resolved first)
+
+**Main Flow**:
+1. Manager/Admin selects a staff member → **Force Check Out** and provides a reason.
+2. System executes Work End orchestration with `forced_by` metadata.
+3. Attendance session closes (ACTIVE → COMPLETED); capacity slot is released.
+4. Audit log records who forced the checkout and why.
+
+**Postconditions**:
+- Staff is no longer ACTIVE working.
+
+---
+
+### UC-4: View Own Attendance History
 
 **Actors**: Cashier, Manager  
 **Preconditions**:
@@ -156,15 +187,15 @@ Design rule (locked): location verification is **evidence-first** and must not b
 
 ---
 
-### UC-4: View Branch Attendance History
+### UC-5: View Branch Attendance History
 
 **Actors**: Manager  
 **Preconditions**:
-- Manager is assigned to a branch
+- Manager is authorized for the selected branch context
 
 **Main Flow**:
 1. Manager accesses branch attendance view.
-2. System displays attendance records for staff in that manager’s assigned branch.
+2. System displays attendance records for staff in that branch.
 
 **Postconditions**:
 - None (read-only)
@@ -175,11 +206,12 @@ Design rule (locked): location verification is **evidence-first** and must not b
 
 ---
 
-### UC-5: View All Attendance History
+### UC-6: View Tenant Attendance History
 
 **Actors**: Admin  
 **Preconditions**:
 - Admin is authenticated
+- Admin is authorized for tenant-level attendance visibility
 
 **Main Flow**:
 1. Admin accesses global attendance view.
@@ -194,55 +226,33 @@ Design rule (locked): location verification is **evidence-first** and must not b
 
 ---
 
-### UC-6: Approve Out-of-Shift Check-in
+## Capability & Policy Inputs
 
-**Actors**: Manager, Admin  
-**Preconditions**:
-- A check-in request exists with status `PENDING_APPROVAL`
-- Request belongs to a valid branch
-- Approver has authority for the request’s branch:
-  - Manager: own branch only
-  - Admin: any branch
-- Branch is ACTIVE (not frozen)
+### Capability: Location Verification Mode (Tenant-level)
+`attendance.location_verification_mode`
+- `disabled`
+- `checkin_only`
+- `checkin_and_checkout`
 
-**Main Flow**:
-1. Manager or Admin reviews the pending request.
-2. Actor approves or rejects the request.
-3. If approved:
-   - System creates or activates the attendance record (CHECK_IN).
-4. If rejected:
-   - Request is marked rejected and no attendance is created.
+### Branch Workplace Location (Branch-level configuration)
+Used only when location verification is enabled:
+- workplace latitude/longitude
+- allowed radius (meters)
 
-**Postconditions**:
-- Check-in request is resolved.
+If workplace location is missing, verification result must be recorded as UNKNOWN (do not block check-in/out).
 
-**Acceptance Criteria**:
-- Approval does not modify timestamps.
-- Approval action is logged in Audit Log.
-- Rejected requests do not create attendance records.
-
----
-
-## Policies Used (Read-only from Policy Module)
-
-**Scope:** Attendance policies are resolved per `(tenant_id, branch_id)`.
-
-- `attendanceEarlyCheckinBufferEnabled` (on/off)
-- `attendanceCheckinBufferMinutes` (duration)
-- `attendanceRequireOutOfShiftApproval` (on/off)
-
-Notes:
-- If a policy value is missing for a branch, the system applies default values (as defined by Policy module defaults).
-- Attendance module does not create policies; it only reads effective policy values.
+### Policy note (avoid drift)
+Some legacy policy keys exist in the current policy schema (e.g., out-of-shift approval), but the March baseline Work Start/End orchestrations treat shift alignment as a **soft** signal for Work Review, not a real-time approval workflow.
 
 ---
 
 ## Data Integrity Rules
 
 - Attendance records are immutable once created.
-- Approval actions do not modify recorded timestamps.
+- An attendance session may be closed (end time appended), but historical start time must never be edited.
+- A staff member may have at most one ACTIVE attendance session per tenant.
 - Historical attendance remains tied to the original branch context at time of record creation.
-- Offline-created records are reconciled during sync with policy enforcement (branch-scoped).
+- Offline-created records must be idempotent under sync replay (use client operation IDs).
 
 ---
 
@@ -259,7 +269,7 @@ Notes:
 
 - Starting or closing a cash session is **not** equivalent to check-in or check-out.
 - Cash Session and Attendance modules are independent. Policy may reference both, but data integrity remains separated.
-- Admin visibility is global, but authority to mutate attendance data is intentionally restricted.
+- Work end must not erase open responsibilities (e.g., cash session). This rule is owned by Work End orchestration + boundary contract.
 
 ---
 
@@ -267,8 +277,6 @@ Notes:
 
 The following events MUST be written to the Audit Log when triggered (with tenant_id, branch_id, actor_id, and relevant entity IDs):
 
-- `ATTENDANCE_CHECKIN_CREATED`
-- `ATTENDANCE_CHECKOUT_CREATED`
-- `ATTENDANCE_OUT_OF_SHIFT_REQUESTED`
-- `ATTENDANCE_OUT_OF_SHIFT_APPROVED`
-- `ATTENDANCE_OUT_OF_SHIFT_REJECTED`
+- `CHECK_IN_CREATED`
+- `CHECK_OUT_CREATED`
+- `CHECK_OUT_FORCED` (if force checkout is implemented as a distinct event; otherwise enrich `CHECK_OUT_CREATED` with forced metadata)

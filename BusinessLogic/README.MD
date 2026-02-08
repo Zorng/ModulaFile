@@ -73,6 +73,8 @@ BusinessLogic
 ├── 4_process
 │   ├── README.md
 │   ├── 10_WorkForce
+│   ├── 20_IdentityAccess
+│   ├── 20_OrgAccount
 │   └── 30_POSOperation
 │
 ├── 5_modSpec
@@ -80,9 +82,9 @@ BusinessLogic
 │   ├── 10_IdentityAccess
 │   ├── 20_OrgAccount
 │   ├── 30_HR
-│   ├── 30_POSOperation
-│   ├── 40_Reporting
-│   ├── 50_PlatformSystems
+│   ├── 40_POSOperation
+│   ├── 50_Reporting
+│   ├── 60_PlatformSystems
 │   └── _archived
 │
 └── _maps
@@ -98,7 +100,7 @@ Each layer answers a different kind of question.
 
 The correct reading and design order is:
 
-> **Stories → Domain → Process → ModSpec**
+> **Stories → Domain → Contract → Process → ModSpec**
 
 Never skip a layer.
 
@@ -161,7 +163,25 @@ If a rule is not stated in a domain document, it is **not guaranteed** by the sy
 
 ---
 
-## 3. Cross-Module Processes (`4_process/`) — Coordination Over Time
+## 3. Contracts (`3_contract/`) — Cross-Layer Agreements
+
+**Question answered:**
+
+> **“What edge cases and cross-layer behaviors must be handled consistently?”**
+
+Contract documents define:
+- cross-layer agreements (Backend/Frontend/QA share the same expectations)
+- edge cases and boundary safety rules (explicit March vs later stance)
+- required behavioral states (errors, degraded behavior, audit signals)
+
+Key rules:
+- contracts do not replace domains (truth/invariants) or processes (sequencing/orchestration)
+- contracts must not prescribe UI layouts; they define behavior the UI must support
+- conflicts are resolved as: **Domain > Contract > Process > ModSpec**
+
+---
+
+## 4. Cross-Module Processes (`4_process/`) — Coordination Over Time
 
 **Question answered:**
 
@@ -188,7 +208,7 @@ If logic spans more than one domain and is **not** in a process doc, it is a des
 
 ---
 
-## 4. Module Specifications (`5_modSpec/`) — Implementation Contract
+## 5. Module Specifications (`5_modSpec/`) — Implementation Contract
 
 **Question answered:**
 
@@ -203,8 +223,8 @@ ModSpecs translate stories, domains, and processes into:
 
 Key rules:
 - modspecs must not invent new business rules
-- modspecs must align with domain and process docs
-- conflicts are resolved as: **Domain > Process > ModSpec**
+- modspecs must align with domain, contract, and process docs
+- conflicts are resolved as: **Domain > Contract > Process > ModSpec**
 
 ModSpecs are grouped by capability:
 - identity & access
@@ -214,6 +234,9 @@ ModSpecs are grouped by capability:
 - platform systems (audit, sync, policy)
 
 The `00_guide/version.md` file tracks spec evolution.
+
+Note:
+- `5_modSpec/60_PlatformSystems/` specs are currently legacy artifacts until PlatformSystems domain models exist.
 
 ---
 

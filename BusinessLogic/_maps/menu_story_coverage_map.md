@@ -5,7 +5,7 @@ Identify human-centered stories for Menu behavior and map them to technical use 
 
 **Scope:**  
 - Menu Domain (`BusinessLogic/2_domain/40_POSOperation/menu_domain_patched_v2.md`)
-- Menu Module Spec (`BusinessLogic/5_modSpec/30_POSOperation/menu_module_patched.md`)
+- Menu Module Spec (`BusinessLogic/5_modSpec/40_POSOperation/menu_module_patched.md`)
 
 **Rule:**  
 Stories are grouped by **human operational context**, not by modules or CRUD operations.
@@ -15,7 +15,7 @@ Stories are grouped by **human operational context**, not by modules or CRUD ope
 ## 1) Source Artifacts (Authoritative)
 
 - **Domain:** `BusinessLogic/2_domain/40_POSOperation/menu_domain_patched_v2.md`
-- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/menu_module_patched.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/40_POSOperation/menu_module_patched.md`
 
 ---
 

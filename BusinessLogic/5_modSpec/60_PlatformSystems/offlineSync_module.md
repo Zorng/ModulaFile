@@ -4,7 +4,7 @@
 **Status:** Defined (Capstone 1)  
 **Module Type:** Core Module  
 **Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
-**Related Modules:** Sale, Cash Session, Staff Attendance, Menu, Inventory
+**Related Modules:** Sale, Cash Session, Attendance, Menu, Inventory
 
 ---
 
@@ -290,7 +290,7 @@ This module guarantees that:
 **Status:** Patched (Cash sessions required for sales; frozen-branch enforcement)  
 **Module Type:** Core Module  
 **Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
-**Related Modules:** Sale, Cash Session, Staff Attendance, Menu, Inventory
+**Related Modules:** Sale, Cash Session, Attendance, Menu, Inventory
 
 ---
 

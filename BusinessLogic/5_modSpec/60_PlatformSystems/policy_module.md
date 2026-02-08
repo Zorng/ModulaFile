@@ -4,7 +4,7 @@
 **Status:** Patched (Branch-scoped policies + cash session requirement is product-enforced)  
 **Module Type:** Core Module  
 **Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
-**Related Modules:** Sale, Inventory, Cash Session, Staff Attendance, Reporting
+**Related Modules:** Sale, Inventory, Cash Session, Attendance, Reporting
 
 ---
 
@@ -308,7 +308,7 @@ The following events MUST be written to the Audit Log when triggered (with tenan
 **Status:** Patched (Branch-scoped policies + cash session requirement is product-enforced)  
 **Module Type:** Core Module  
 **Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
-**Related Modules:** Sale, Inventory, Cash Session, Staff Attendance, Reporting  
+**Related Modules:** Sale, Inventory, Cash Session, Attendance, Reporting  
 
 ---
 

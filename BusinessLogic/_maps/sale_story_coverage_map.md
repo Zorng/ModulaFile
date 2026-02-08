@@ -5,7 +5,7 @@ Identify human-centered stories for Order/Sale behavior and map them to technica
 
 **Scope:**  
 - Order Domain (`BusinessLogic/2_domain/40_POSOperation/order_domain_patched.md`)
-- Sale Module Spec (`BusinessLogic/5_modSpec/30_POSOperation/sale_module_patched.md`)
+- Sale Module Spec (`BusinessLogic/5_modSpec/40_POSOperation/sale_module_patched.md`)
 
 **Rule:**  
 Stories are grouped by **human operational context**, not by system modules.
@@ -15,7 +15,7 @@ Stories are grouped by **human operational context**, not by system modules.
 ## 1) Source Artifacts (Authoritative)
 
 - **Domain:** `BusinessLogic/2_domain/40_POSOperation/order_domain_patched.md`
-- **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/sale_module_patched.md`
+- **ModSpec:** `BusinessLogic/5_modSpec/40_POSOperation/sale_module_patched.md`
 
 ---
 

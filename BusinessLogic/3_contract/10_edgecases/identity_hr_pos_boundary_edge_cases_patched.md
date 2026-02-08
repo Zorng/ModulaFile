@@ -5,7 +5,7 @@
 - **Scope**: Cross-context boundary between Identity/HR and POS Operations
 - **Primary Audience**: Backend, Frontend, QA
 - **Owner(s)**: Work Start/End Orchestration, Cash Session, Sale orchestration, Access Control, Audit
-- **Last Updated**: 2026-02-04
+- **Last Updated**: 2026-02-08
 - **Delivery Level**:
   - **March**: must be handled or explicitly degraded safely
   - **Later**: explicitly deferred
@@ -22,7 +22,7 @@ It prevents contradictions like “staff ended work while drawer is open” and 
 ### In-scope
 - Attendance ↔ Cash Session dependency
 - Branch context selection and switching
-- Role/membership changes mid-session
+- `role_key` / membership changes mid-session
 - Multi-device sessions safety behavior
 - Sale finalization prerequisites and audit signals
 - Offline reconciliation constraints (March-safe definition)
@@ -54,7 +54,7 @@ It prevents contradictions like “staff ended work while drawer is open” and 
    - Each action runs within exactly one branch context.
 
 4. **Authorization is checked at critical moments**
-   - Access Control must re-evaluate membership/role/assignment on sensitive actions.
+   - Access Control must re-evaluate membership status, `role_key`, and branch assignment on sensitive actions.
 
 ---
 
@@ -110,11 +110,11 @@ It prevents contradictions like “staff ended work while drawer is open” and 
 - **Owner**: Authentication session mgmt + Attendance + Cash Session
 - **March**: Yes (state safety)
 
-### EC-BND-06 — Permission/Role Changes Mid-Shift
-- **Scenario**: Role revoked while staff is working.
+### EC-BND-06 — Membership / Role Key Changes Mid-Shift
+- **Scenario**: Membership is disabled/archived, or `role_key` changes while staff is working.
 - **Trigger**: sensitive action (void, finalize sale, open drawer, etc.)
 - **Expected Behavior**:
-  - Access Control re-check denies action.
+  - Access Control re-check denies action if current facts/policy no longer allow it.
   - UI shows “Your access has changed.”
 - **Signal**: UI message + audit log
 - **Owner**: Access Control + UX contract
@@ -168,6 +168,15 @@ It prevents contradictions like “staff ended work while drawer is open” and 
 2) **Finalize sale requires attendance** → No hard block; audit flag
 3) **Archiving staff with active responsibilities** → Block archive
 4) **Branch switching mid-shift** → Require end/start
+
+---
+
+## Related Processes
+
+- `BusinessLogic/4_process/20_OrgAccount/10_tenant_membership_administration_process.md`
+- `BusinessLogic/4_process/20_IdentityAccess/10_identity_activation_recovery_orchestration.md`
+- `BusinessLogic/4_process/10_WorkForce/10_work_start_end_orchestration.md`
+- `BusinessLogic/4_process/10_WorkForce/20_work_end_orchestrastion.md`
 
 ---
 

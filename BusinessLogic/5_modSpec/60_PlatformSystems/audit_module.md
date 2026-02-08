@@ -1,10 +1,10 @@
 # Audit Logging Module — Core Module (Capstone I)
 
-**Version:** 1.1  
-**Status:** Patched (Branch lifecycle + frozen-branch denials added)  
+**Version:** 1.2  
+**Status:** Patched (Attendance events aligned; frozen-branch denials added)  
 **Module Type:** Core Module  
 **Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Sync & Offline Support (Core)  
-**Used by:** Sale, Cash Session & Reconciliation, Staff Attendance, Menu, Inventory, Discount, Policy & Configuration, Tenant/Branch (Core)
+**Used by:** Sale, Cash Session & Reconciliation, Attendance, Menu, Inventory, Discount, Policy & Configuration, Tenant/Branch (Core)
 
 ---
 
@@ -185,11 +185,10 @@ When outcome is `REJECTED`, the audit event should include a **denial reason**:
 - CASH_PAID_OUT_REJECTED
 - CASH_ADJUSTMENT_POSTED
 
-### Staff Attendance
+### Attendance
 - CHECK_IN_CREATED
 - CHECK_OUT_CREATED
-- OUT_OF_SHIFT_APPROVAL_GRANTED
-- OUT_OF_SHIFT_APPROVAL_REJECTED
+- CHECK_OUT_FORCED (optional; otherwise enrich CHECK_OUT_CREATED with forced metadata)
 
 ### Policy & Configuration
 - POLICY_UPDATED

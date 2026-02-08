@@ -6,7 +6,7 @@
 **Status:** Patched (Renamed from `auth_module`; explicit AuthN vs AuthZ separation)  
 **Module Type:** Core Module  
 **Depends on:** Tenant & Branch (context), Staff Membership / Roles (IdentityAccess), Audit Logging (Platform), Policy & Configuration (Platform), Offline Sync (Platform)  
-**Related Modules:** Tenant, Branch, Staff Management, Staff Attendance, Sale, Cash Session, Receipt, Audit, Policy, Offline Sync
+**Related Modules:** Tenant, Branch, Staff Management, Attendance, Sale, Cash Session, Receipt, Audit, Policy, Offline Sync
 
 ---
 
@@ -101,13 +101,18 @@ But:
 - **Session**: authenticated session (access/refresh tokens, revocation state)
 - **Tenant Context**: which tenant/workspace the user is operating in
 - **Branch Context**: which branch/location the user is operating in (if required)
-- **Membership**: link between AuthAccount and Tenant (owned elsewhere)
-- **Role**: tenant-scoped role (Admin/Manager/Cashier) (owned elsewhere)
+- **Membership**: link between AuthAccount and Tenant (owned by Tenant Membership)
+- **Membership Kind**: governance relationship (OWNER/MEMBER) (owned by Tenant Membership)
+- **Role Key**: tenant-scoped authorization role key (`role_key`; e.g., `ADMIN`, `MANAGER`, `CASHIER`, ...) (owned by Tenant Membership)
 - **Authorization Decision**: yes/no answer using external facts
 
 ---
 
 ## 5. Use Cases
+
+> Canonical process references (behavior source of truth):
+> - Identity activation + recovery + context selection: `BusinessLogic/4_process/20_IdentityAccess/10_identity_activation_recovery_orchestration.md`
+> - Staff onboarding that provisions identities: `BusinessLogic/4_process/10_WorkForce/05_staff_provisioning_orchestration.md`
 
 ### 5.1 Authentication (Owned)
 
@@ -244,7 +249,7 @@ But:
 
 ### Stored by other modules (referenced)
 - Tenant membership, roles, branch assignments
-- Tenant status (ACTIVE/SUSPENDED)
+- Tenant status (ACTIVE/FROZEN)
 - Entitlements snapshot (future)
 
 ---

@@ -4,7 +4,7 @@
 **Status:** Revised (Branch provisioning is system-driven)  
 **Module Type:** Core Module  
 **Depends on:** Auth & Authorization (Core), Tenant & Branch Context (Core)  
-**Related Modules:** Subscription/Billing (Phase 2), Sale & Orders, Inventory, Cash Session, Staff Attendance, Reporting, Receipt/eReceipt, Policy, Audit Logging
+**Related Modules:** Subscription/Billing (Phase 2), Sale & Orders, Inventory, Cash Session, Attendance, Reporting, Receipt/eReceipt, Policy, Audit Logging
 
 ---
 
@@ -134,11 +134,14 @@ Any operation that creates or mutates branch-scoped operational records requires
 
 **Main Flow:**
 1. System returns accessible branches:
-   - Admin: all branches
-   - Manager/Cashier: assigned branch only (Capstone I)
+   - Branch selection list is derived from **explicit branch assignments** (for all roles).
+   - Filter to branches where:
+     - BranchAssignment is ACTIVE for the actor, and
+     - Branch status is ACTIVE (not FROZEN)
 
 **Acceptance Criteria:**
-- Branch visibility respects role + assignment.
+- Branch visibility respects explicit assignment (no implicit “Admin can access all branches”).
+- To grant “all branches”, create assignments for every branch.
 
 ---
 
@@ -147,7 +150,7 @@ Any operation that creates or mutates branch-scoped operational records requires
 ### Functional
 - Branch profile update (Admin)
 - Freeze/unfreeze (Admin)
-- Branch list (role-scoped)
+- Branch list (assignment-scoped)
 - System provisioning hook (non-UI)
 
 ### Non-functional

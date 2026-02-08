@@ -21,7 +21,7 @@ The Tenant Membership domain defines **who belongs to a tenant** and what kind o
 It exists to answer:
 - Who is part of this business?
 - Who has authority to add/remove people?
-- What is the difference between an owner, an admin, and a staff member as membership types?
+- What is the difference between **ownership (governance)** and **operational roles** (admin/manager/cashier)?
 - How does membership remain stable over time, even when staff leave?
 
 Tenant Membership is the **foundation of “team setup”** without mixing in authentication credentials or day-to-day HR operations.
@@ -60,24 +60,36 @@ but membership is the root.
 
 ---
 
-### Membership Type (Business Relationship)
+### Membership Kind (Governance Relationship)
 
-A membership type expresses the relationship between a person and the tenant.
-
-Example membership types:
-- **Owner** — ultimate authority for the tenant
-- **Admin** — trusted operator for setup and management
-- **Staff** — operational worker
-
-Important:
-- Membership type expresses business meaning.
-- Permission decisions remain owned by Access Control.
-- A membership type is a stable classification that helps structure policies later.
+A membership kind expresses the **governance relationship** between a person and the tenant.
 
 For March delivery:
-- Access Control evaluates permission roles such as `ADMIN`, `MANAGER`, `CASHIER`.
-- `OWNER` membership implies an `ADMIN`-level permission role (owners are never less powerful than admins).
-- Staff operational role labels (e.g., manager/cashier) live in Staff Profile & Assignment.
+- `OWNER` — ultimate authority for the tenant (governance invariant)
+- `MEMBER` — everyone else
+
+Important:
+- Membership kind is governance meaning, not an operational permission bundle.
+- Permission decisions remain owned by Access Control (via role policy + action keys).
+- Ownership transfer is out of scope for March, but the model must support it later.
+
+---
+
+### Tenant Role Key (Authorization Role)
+
+A tenant role key expresses the **tenant-scoped authorization role** granted to a member.
+
+The role key is a stable fact owned by Tenant Membership and **consumed by Access Control**.
+Access Control owns the permission matrix (which actions each role may perform).
+
+For March delivery, the built-in role keys are:
+- `ADMIN` — trusted operator for setup and management
+- `MANAGER` — operational supervisor role
+- `CASHIER` — operational worker role
+
+Design rule:
+- Role keys must be **extendable** (e.g., adding `INVENTORY_CLERK`) without rewriting HR domains/processes.
+- Role keys are not job titles; job titles belong to Staff Profile & Assignment for display/scheduling context only.
 
 ---
 
@@ -118,7 +130,8 @@ A Tenant Member typically includes:
 - `tenant_id`
 - `member_id` (tenant-scoped membership id; the same person may have different `member_id`s in other tenants)
 - `auth_account_id` (link to Authentication identity)
-- `membership_type` (OWNER, ADMIN, STAFF)
+- `membership_kind` (`OWNER` or `MEMBER`)
+- `role_key` (`ADMIN`, `MANAGER`, `CASHIER`, ...)
 - `membership_status` (ACTIVE, DISABLED, ARCHIVED)
 - `created_by_member_id` (who added them)
 - `created_at`
@@ -132,12 +145,16 @@ Optional:
 
 ## Invariants
 
-- Every tenant must have at least one OWNER membership.
+- Every tenant must have at least one ACTIVE `OWNER` membership.
 - An authentication identity may belong to multiple tenants (multi-tenant SaaS).
   - This enables a person to work for multiple businesses using one login identity.
 - Membership must be unique per `(tenant_id, auth_account_id)` (no duplicate memberships for the same person in the same tenant).
 - A tenant member’s identity must be unique within tenant constraints (Authentication enforces credential uniqueness).
 - Removing membership must not delete historical records (attendance, sales, audit).
+  
+Authorization-aware invariants:
+- Each ACTIVE membership must have a `role_key`.
+- An `OWNER` must never be less powerful than an `ADMIN` in Access Control policy (implementation can satisfy this by ensuring owners are granted `ADMIN`-equivalent permissions).
 
 Capability-aware invariants:
 - Some tenants may be entitled to limited staff capacity.
@@ -170,13 +187,13 @@ It only defines belonging and membership relationships.
 
 ### Tenant Membership ↔ Staff Profile & Assignment
 - Staff Profile is the operational representation (who they are in day-to-day work).
-- Staff Profile usually exists only for members of type STAFF (and sometimes ADMIN/OWNER as operational actors).
+- Staff Profile exists for members who operate day-to-day in the tenant (including owners/admins if they work shifts).
 - Membership is the prerequisite; profile is the operational view.
 
 ---
 
 ### Tenant Membership ↔ Access Control
-- Access Control uses membership type and status as primary inputs.
+- Access Control uses membership status and `role_key` as primary inputs (and may use `membership_kind` for governance-only invariants).
 - Membership says “belongs”; access control says “may.”
 
 ---

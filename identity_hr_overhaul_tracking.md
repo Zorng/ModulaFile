@@ -4,7 +4,7 @@ This document tracks the progress of the **Identity, Authorization, HR, and OrgA
 
 The goal of this overhaul is to rebuild the people/work/business foundation of Modula using the proper layer order:
 
-Stories → Domains → Processes → ModSpec
+Stories → Domains → Contracts → Processes → ModSpec
 
 This tracker is the source of truth for **where we are in the overhaul**.
 

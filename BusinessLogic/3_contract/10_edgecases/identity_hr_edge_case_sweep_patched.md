@@ -5,7 +5,7 @@
 - **Scope**: Identity & HR context (internal to workforce + identity membership rules)
 - **Primary Audience**: Backend, Frontend, QA
 - **Owner(s)**: Tenant Membership, Staff Profile & Assignment, Shift, Attendance, Work Review, Work Start/End Orchestration
-- **Last Updated**: 2026-02-06
+- **Last Updated**: 2026-02-08
 - **Delivery Level**:
   - **March**: must be handled or explicitly degraded safely
   - **Later**: explicitly deferred
@@ -51,12 +51,13 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 - **March**: Yes
 
 ### EC-IDH-02 — Member Has Multiple Responsibilities
-- **Scenario**: Same person is both ADMIN and operational STAFF.
-- **Trigger**: Membership role is ADMIN/OWNER and Staff Profile exists.
+- **Scenario**: Same person is an owner/admin and also works shifts as staff.
+- **Trigger**: Membership has `membership_kind = OWNER` and/or `role_key = ADMIN`, and Staff Profile exists.
 - **Expected Behavior**:
-  - Membership role remains singular.
-  - Operational ability comes from Staff Profile existence.
-- **Owner**: Tenant Membership + Staff Profile
+  - Membership remains a single record per tenant with `membership_kind` + `role_key`.
+  - Staff Profile exists to support operational work (branch assignment + display context like job title).
+  - Authorization is evaluated from `role_key` + branch assignment; job title is not an authorization input.
+- **Owner**: Tenant Membership + Staff Profile & Assignment + Access Control
 - **March**: Yes
 
 ### EC-IDH-03 — Removing a Member with History

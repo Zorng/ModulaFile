@@ -20,7 +20,7 @@ The Staff Profile & Assignment domain represents **people who work for a tenant*
 
 It captures:
 - who a staff member is (as a person within the tenant),
-- what role context they operate under (business meaning, not permission logic),
+- what job title / position context they operate under (business meaning, not permission logic),
 - where they are allowed to work (branch assignment / eligibility),
 - whether they are currently active or not.
 
@@ -81,21 +81,16 @@ Whether an action is permitted at request-time is decided by Access Control.
 
 ---
 
-### Role Context (Business Meaning)
+### Job Title / Position (Business Meaning)
 
-A staff member may have a role label such as:
-- admin
-- manager
-- cashier
-- barista (job title; not a permission role)
+A staff member may have a **job title** (optional) such as:
+- barista
+- trainee
+- shift lead
 
-In this domain, role is treated as **business meaning** and a stable label, not an enforcement engine.
+In this domain, job title is treated as **business meaning** and display/scheduling context — not an enforcement engine.
 
-The permission logic that maps roles to allowed actions belongs to Access Control.
-
-For March delivery:
-- Use `ADMIN`, `MANAGER`, `CASHIER` as the canonical permission role keys (consumed by Access Control).
-- Treat job titles (e.g., barista) as profile metadata only.
+Authorization roles (tenant-scoped `role_key`) belong to Tenant Membership and are evaluated by Access Control.
 
 ---
 
@@ -107,6 +102,7 @@ A Staff Member / Profile typically includes:
 - `auth_account_id` (link to Authentication identity)
 - `display_name`
 - `staff_code` (optional)
+- `job_title` (optional)
 - `status` (ACTIVE, DISABLED, ARCHIVED)
 - `created_at`
 - `updated_at`
@@ -119,10 +115,6 @@ A Branch Assignment typically includes:
 - `assigned_at`
 - `unassigned_at` (nullable)
 
-Role context may include:
-- `role_key` (e.g., CASHIER, MANAGER, ADMIN)
-- `role_assigned_at`
-
 ---
 
 ## Invariants
@@ -132,7 +124,8 @@ Role context may include:
 - A staff member’s branch assignments may change over time; history should be preservable.
 - Authentication identities are globally unique; this domain references them via `auth_account_id`.
 - Deactivating or archiving staff does not delete history (attendance and sales remain traceable).
-- Role labels are not authorization decisions.
+- Job titles and display labels are not authorization decisions.
+- Authorization role keys must not be duplicated here (source of truth is Tenant Membership).
 
 Capability-aware invariants:
 - Some tenants may only be entitled to a single branch.
@@ -199,7 +192,7 @@ It only stores stable facts about people and their workplace eligibility.
 
 ### Staff Profile ↔ Access Control
 - Access Control decides what actions are allowed.
-- Access Control consumes branch assignment and role context as inputs.
+- Access Control consumes branch assignment facts from this domain and `role_key` from Tenant Membership.
 
 ---
 

@@ -81,9 +81,9 @@ Access Control **consumes facts** (membership, role, branch assignment, tenant s
 | Actor | The authenticated user identity (`auth_account_id`) |
 | Tenant | The business workspace boundary |
 | Branch | A physical operating location within a tenant |
-| Action | A named operation (e.g., `sale.finalize`, `inventory.adjust`) |
-| Role | Tenant-scoped role (ADMIN, MANAGER, CASHIER) |
-| Membership | Actor ↔ Tenant relationship (ACTIVE/DISABLED/ARCHIVED) |
+| Action (Permission Key) | A stable operation key (e.g., `sale.finalize`, `inventory.adjust`) |
+| Role Key | Tenant-scoped authorization role identifier (e.g., `ADMIN`, `MANAGER`, `CASHIER`, …) |
+| Membership | Actor ↔ Tenant relationship (status + `role_key` + optional ownership flag) |
 | Branch Assignment | Actor ↔ Branch relationship (ACTIVE/REVOKED) |
 | Decision | ALLOW or DENY with a reason code |
 | Context | The chosen tenant + branch the user is operating in |
@@ -134,7 +134,7 @@ Design rule: actions are stable public contract keys, not method names.
 Defines which roles are permitted for which actions.
 
 MVP uses RBAC:
-- CASHIER, MANAGER, ADMIN
+- CASHIER, MANAGER, ADMIN (extendable via additional role keys)
 
 RolePolicy may be:
 - code-defined mapping (MVP)
@@ -146,9 +146,10 @@ RolePolicy may be:
 Access Control consumes membership facts:
 - membership exists?
 - membership status ACTIVE? (or not DISABLED/ARCHIVED)
-- role in tenant?
+ - `role_key` in tenant?
+ - optional: membership kind / ownership flag for governance-only invariants
 
-Owned by Tenant Membership + Staff Profile domains.
+Owned by Tenant Membership domain.
 
 ---
 
@@ -283,3 +284,4 @@ Modula uses **explicit branch assignments** to grant branch access (academic pro
 - add branch-level capability gating (e.g., branch count limits)
 - add temporary access grants (cover shifts)
 - add richer policies (ABAC) if needed, while keeping action contract stable
+ - add data-defined roles (custom tenant roles) without changing action keys

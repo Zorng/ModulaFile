@@ -6,7 +6,7 @@
 **Status:** Patched to support Access Control + future SaaS (without implementing billing yet)  
 **Module Type:** Core / Organizational Boundary  
 **Depends on:** Authentication (identity), Access Control (authorization decisions), Audit (logging), Policy (optional), Offline Sync (optional)  
-**Related Modules:** Branch, Staff Management, Staff Attendance, Sale, Cash Session, Inventory, Menu, Reporting, Access Control
+**Related Modules:** Branch, Staff Management, Attendance, Sale, Cash Session, Inventory, Menu, Reporting, Access Control
 
 ---
 
@@ -31,18 +31,18 @@ This module is intentionally **not** a billing system and does not implement pay
 - **Tenant** defines the business workspace and its lifecycle.
 
 ### 2.2 Tenant vs Staff Management (Membership Workflows)
-- **Tenant owns the truth of membership + role as tenant-scoped facts** (needed for authorization).
+- **Tenant owns the truth of tenant membership facts** (needed for authorization and governance safety).
 - **Staff Management owns the workflows and staff profile** (inviting, onboarding, disabling staff, etc.).
 - Access Control reads:
   - tenant status (from Tenant)
-  - tenant membership + role (from Tenant)
+  - tenant membership (`membership_kind`, `role_key`, `membership_status`) (from Tenant)
   - branch assignment (from Staff Management)
 
 This separation prevents business-critical authorization facts from being scattered.
 
 ### 2.3 Tenant vs Access Control
 - Tenant does **not** decide permissions.
-- Tenant provides facts (tenant status, membership roles) that Access Control uses to decide.
+- Tenant provides facts (tenant status, membership facts) that Access Control uses to decide.
 
 ---
 
@@ -60,13 +60,14 @@ Minimum fields:
 - `created_at`, `updated_at`
 
 ### 3.2 TenantMembership (Tenant-scoped Fact)
-Represents a user’s relationship to a tenant and their role.
+Represents a user’s relationship to a tenant (governance + authorization).
 
 Minimum fields:
 - `tenant_id`
 - `auth_account_id` (actor id from Authentication)
-- `role` = ADMIN | MANAGER | CASHIER (extend later)
-- `status` = ACTIVE | REVOKED | (optional) SUSPENDED
+- `membership_kind` = OWNER | MEMBER
+- `role_key` = ADMIN | MANAGER | CASHIER (extend later)
+- `membership_status` = ACTIVE | DISABLED | ARCHIVED
 - `created_at`, `updated_at`
 
 **Design rule:** Membership is keyed by `auth_account_id` to keep authorization deterministic.
@@ -79,9 +80,10 @@ Minimum fields:
 - INV-T2: Cross-tenant data access is forbidden.
 - INV-T3: Tenant status is a fact; Access Control enforces behavior based on it.
 - INV-T4: Membership must be tenant-scoped (not global).
-- INV-T5: A revoked/suspended membership must be reflected immediately in authorization decisions.
+- INV-T5: A disabled/archived membership must be reflected immediately in authorization decisions.
 - INV-T6: A tenant should have at least one branch provisioned (enforced via provisioning workflow).
-- INV-T7: A tenant must have at least one ADMIN membership (MVP rule).
+- INV-T7: A tenant must have at least one ACTIVE OWNER membership (governance safety).
+- INV-T8: An OWNER must never be less powerful than an ADMIN in Access Control policy (for March: keep `role_key = ADMIN` for owners).
 
 ---
 
@@ -94,7 +96,9 @@ Minimum fields:
 **Inputs:** business name, initial owner identity (auth_account_id), optional metadata.  
 **Steps:**
 - create Tenant (status ACTIVE)
-- create initial ADMIN membership for owner
+- create initial membership for owner:
+  - `membership_kind = OWNER`
+  - `role_key = ADMIN` (March baseline)
 - (recommended) create first branch via Branch module provisioning
 - log to Audit
 
@@ -131,16 +135,20 @@ Minimum fields:
 
 > This section defines membership facts and their lifecycle. Staff Management may provide the UI/workflow to trigger these operations.
 
+Canonical process reference:
+- `BusinessLogic/4_process/20_OrgAccount/10_tenant_membership_administration_process.md`
+
 ### UC-T4 — Grant Membership (Add a User to Tenant)
 **Goal:** Add an actor to tenant with a role.
 
-**Inputs:** tenant_id, auth_account_id, role  
+**Inputs:** tenant_id, auth_account_id, `role_key`  
 **Rules:**
 - cannot grant membership if tenant is FROZEN (optional MVP)
-- role must be in allowed set
+- `role_key` must be recognized by the current RolePolicy (do not hardcode role lists in Tenant)
 - if membership already exists and ACTIVE → idempotent no-op or return conflict
+  - owners are created during tenant provisioning; ownership transfer is out of scope for March MVP
 
-**Outputs:** membership record ACTIVE
+**Outputs:** membership record with `membership_status = ACTIVE`
 
 **Audit:** MEMBER_ADDED
 
@@ -150,7 +158,7 @@ Minimum fields:
 **Goal:** Promote/demote role.
 
 **Rules:**
-- cannot change role of last remaining ADMIN (INV-T7)
+- cannot set an OWNER to less than ADMIN-equivalent permissions (INV-T8)
 - changes take effect immediately for authorization
 
 **Audit:** MEMBER_ROLE_CHANGED
@@ -161,19 +169,24 @@ Minimum fields:
 **Goal:** Remove actor from tenant.
 
 **Rules:**
-- cannot revoke last ADMIN
+- cannot revoke/archive the last ACTIVE OWNER (INV-T7)
 - revocation takes effect immediately (Access Control must deny next request)
+
+**Effect:**
+- set membership `membership_status` → `ARCHIVED`
 
 **Audit:** MEMBER_REVOKED
 
 ---
 
-### UC-T7 — Suspend/Reactivate Membership (Optional)
+### UC-T7 — Disable/Reactivate Membership (Optional)
 **Goal:** Temporarily disable a member without deleting history.
 
 **Why:** Useful for HR discipline or temporary leave.
 
-**Rule:** SUSPENDED behaves like REVOKED for authorization.
+**Rules:**
+- Cannot disable the last ACTIVE OWNER (governance safety).
+- DISABLED behaves like ARCHIVED for authorization (deny operational actions) but is reversible.
 
 ---
 
@@ -184,7 +197,7 @@ Minimum fields:
 - List tenants for actor (for tenant selection at login)
 
 ### Membership queries (critical for Access Control)
-- Get membership(role, status) by (tenant_id, auth_account_id)
+- Get membership(`membership_kind`, `role_key`, `membership_status`) by (tenant_id, auth_account_id)
 - List memberships for tenant (admin UI)
 - List tenants for actor (where membership ACTIVE)
 
@@ -199,7 +212,7 @@ Recommended events (or audit logs):
 - TENANT_MEMBER_GRANTED
 - TENANT_MEMBER_ROLE_CHANGED
 - TENANT_MEMBER_REVOKED
-- TENANT_MEMBER_SUSPENDED / REACTIVATED
+- TENANT_MEMBER_DISABLED / REACTIVATED
 
 These support traceability for academic defense and debugging.
 
@@ -211,8 +224,9 @@ These support traceability for academic defense and debugging.
 - TENANT_NOT_ACTIVE (when status is FROZEN; enforcement by Access Control)
 - MEMBER_NOT_FOUND
 - MEMBER_NOT_ACTIVE
-- ROLE_INVALID
-- CANNOT_REMOVE_LAST_ADMIN
+- ROLE_KEY_INVALID
+- CANNOT_REMOVE_LAST_OWNER
+- CANNOT_DEMOTE_OWNER_ROLE
 - DUPLICATE_MEMBERSHIP
 
 ---
@@ -240,7 +254,7 @@ These support traceability for academic defense and debugging.
 
 Access Control middleware calls:
 - Tenant: `tenant.status`
-- TenantMembership: membership existence + role + status
+- TenantMembership: membership existence + `membership_kind` + `role_key` + `membership_status`
 
 Access Control separately checks:
 - Branch assignment (from Staff Management)

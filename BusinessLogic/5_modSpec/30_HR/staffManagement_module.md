@@ -5,7 +5,7 @@
 **Version:** 3.1  
 **Status:** Patched (simplified onboarding; user-owned credentials; aligned with Authentication, Access Control, Tenant, and Concurrent Staff Licensing)  
 **Module Type:** Supporting Domain (Org Operations / HR-light)  
-**Depends on:** Authentication (identity & credentials), Tenant (membership & roles), Branch (branch entity), Access Control (authorization), Attendance (signals), Audit (logging)  
+**Depends on:** Authentication (identity & credentials), Tenant (membership facts: `membership_kind` + `role_key`), Branch (branch entity), Access Control (authorization), Attendance (signals), Audit (logging)  
 **Related Modules:** Attendance, Cash Session, Sale, Access Control, Staff Licensing, Subscription/Entitlements (future)
 
 ---
@@ -46,7 +46,7 @@ To prioritize shipping and reduce onboarding complexity, Modula adopts **owner-p
 
 ### 2.3 Tenant Membership vs Staff Profile
 
-- **Tenant module** owns tenant membership and role (`ADMIN / MANAGER / CASHIER`).
+- **Tenant module** owns tenant membership facts (`membership_kind`, `role_key`, membership status).
 - **Staff Management** owns staff profiles and branch assignments.
 
 A staff member can operate only if all are true:
@@ -83,6 +83,7 @@ Minimum fields:
 - `auth_account_id`
 - `display_name`
 - `staff_code` (optional)
+- `job_title` (optional; display/scheduling context only)
 - `pin_hash` (optional; for quick unlock)
 - `status` = ACTIVE | DISABLED | ARCHIVED
 - `created_at`, `updated_at`
@@ -100,7 +101,7 @@ Minimum fields:
 - `tenant_id`
 - `branch_id`
 - `auth_account_id`
-- `status` = ACTIVE | REVOKED
+- `assignment_status` = ACTIVE | REVOKED
 - `assigned_at`
 - `revoked_at?`
 - `assigned_by` (auth_account_id)
@@ -130,7 +131,7 @@ The storage mechanism is an implementation detail; the definition is canonical.
 - INV-SM3: Branch access requires explicit BranchAssignment.
 - INV-SM4: BranchAssignment revocation is immediate.
 - INV-SM5: Concurrent staff limits gate operation, not staff record creation.
-- INV-SM6: Admin/Manager roles do not bypass branch assignment or licensing limits.
+- INV-SM6: `role_key` does not bypass branch assignment or licensing limits (including for ADMIN/MANAGER).
 
 ---
 
@@ -139,11 +140,14 @@ The storage mechanism is an implementation detail; the definition is canonical.
 ### UC-SM1 — Create Staff Account (Owner Provisioned)
 **Goal:** Owner/admin provisions staff access for a phone number (membership/profile), while credentials remain user-owned.
 
+Canonical process reference:
+- `BusinessLogic/4_process/10_WorkForce/05_staff_provisioning_orchestration.md`
+
 **Inputs**
 - tenant_id
 - phone_number (login identifier)
 - display_name
-- initial role (Tenant membership)
+- initial `role_key` (Tenant membership)
 - initial branch assignments (one or more)
 
 **Steps**
@@ -152,7 +156,9 @@ The storage mechanism is an implementation detail; the definition is canonical.
    - Otherwise provision an Authentication account (phone identifier only; unverified; no password yet).
 2. Trigger Authentication-managed OTP flow for phone verification + password setup (if needed).
 3. Create StaffProfile linked to `auth_account_id` with status ACTIVE.
-4. Ensure TenantMembership exists with selected role.
+4. Ensure TenantMembership exists with:
+   - `membership_kind = MEMBER` (staff provisioning does not create owners)
+   - `role_key = <role_key>`
 5. Create BranchAssignment(s).
 
 **Rules**

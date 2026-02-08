@@ -71,13 +71,13 @@ Decision evaluation order (fast denial first):
 
 2) **Membership**
 - If no active membership for actor in tenant → DENY(NO_MEMBERSHIP)
-- Determine role from membership
+- Determine `role_key` from membership
 
 3) **Branch assignment**
 - If no active assignment for actor to branch in tenant → DENY(NO_BRANCH_ACCESS)
 
 4) **Role policy**
-- If role does not permit action → DENY(ACTION_NOT_PERMITTED)
+- If `role_key` does not permit action → DENY(ACTION_NOT_PERMITTED)
 
 5) **Entitlements (future hook)**
 - If entitlements block feature → DENY(ENTITLEMENT_BLOCKED)
@@ -94,8 +94,9 @@ This module does not own these; it reads them.
 Needed fields:
 - `actor_id`
 - `tenant_id`
-- `role`
-- `status` (ACTIVE/REVOKED)
+- `membership_kind` (OWNER | MEMBER)
+- `role_key` (e.g., `ADMIN`, `MANAGER`, `CASHIER`, ...)
+- `membership_status` (ACTIVE/DISABLED/ARCHIVED)
 
 ### 5.2 Branch assignment store
 Branch access is granted **only** via explicit assignments (including for Admin/Manager).
@@ -104,12 +105,12 @@ Needed fields:
 - `actor_id`
 - `tenant_id`
 - `branch_id`
-- `status` (ACTIVE/REVOKED)
+- `assignment_status` (ACTIVE/REVOKED)
 
 ### 5.3 Tenant status
 Needed fields:
 - `tenant_id`
-- `status` (ACTIVE/SUSPENDED)
+- `status` (ACTIVE/FROZEN)
 
 ### 5.4 Role policy
 MVP: code-defined mapping.
@@ -132,9 +133,10 @@ Use stable string keys. Examples:
 - `receipt.print`
 
 ### Inventory & Menu
+- `inventory.view`
 - `inventory.receive`
 - `inventory.adjust`
-- `inventory.forceCorrect`
+- `inventory.forceCorrect` (reserved; admin-only correction tool if ever needed)
 - `menu.manage`
 
 ### Reporting
@@ -151,7 +153,7 @@ Example baseline mapping (adjust as needed):
   - cashSession.open, cashSession.close
 - MANAGER:
   - everything CASHIER can do
-  - inventory.adjust
+  - inventory.view, inventory.receive
   - sale.void.approve
   - reports.view
 - ADMIN:
@@ -167,7 +169,7 @@ Because Modula is offline-first:
 
 ### 8.1 Cached facts
 The POS client should cache:
-- memberships + roles
+- memberships + `role_key`
 - branch assignments
 - tenant status
 - policy version
