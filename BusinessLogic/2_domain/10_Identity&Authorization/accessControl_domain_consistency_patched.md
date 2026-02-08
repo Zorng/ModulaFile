@@ -6,6 +6,9 @@ Access Control (Authorization)
 ## Domain Type
 Platform / Supporting Domain (Authorization)
 
+## Domain Group
+10_Identity&Authorization
+
 ## Status
 Draft (Branch access is mandatory — academic promise)
 
@@ -75,13 +78,13 @@ Access Control **consumes facts** (membership, role, branch assignment, tenant s
 
 | Term | Meaning |
 |---|---|
-| Actor | The authenticated user identity (`authentication_account_id`) |
+| Actor | The authenticated user identity (`auth_account_id`) |
 | Tenant | The business workspace boundary |
 | Branch | A physical operating location within a tenant |
 | Action | A named operation (e.g., `sale.finalize`, `inventory.adjust`) |
 | Role | Tenant-scoped role (ADMIN, MANAGER, CASHIER) |
-| Membership | Actor ↔ Tenant relationship (active/inactive) |
-| Branch Assignment | Actor ↔ Branch relationship (active/inactive) |
+| Membership | Actor ↔ Tenant relationship (ACTIVE/DISABLED/ARCHIVED) |
+| Branch Assignment | Actor ↔ Branch relationship (ACTIVE/REVOKED) |
 | Decision | ALLOW or DENY with a reason code |
 | Context | The chosen tenant + branch the user is operating in |
 | Entitlements | SaaS capability snapshot (future) |
@@ -99,9 +102,10 @@ Output of the domain:
 Example deny reasons:
 - TENANT_NOT_ACTIVE
 - NO_MEMBERSHIP
-- MEMBERSHIP_SUSPENDED
+- MEMBERSHIP_DISABLED
 - NO_BRANCH_ACCESS
 - BRANCH_ACCESS_REVOKED
+- BRANCH_FROZEN
 - ACTION_NOT_PERMITTED
 - ENTITLEMENT_BLOCKED (future)
 
@@ -141,7 +145,7 @@ RolePolicy may be:
 ### 3.4 Membership (External Fact)
 Access Control consumes membership facts:
 - membership exists?
-- membership status ACTIVE? (or not DISABLED/REMOVED)
+- membership status ACTIVE? (or not DISABLED/ARCHIVED)
 - role in tenant?
 
 Owned by Tenant Membership + Staff Profile domains.
@@ -151,7 +155,7 @@ Owned by Tenant Membership + Staff Profile domains.
 ### 3.5 Branch Assignment (External Fact)
 Access Control consumes branch assignment facts:
 - is actor assigned to this branch?
-- assignment status active?
+- assignment status ACTIVE? (or not REVOKED)
 
 Owned by Staff Management (or a staff/organization domain), but consumed here.
 
@@ -161,13 +165,21 @@ Branch access is **mandatory** for operational actions.
 
 ### 3.6 Tenant Status (External Fact)
 Access Control consumes tenant status:
-- ACTIVE / SUSPENDED (and future states)
+- ACTIVE / FROZEN (and future states)
 
 Owned by Tenant domain/module.
 
 ---
 
-### 3.7 Entitlements Snapshot (External Fact — Future)
+### 3.7 Branch Status (External Fact)
+Access Control consumes branch status:
+- ACTIVE / FROZEN
+
+Owned by Branch domain/module.
+
+---
+
+### 3.8 Entitlements Snapshot (External Fact — Future)
 A computed snapshot of capabilities for the tenant.
 Access Control must be compatible with adding:
 - feature gating
@@ -185,7 +197,8 @@ without rewriting all modules
 - INV-AC4: If branch access cannot be verified, deny (fail closed).
 - INV-AC5: Authorization decisions must be deterministic based on current facts.
 - INV-AC6: RolePolicy must be stable and versionable (for auditability).
-- INV-AC7: Tenant suspension must block operational actions (unless explicitly allow-listed).
+- INV-AC7: Tenant frozen status must block operational actions (unless explicitly allow-listed).
+- INV-AC8: Branch frozen status must block operational actions (unless explicitly allow-listed).
 
 ---
 

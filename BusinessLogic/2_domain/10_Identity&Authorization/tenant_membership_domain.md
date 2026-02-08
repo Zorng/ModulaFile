@@ -6,6 +6,9 @@ Tenant Membership
 ## Domain Type
 Identity & Organization Domain
 
+## Domain Group
+10_Identity&Authorization
+
 ## Status
 Draft (Derived from Anchor Stories A1, A5)
 
@@ -71,6 +74,11 @@ Important:
 - Permission decisions remain owned by Access Control.
 - A membership type is a stable classification that helps structure policies later.
 
+For March delivery:
+- Access Control evaluates permission roles such as `ADMIN`, `MANAGER`, `CASHIER`.
+- `OWNER` membership implies an `ADMIN`-level permission role (owners are never less powerful than admins).
+- Staff operational role labels (e.g., manager/cashier) live in Staff Profile & Assignment.
+
 ---
 
 ### Membership Status
@@ -78,7 +86,7 @@ Important:
 Membership also has a lifecycle:
 - ACTIVE
 - DISABLED
-- REMOVED (soft-removed / archived)
+- ARCHIVED (removed from active roster; history preserved)
 
 Status defines whether a person is currently considered part of the tenant.
 
@@ -109,9 +117,9 @@ Authentication handles password setup/reset and account recovery (Staff Manageme
 A Tenant Member typically includes:
 - `tenant_id`
 - `member_id` (tenant-scoped membership id; the same person may have different `member_id`s in other tenants)
-- `auth_identity_ref` (link to Authentication identity)
+- `auth_account_id` (link to Authentication identity)
 - `membership_type` (OWNER, ADMIN, STAFF)
-- `membership_status` (ACTIVE, DISABLED, REMOVED)
+- `membership_status` (ACTIVE, DISABLED, ARCHIVED)
 - `created_by_member_id` (who added them)
 - `created_at`
 - `updated_at`
@@ -127,7 +135,7 @@ Optional:
 - Every tenant must have at least one OWNER membership.
 - An authentication identity may belong to multiple tenants (multi-tenant SaaS).
   - This enables a person to work for multiple businesses using one login identity.
-- Membership must be unique per `(tenant_id, auth_identity_ref)` (no duplicate memberships for the same person in the same tenant).
+- Membership must be unique per `(tenant_id, auth_account_id)` (no duplicate memberships for the same person in the same tenant).
 - A tenant member’s identity must be unique within tenant constraints (Authentication enforces credential uniqueness).
 - Removing membership must not delete historical records (attendance, sales, audit).
 

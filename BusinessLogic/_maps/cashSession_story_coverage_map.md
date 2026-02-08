@@ -8,7 +8,7 @@
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/2_domain/30_POSOperation/cashSession_domain.md`
+- **Domain:** `BusinessLogic/2_domain/40_POSOperation/cashSession_domain.md`
 - **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/cashSession_module_patched_v2.md`
 
 ---

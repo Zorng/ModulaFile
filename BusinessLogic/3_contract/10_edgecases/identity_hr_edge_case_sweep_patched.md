@@ -5,7 +5,7 @@
 - **Scope**: Identity & HR context (internal to workforce + identity membership rules)
 - **Primary Audience**: Backend, Frontend, QA
 - **Owner(s)**: Tenant Membership, Staff Profile & Assignment, Shift, Attendance, Work Review, Work Start/End Orchestration
-- **Last Updated**: 2026-02-04
+- **Last Updated**: 2026-02-06
 - **Delivery Level**:
   - **March**: must be handled or explicitly degraded safely
   - **Later**: explicitly deferred
@@ -63,7 +63,7 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 - **Scenario**: Staff leaves after months of work.
 - **Trigger**: Owner/admin removes membership.
 - **Expected Behavior**:
-  - Membership marked REMOVED.
+  - Membership marked ARCHIVED.
   - History preserved.
 - **Owner**: Tenant Membership
 - **March**: Yes
@@ -82,8 +82,8 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 - **Owner**: Staff Profile + Access Control
 - **March**: Yes
 
-### EC-IDH-06 — Suspended / Archived Staff
-- **Scenario**: Staff is suspended/archived but tries to work.
+### EC-IDH-06 — Disabled / Archived Staff
+- **Scenario**: Staff is disabled/archived but tries to work.
 - **Trigger**: START_WORK attempted.
 - **Expected Behavior**: START_WORK denied.
 - **Owner**: Staff Profile + Work Start orchestration
@@ -178,6 +178,6 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 ## Summary
 - Most risk lies in orchestration, idempotency, and cross-boundary responsibilities.
 - March delivery is feasible with explicit degradation rules (UNKNOWN/MISMATCH attestation, partial atomicity).
-- Cross-boundary rules are centralized in `contracts/10_edge_cases/identity_hr_pos_boundary_edge_cases.md`.
+- Cross-boundary rules are centralized in `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`.
 
 _End of Identity & HR edge case contract_

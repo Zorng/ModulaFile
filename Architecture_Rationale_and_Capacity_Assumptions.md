@@ -167,7 +167,47 @@ These are **evolution paths**, not initial requirements.
 
 ---
 
-## 10. Final Note to Future Self
+## 10. Platform Provider Decision (Locked for March)
+
+### Decision
+For March delivery and initial real-café deployment, Modula will use:
+- **Supabase** for:
+  - database hosting (managed Postgres)
+  - authentication (Supabase Auth)
+- **Cloudflare R2** for:
+  - file storage (user-uploaded images)
+
+**Decision date:** 2026-02-06
+
+### Why This Fits Modula
+- Modula’s correctness depends on **transactional invariants** (cash session, sale finalization, inventory ledger). Postgres supports this naturally.
+- Supabase Auth supports a **global person identity** (phone-based login) which matches our SaaS model: one person can belong to multiple tenants.
+- Cloudflare R2 provides low-friction object storage during the capstone phase, keeping operational cost low while we have no revenue.
+- The domain model remains clean:
+  - Supabase Auth answers “who is this person?” (authentication)
+  - Modula domains answer “which tenant/branch can they operate in?” (authorization via memberships/assignments)
+
+### Design Mapping (No Domain Drift)
+- `auth_account_id` (our stable identity key across the KnowledgeBase) maps to Supabase `auth.users.id`.
+- Tenant Membership / Staff Profile / Access Control remain **our own tables and rules** (Supabase does not model our multi-tenant org structure).
+- Owner-provisioned onboarding remains valid:
+  - admins/owners provision **membership** by phone
+  - staff own credentials via OTP/self-service flows
+  - no admin ever sets/knows a staff password (even if a user record is provisioned server-side)
+- User-uploaded images (tenant logo, staff avatar, menu item images, stock item images) are stored in Cloudflare R2.
+  - The database stores an object reference (path/key) + metadata; clients do not treat public URLs as stable identity.
+  - Object keys should be tenant-scoped (example prefix: `tenants/{tenant_id}/...`) to keep multi-tenant boundaries explicit.
+
+### Security / Operational Constraints
+- Supabase service role credentials are **server-only** (never shipped to clients).
+- Multi-tenant isolation is enforced by Modula’s authorization model (and optionally database RLS), not by “trusting the client session context”.
+- Storage access should follow the same rule:
+  - default to a private R2 bucket + signed URLs so one tenant cannot read another tenant’s uploads.
+  - R2 credentials are server-only; clients upload/download only via signed URLs issued after Access Control checks.
+
+---
+
+## 11. Final Note to Future Self
 
 These decisions were made with:
 - limited market size

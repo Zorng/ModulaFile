@@ -58,11 +58,11 @@ BusinessLogic
 ├── 2_domain
 │   ├── README.md
 │   ├── 10_Identity&Authorization
-│   ├── 20_HR
-│   ├── 30_POSOperation
-│   ├── OrgAccount
+│   ├── 20_OrgAccount
 │   │   ├── tenant_domain_consistency_patched.md
 │   │   └── branch_domain.md
+│   ├── 30_HR
+│   ├── 40_POSOperation
 │   └── _archived
 │
 ├── 3_contract

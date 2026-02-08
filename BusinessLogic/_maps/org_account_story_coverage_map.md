@@ -22,8 +22,8 @@ It complements the Identity+HR overhaul by covering the **Org Account maintenanc
 - Tenant + branch profile stories: `BusinessLogic/1_stories/handling_branding/`
 - Branch workplace location (GPS) stories: `BusinessLogic/1_stories/handling_staff&attendance/`
 - Later: derive/patch domains in:
-  - Tenant: `BusinessLogic/2_domain/OrgAccount/tenant_domain_consistency_patched.md`
-  - Branch: `BusinessLogic/2_domain/OrgAccount/branch_domain.md`
+  - Tenant: `BusinessLogic/2_domain/20_OrgAccount/tenant_domain_consistency_patched.md`
+  - Branch: `BusinessLogic/2_domain/20_OrgAccount/branch_domain.md`
 - Ensure modspecs in `BusinessLogic/5_modSpec/20_OrgAccount/` (and the patched tenant spec) align
 
 ---

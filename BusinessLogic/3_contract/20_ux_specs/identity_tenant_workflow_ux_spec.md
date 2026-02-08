@@ -1,5 +1,20 @@
 # UX Spec — Identity, Tenant Selection, and Work Entry
 
+## Metadata
+- **Contract Type**: UX Spec
+- **Scope**: Login → tenant selection → branch selection → work entry + loss of access
+- **Primary Audience**: Frontend, Backend, QA
+- **Owner(s)**: Authentication, Tenant Membership, Staff Profile & Assignment, Access Control, Work Start/End Orchestration
+- **Last Updated**: 2026-02-06
+- **Delivery Level**:
+  - **March**: baseline behavior
+  - **Later**: explicitly deferred
+- **Related Contracts**:
+  - `BusinessLogic/3_contract/10_edgecases/identity_hr_edge_case_sweep_patched.md`
+  - `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`
+
+---
+
 ## Purpose
 
 This document defines the **UX behavior and rules** for:
@@ -21,7 +36,7 @@ This spec assumes all **domain + edge-case decisions are already locked**.
    - They then choose *where* they are working.
 
 2. **Only ACTIVE memberships are actionable**
-   - Archived or removed memberships do not grant access.
+   - Disabled or archived memberships do not grant access.
    - The UI should never invite the user to “try and fail.”
 
 3. **Reduce friction when there is no choice**
@@ -112,13 +127,13 @@ After tenant + branch selection:
 - System attempts **START_WORK orchestration**.
 - UI shows:
   - success → enters POS
-  - failure → clear reason (capacity reached, suspended, etc.)
+  - failure → clear reason (capacity reached, disabled, etc.)
 
 ---
 
 ## 5. Membership State Changes While Logged In
 
-### Scenario: Membership Becomes Archived / Removed
+### Scenario: Membership Becomes Disabled / Archived
 
 Trigger:
 - Access Control check fails due to membership state change.
@@ -133,17 +148,17 @@ UX behavior:
 
 ---
 
-## 6. Suspended Membership (Optional UX)
+## 6. Disabled Membership (Optional UX)
 
-If suspension is supported:
+If disabled memberships are supported:
 
 ### Option A (Recommended for March)
-- Do NOT show suspended memberships at all.
+- Do NOT show disabled memberships at all.
 
 ### Option B (Optional Future)
-- Show suspended memberships as disabled items.
+- Show disabled memberships as disabled items.
 - Clicking shows:
-  > “Your access is temporarily suspended. Contact your manager.”
+  > “Your access is temporarily disabled. Contact your manager.”
 
 ---
 

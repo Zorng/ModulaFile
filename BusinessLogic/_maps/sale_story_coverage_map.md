@@ -4,7 +4,7 @@
 Identify human-centered stories for Order/Sale behavior and map them to technical use cases, ensuring complete coverage without “one story per UC”.
 
 **Scope:**  
-- Order Domain (`BusinessLogic/2_domain/30_POSOperation/order_domain_patched.md`)
+- Order Domain (`BusinessLogic/2_domain/40_POSOperation/order_domain_patched.md`)
 - Sale Module Spec (`BusinessLogic/5_modSpec/30_POSOperation/sale_module_patched.md`)
 
 **Rule:**  
@@ -14,7 +14,7 @@ Stories are grouped by **human operational context**, not by system modules.
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain:** `BusinessLogic/2_domain/30_POSOperation/order_domain_patched.md`
+- **Domain:** `BusinessLogic/2_domain/40_POSOperation/order_domain_patched.md`
 - **ModSpec:** `BusinessLogic/5_modSpec/30_POSOperation/sale_module_patched.md`
 
 ---

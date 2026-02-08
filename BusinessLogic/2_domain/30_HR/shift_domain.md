@@ -6,6 +6,9 @@ Shift (Planned Work)
 ## Domain Type
 HR / Planning Domain
 
+## Domain Group
+30_HR
+
 ## Status
 Draft (Refined — supports recurring planning)
 

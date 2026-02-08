@@ -15,8 +15,8 @@ Stories are grouped by **human operational context**, not by CRUD actions or int
 
 ## 1) Source Artifacts (Authoritative)
 
-- **Domain (staff facts):** `BusinessLogic/2_domain/20_HR/staff_profile_and_assignment_domain.md`
-- **Domain (attendance + capacity gates):** `BusinessLogic/2_domain/20_HR/attendance_domain_capability_gated.md`
+- **Domain (staff facts):** `BusinessLogic/2_domain/30_HR/staff_profile_and_assignment_domain.md`
+- **Domain (attendance + capacity gates):** `BusinessLogic/2_domain/30_HR/attendance_domain_capability_gated.md`
 - **ModSpec:** `BusinessLogic/5_modSpec/staffManagement_module_patched_v3.md`
 
 ---

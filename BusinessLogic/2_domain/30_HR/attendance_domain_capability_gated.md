@@ -6,6 +6,9 @@ Attendance (Actual Work)
 ## Domain Type
 HR / Operational Reality Domain
 
+## Domain Group
+30_HR
+
 ## Status
 Draft — rewritten (supports dual location verification + capability gating)
 
@@ -22,7 +25,7 @@ This domain exists to:
 
 - establish a reliable source of truth for actual work
 - support operational control during the day
-- enforce concurrent staff capacity
+- support concurrent staff capacity enforcement (Attendance is the ACTIVE-work signal; capacity policies are owned elsewhere)
 - enable later review of time respecting and behaviour
 
 Attendance is about **events that happened**, not what should have happened.
@@ -180,7 +183,8 @@ UNKNOWN must always be possible:
 - weak signal
 - indoor GPS drift
 - branch workplace location not configured
-- capability disabled
+
+If location verification mode is `disabled`, verification fields are simply not recorded (not UNKNOWN).
 
 The system records evidence without assuming perfect accuracy.
 
@@ -245,7 +249,7 @@ Attendance does **not**:
 
 - decide who is allowed to start work (Access Control)
 - plan schedules (Shift domain)
-- enforce staff capacity policies (Licensing / Capability domain)
+- define staff capacity limits (Licensing / Entitlements domain), though Attendance consumes those limits at check-in/out as an enforcement point
 - interpret performance (Work Review domain)
 - handle payroll or compensation
 - enforce subscriptions or billing

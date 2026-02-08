@@ -43,8 +43,8 @@ Domain models must **not**:
 - guess real-world outcomes (e.g., whether an item was physically consumed)
 
 Those belong to:
-- `2_process/` (coordination over time)
-- `3_modSpec/` (implementation contracts)
+- `4_process/` (coordination over time)
+- `5_modSpec/` (implementation contracts)
 
 If a domain document starts to feel procedural, something is wrong.
 
@@ -66,11 +66,11 @@ The correct conceptual order is:
 - defines *what must always be true*
 - establishes ownership and boundaries
 
-### Process (`3_process/`)
+### Process (`4_process/`)
 - defines *how domains coordinate*
 - handles timing, triggers, and compensation
 
-### ModSpec (`4_modSpec/`)
+### ModSpec (`5_modSpec/`)
 - defines *how the system is implemented*
 - must obey domain and process rules
 

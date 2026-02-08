@@ -6,6 +6,9 @@ Staff Profile & Assignment
 ## Domain Type
 Identity & HR Foundation Domain
 
+## Domain Group
+30_HR
+
 ## Status
 Draft (Derived from Anchor Stories A1, A3, and A5)
 
@@ -57,7 +60,7 @@ They represent a business relationship and operational responsibility.
 
 A **Staff Profile** contains business-level information about the staff member, such as:
 - display name,
-- contact identifiers (e.g., phone number),
+- reference to Authentication identity (e.g., `auth_account_id`),
 - internal labels (e.g., staff code),
 - and status.
 
@@ -81,14 +84,18 @@ Whether an action is permitted at request-time is decided by Access Control.
 ### Role Context (Business Meaning)
 
 A staff member may have a role label such as:
-- owner
+- admin
 - manager
 - cashier
-- barista
+- barista (job title; not a permission role)
 
 In this domain, role is treated as **business meaning** and a stable label, not an enforcement engine.
 
 The permission logic that maps roles to allowed actions belongs to Access Control.
+
+For March delivery:
+- Use `ADMIN`, `MANAGER`, `CASHIER` as the canonical permission role keys (consumed by Access Control).
+- Treat job titles (e.g., barista) as profile metadata only.
 
 ---
 
@@ -97,9 +104,10 @@ The permission logic that maps roles to allowed actions belongs to Access Contro
 A Staff Member / Profile typically includes:
 - `staff_id`
 - `tenant_id`
+- `auth_account_id` (link to Authentication identity)
 - `display_name`
-- `phone_number` (or reference to Authentication identity)
-- `status` (ACTIVE, INACTIVE, SUSPENDED, ARCHIVED)
+- `staff_code` (optional)
+- `status` (ACTIVE, DISABLED, ARCHIVED)
 - `created_at`
 - `updated_at`
 
@@ -107,22 +115,22 @@ A Branch Assignment typically includes:
 - `tenant_id`
 - `staff_id`
 - `branch_id`
-- `assignment_status` (ACTIVE / INACTIVE)
+- `assignment_status` (ACTIVE / REVOKED)
 - `assigned_at`
 - `unassigned_at` (nullable)
 
 Role context may include:
-- `role_key` (e.g., cashier, manager)
+- `role_key` (e.g., CASHIER, MANAGER, ADMIN)
 - `role_assigned_at`
 
 ---
 
 ## Invariants
 
-- Every staff member belongs to exactly one tenant.
+- Each StaffProfile belongs to exactly one tenant (staff are tenant-scoped).
 - A staff member may be assigned to one or more branches.
 - A staff member’s branch assignments may change over time; history should be preservable.
-- A staff member’s identity (authentication credential) must be unique within the system constraints (handled by Authentication).
+- Authentication identities are globally unique; this domain references them via `auth_account_id`.
 - Deactivating or archiving staff does not delete history (attendance and sales remain traceable).
 - Role labels are not authorization decisions.
 
@@ -135,12 +143,11 @@ Capability-aware invariants:
 
 ## Staff Lifecycle (Business Lifecycle)
 
-A staff member can move through states such as:
+For March delivery, staff lifecycle is intentionally simple:
 
 - **ACTIVE** — can work and can be scheduled
-- **INACTIVE** — temporarily not working, but kept in records
-- **SUSPENDED** — explicitly blocked due to business decision
-- **ARCHIVED** — no longer part of the team, retained for history
+- **DISABLED** — temporarily blocked from access (history preserved)
+- **ARCHIVED** — removed from active roster (history preserved)
 
 The exact transitions are process concerns, but the concept of lifecycle is owned here.
 

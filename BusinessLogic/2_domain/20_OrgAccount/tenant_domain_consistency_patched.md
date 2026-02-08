@@ -7,7 +7,7 @@ Tenant (Business Workspace)
 Core Domain (Organizational Boundary)
 
 ## Domain Group
-OrgAccount (Tenant + Branch)
+20_OrgAccount (Tenant + Branch)
 
 ## Status
 Draft (Baseline for Capstone 1; SaaS-ready)

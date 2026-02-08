@@ -1,10 +1,13 @@
-# Authenticationentication Domain Model — Modula POS
+# Authentication Domain Model — Modula POS
 
 ## Domain Name
 Auth (Identity & Access)
 
 ## Domain Type
 Platform / Supporting Domain (Identity & Access)
+
+## Domain Group
+10_Identity&Authorization
 
 ## Status
 Draft (Baseline for Capstone 1)
@@ -228,7 +231,7 @@ Tenant/Staff provides:
 Auth should remain independent of billing logic.
 
 Future capability enforcement typically happens by:
-- tenant status (ACTIVE/SUSPENDED) checked in operational workflows
+- tenant status (ACTIVE/FROZEN) checked in operational workflows
 - entitlements snapshot consulted by POS operations
 
 Auth’s responsibility is only to authenticate the actor.

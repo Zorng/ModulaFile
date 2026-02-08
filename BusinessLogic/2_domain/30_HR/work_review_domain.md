@@ -6,6 +6,9 @@ Work Review (Time Respecting & Attendance Insights)
 ## Domain Type
 Interpretation / Reporting-Ready Domain (HR)
 
+## Domain Group
+30_HR
+
 ## Status
 Draft (Derived from Anchor Story A6)
 
@@ -128,7 +131,8 @@ A comparison result may include:
 - `evidence_notes` (optional; e.g., “no planned shift”, “no checkout recorded”)
 
 Location-related derived fields (optional):
-- `checkin_location_result` (MATCH / MISMATCH / UNKNOWN / NOT_ENABLED)
+- `checkin_location_result` (nullable; MATCH / MISMATCH / UNKNOWN)
+  - null when location verification was not recorded (mode disabled or missing evidence)
 
 ---
 
