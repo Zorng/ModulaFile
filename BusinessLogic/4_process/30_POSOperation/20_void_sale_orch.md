@@ -25,6 +25,8 @@ This document exists to ensure that void behavior is **explicit and explainable*
 Related contracts:
 - `BusinessLogic/3_contract/10_edgecases/pos_operation_edge_case_sweep_patched.md`
 - `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md` (HR ↔ POS boundary)
+- Operational notifications (best-effort signals):
+  - `BusinessLogic/4_process/60_PlatformSystems/30_operational_notification_emission_process.md`
 
 ---
 
@@ -38,6 +40,9 @@ Related contracts:
 
 This preserves financial correctness and prevents unauthorized truth changes.
 
+OperationalNotification note:
+- When a void is requested and the Sale transitions to `VOID_PENDING`, the system should emit a best-effort in-app notification to the approver pool (see OperationalNotification process). This is a signal only; approval must still re-check current state.
+
 ---
 
 ## 3. Participating Modules & Roles
@@ -49,6 +54,7 @@ This preserves financial correctness and prevents unauthorized truth changes.
 | Cash Session | Reverses cash movements (if applicable) |
 | Process Layer | Orchestrates sequencing and idempotency |
 | Receipt | Reflects void state (read-only) |
+| OperationalNotification | Emits best-effort in-app signals to approvers/requester |
 
 ---
 
@@ -134,6 +140,15 @@ See:
 - Receipt reflects VOIDED state (watermark / status)
 
 At this point, all compensating actions have completed successfully.
+
+---
+
+### Step 5 — Emit Operational Notification (Best-Effort)
+- Notify the requester that the void was approved (ON-02).
+- Emission must be idempotent per `(branch_id, sale_id)` and must not be a correctness dependency for the void itself.
+
+See:
+- `BusinessLogic/4_process/60_PlatformSystems/30_operational_notification_emission_process.md`
 
 ---
 

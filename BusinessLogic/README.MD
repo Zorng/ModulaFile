@@ -64,6 +64,7 @@ BusinessLogic
 │   ├── 30_HR
 │   ├── 40_POSOperation
 │   ├── 50_Reporting
+│   ├── 60_PlatformSystems
 │   └── _archived
 │
 ├── 3_contract
@@ -77,7 +78,8 @@ BusinessLogic
 │   ├── 20_IdentityAccess
 │   ├── 20_OrgAccount
 │   ├── 30_POSOperation
-│   └── 50_Reporting
+│   ├── 50_Reporting
+│   └── 60_PlatformSystems
 │
 ├── 5_modSpec
 │   ├── 00_guide
@@ -238,7 +240,7 @@ ModSpecs are grouped by capability:
 The `00_guide/version.md` file tracks spec evolution.
 
 Note:
-- `5_modSpec/60_PlatformSystems/` specs are currently legacy artifacts until PlatformSystems domain models exist.
+- `5_modSpec/60_PlatformSystems/` contains legacy artifacts. Policy + OperationalNotification have been aligned to domain/contract/process; Audit + Offline Sync remain legacy until their PlatformSystems domain models exist.
 
 ---
 

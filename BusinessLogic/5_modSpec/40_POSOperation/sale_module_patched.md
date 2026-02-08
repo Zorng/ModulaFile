@@ -112,6 +112,45 @@ Sale status is used to represent financial lifecycle:
 - VOID_PENDING
 - VOIDED
 
+### 3.2.1 Finalized Sale Snapshot (Required for Receipt + Reporting)
+
+On finalize, the Sale module must persist an **immutable sale snapshot** that supports:
+- Receipt rendering (customer dispute resolution)
+- Management reporting aggregation (sales performance insight)
+- Auditability under offline replay/idempotent sync
+
+At minimum, the finalized sale snapshot must include:
+
+Sale header snapshot:
+- `tenant_id`, `branch_id`
+- `sale_id`
+- finalized timestamp
+- sale type (dine-in / takeaway / delivery)
+- sale status (FINALIZED / VOID_PENDING / VOIDED)
+- cashier identity (`actor_id`) (recommended; supports drill-down and accountability)
+
+Totals snapshot (captured at finalize time; no recompute later):
+- subtotal
+- discount totals + discount snapshot (see 3.5)
+- VAT totals (if enabled) + VAT policy snapshot values applied
+- FX rate + KHR rounding policy snapshot values applied
+- grand totals (USD + KHR) and any rounded payable value used at checkout
+
+Tender snapshot:
+- payment method (cash / QR; extend later)
+- if cash: tender currency (USD vs KHR) and change results (recommended)
+
+Line snapshot (for item/category reporting and receipts):
+- `menu_item_id`
+- menu item display name snapshot
+- menu category snapshot (category id + category display name), or null → treated as **Uncategorized**
+- quantity
+- line monetary snapshot (line totals and optionally per-line discount amounts)
+
+Design rule:
+- Reporting must aggregate item/category metrics from the **stored sale line snapshot**.
+- Do not join to current Menu in a way that rewrites historical reports when items/categories are renamed, moved, or deleted later.
+
 ### 3.3 Order (Fulfillment Record)
 An operational record used for fulfillment tracking.
 - Created when a sale is finalized.
@@ -205,8 +244,9 @@ The Sale Module must read policy values using the backend-implemented keys (from
 ### Cash Session Control
 - Cash sessions are required for cart/sales in Capstone 1 (product rule; not configurable).
 
-### Inventory Behavior
-- `inventoryAutoSubtractOnSale` (boolean)
+### Inventory Deduction (Not a Policy)
+- Sale-based inventory deduction is derived from **Menu composition** (recipe/direct-stock mapping), not a policy toggle.
+- Finalize should produce `deduction_lines` (may be empty). Inventory deduction executes only when `deduction_lines` is non-empty.
 
 ---
 
@@ -225,7 +265,7 @@ Cash sessions are required for cart/sales, but backend integrity rules still app
 At minimum, backend must guarantee:
 1. **Atomic finalize** (sale + order + cash movement + inventory deduction where applicable)
 2. **Idempotency / duplicate prevention** for finalize operations (including offline sync replay)
-3. **Concurrency-safe stock mutation** when `inventoryAutoSubtractOnSale = true`
+3. **Concurrency-safe stock mutation** when inventory deduction executes (i.e., when `deduction_lines` is non-empty)
 4. **Server-authoritative ordering** for finalize operations
 
 ---
@@ -367,7 +407,7 @@ If payment method is Cash:
    - persists finalized sale (`status = FINALIZED`)
 3. If cash:
    - cash movement is recorded via Cash Session module
-4. If `inventoryAutoSubtractOnSale = true`:
+4. If sale evaluation produces `deduction_lines`:
    - inventory deduction is executed
 5. An Order is created with status IN_PREP
 6. eReceipt becomes available for the finalized sale/order
@@ -432,6 +472,8 @@ If payment method is Cash:
 3. System creates a Void Request record with status PENDING.
 4. System sets Sale status = VOID_PENDING.
 5. Orders UI shows a badge “Void requested”.
+6. System emits an OperationalNotification to approvers (best-effort, idempotent):
+   - ON-01 `VOID_APPROVAL_NEEDED:{branch_id}:{sale_id}`
 
 **Postconditions**
 - Void request is recorded (PENDING)
@@ -458,15 +500,19 @@ If payment method is Cash:
    - Sale status → VOIDED
    - Order status → VOIDED
    - Cash refund movement (`REFUND_CASH`) recorded (via Cash Session module)
-   - Inventory reversal executed (if `inventoryAutoSubtractOnSale = true`)
+   - Inventory reversal executed (if inventory deduction was applied on finalize)
 5. System marks void request as APPROVED.
 6. System logs action (audit).
+7. System emits an OperationalNotification to the requester (best-effort, idempotent):
+   - ON-02 `VOID_APPROVED:{branch_id}:{sale_id}`
 
 **Alternative Flow — Reject**
 1. Actor selects “Reject void” and provides reason.
 2. System marks void request REJECTED.
 3. System sets Sale status back to FINALIZED.
 4. Audit log recorded.
+5. System emits an OperationalNotification to the requester (best-effort, idempotent):
+   - ON-03 `VOID_REJECTED:{branch_id}:{sale_id}`
 
 **Postconditions**
 - If approved: Sale VOIDED and effects reversed once; Order VOIDED
@@ -502,7 +548,7 @@ If payment method is Cash:
 - FR-6: Cash tender supports USD/KHR selection and change computation
 - FR-7: Finalized sale creates an order in IN_PREP
 - FR-8: Order status updates do not modify finalized sale totals
-- FR-9: Inventory deduction respects `inventoryAutoSubtractOnSale` and executes on finalize
+- FR-9: Inventory deduction executes on finalize only when the sale produces `deduction_lines` (from Menu composition)
 - FR-10: Offline finalize is safe and idempotent
 - FR-11: Draft carts do not pollute database
 - FR-12: Cashier can request void; Manager/Admin can approve/reject

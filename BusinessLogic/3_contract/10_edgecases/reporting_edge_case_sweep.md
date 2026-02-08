@@ -64,6 +64,16 @@ It prevents "report drift" where multiple modules compute the same totals differ
 - **Owner**: Sale/Order (store snapshots) + Reporting (aggregate from snapshots)
 - **March**: Yes
 
+### EC-REP-11 — Menu Item/Category Edits Must Not Rewrite Past Sales Reports
+- **Scenario**: A menu item is renamed, moved to a different category, or a category is renamed/deleted after sales occurred.
+- **Trigger**: User views a sales report for a historical time window.
+- **Expected Behavior**:
+  - Item and category breakdowns are aggregated from the **stored sale line snapshot** captured at finalize time.
+  - Reporting must not join to current Menu in a way that rewrites historical item/category aggregations.
+  - If category is missing in the snapshot, treat it as **Uncategorized** (do not guess).
+- **Owner**: Sale/Order (store line snapshots) + Reporting (aggregate from snapshots) + Menu (does not backfill history)
+- **March**: Yes
+
 ### EC-REP-02 — VOID_PENDING Must Be Visible (Never Silently Hidden)
 - **Scenario**: A cashier requests a void and it is awaiting approval.
 - **Trigger**: User views sales totals for a window containing `VOID_PENDING` sales.

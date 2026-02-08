@@ -155,7 +155,7 @@ Validate:
 - payment method and tender details are valid
 
 Load required read facts:
-- branch policy snapshot inputs (VAT/FX/Rounding + `inventoryAutoSubtractOnSale`)
+- branch policy snapshot inputs (VAT/FX/Rounding)
 - applicable discount rules (branch-scoped)
 - menu metadata required for line evaluation (including modifier selections)
 
@@ -197,7 +197,7 @@ If payment is non-cash (e.g., QR):
 ---
 
 ### Step 5 — Execute Inventory Deduction (Inventory, Conditional)
-If `inventoryAutoSubtractOnSale = true`:
+If sale evaluation produces `deduction_lines` (tracked components from menu mapping):
 - run the inventory deduction sub-process:
   - `BusinessLogic/4_process/30_POSOperation/13_stock_deduction_on_finalize_sale_process.md`
 
@@ -219,7 +219,7 @@ Receipt is an immutable view of truth; it does not decide truth.
 At minimum, write audit records for:
 - `SALE_FINALIZED`
 - `CASH_MOVEMENT_RECORDED` (if cash)
-- `INVENTORY_DEDUCTION_APPLIED` (if enabled and applicable)
+- `INVENTORY_DEDUCTION_APPLIED` (if applicable)
 - `RECEIPT_CREATED`
 
 If attendance is missing, also record:

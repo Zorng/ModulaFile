@@ -88,6 +88,11 @@ BusinessLogic/4_process
 ├── 50_Reporting
 │   ├── 10_sales_reporting_process.md
 │   └── 20_restock_spend_reporting_process.md
+│
+├── 60_PlatformSystems
+│   ├── 10_update_tax_currency_policy_process.md
+│   ├── 20_resolve_tax_currency_policy_process.md
+│   └── 30_operational_notification_emission_process.md
 ```
 
 This structure is designed to scale without becoming unreadable.

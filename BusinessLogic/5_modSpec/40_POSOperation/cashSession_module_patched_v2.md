@@ -132,7 +132,7 @@ Cash movements are immutable and auditable.
 
 ### UC-4: Cash Paid In (Optional Capability)
 
-**Actors:** Cashier (if allowed by role rules), Manager, Admin
+**Actors:** Cashier, Manager, Admin
 
 **Preconditions:**
 - Branch context is resolved
@@ -148,19 +148,20 @@ Cash movements are immutable and auditable.
 - Reconciliation totals update via projections/read model (expected cash is derived).
 - Action is audit logged.
 
-> Note: There is **no** backend policy key for “allow paid in” in the current policy schema. If you want it policy-controlled later, it must be added explicitly (and would be branch-scoped).
+> Note: Cash movements such as Paid In / Paid Out / Manual Adjustment are **not policy-controlled** in Capstone 1.
+> They are governed by Access Control (RBAC) and must be fully auditable.
+> If you want tenant/branch toggles later, add explicit policy keys (branch-scoped).
 
 ---
 
 ### UC-5: Paid Out
 
-**Actors:** Cashier (if allowed), Manager, Admin
+**Actors:** Cashier, Manager, Admin
 
 **Preconditions:**
 - Branch context is resolved
 - Branch is ACTIVE
 - Session OPEN
-- **Branch-scoped policy** `cashAllowPaidOut = true`
 
 **Main Flow:**
 1. User selects “Paid Out”.
@@ -181,7 +182,6 @@ Cash movements are immutable and auditable.
 - Branch context is resolved
 - Branch is ACTIVE
 - Session OPEN
-- **Branch-scoped policy** `cashRequireRefundApproval = true`
 - A refund/void approval exists (triggered by void/refund flow)
 
 **Main Flow:**
@@ -205,7 +205,6 @@ Cash movements are immutable and auditable.
 - Branch context is resolved
 - Branch is ACTIVE
 - Session OPEN
-- **Branch-scoped policy** `cashAllowManualAdjustment = true`
 
 **Main Flow:**
 1. Actor inputs adjustment (+/-) and reason.
@@ -233,6 +232,9 @@ Cash movements are immutable and auditable.
 3. System computes expected cash and variance.
 4. Session marked CLOSED.
 5. Z report generated.
+6. System emits OperationalNotifications (best-effort, idempotent):
+   - ON-04 `CASH_SESSION_CLOSED:{branch_id}:{cash_session_id}` (awareness; optional March baseline)
+   - include variance values in the notification body/payload so humans can evaluate
 
 **Postconditions:**
 - Session status = CLOSED
@@ -268,6 +270,8 @@ Includes:
 - X Report is read-only
 - X Report does not close the session
 - X Report is part of **cash handling UX**, not analytics
+- Access Control action key (branch-scoped): `cashSession.x.view`  
+  - Cashier is limited to their own session(s) (Capstone 1 baseline).
 
 ---
 
@@ -288,6 +292,8 @@ Includes:
 - Z Report represents the authoritative close of a cash session
 - Z Report is immutable once created
 - Z Report is an **operational artifact**, not an analytics report
+- Access Control action key (branch-scoped): `cashSession.z.view`  
+  - Cashier is limited to their own session(s) (Capstone 1 baseline).
 
 ---
 

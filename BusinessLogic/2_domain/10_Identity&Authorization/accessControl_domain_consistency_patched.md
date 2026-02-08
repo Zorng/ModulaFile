@@ -123,6 +123,8 @@ Examples:
 - `sale.void.approve`
 - `cashSession.open`
 - `cashSession.close`
+- `cashSession.x.view`
+- `cashSession.z.view`
 - `inventory.receive`
 - `inventory.adjust`
 - `menu.manage`

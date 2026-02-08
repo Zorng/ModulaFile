@@ -4,6 +4,14 @@
 **Channel:** In‑app only (no email/SMS/push)  
 **Intent:** Operational coordination signals (not policy, not marketing)
 
+> Note: This root-level file is a **design artifact** captured during POSOperation work.
+> The authoritative, layered BusinessLogic docs are now:
+> - Story: `BusinessLogic/1_stories/correcting_mistakes/responding_to_operational_notifications.md`
+> - Domain: `BusinessLogic/2_domain/60_PlatformSystems/operational_notification_domain.md`
+> - Contract: `BusinessLogic/3_contract/10_edgecases/operational_notification_edge_case_sweep.md`
+> - Process: `BusinessLogic/4_process/60_PlatformSystems/30_operational_notification_emission_process.md`
+> - ModSpec: `BusinessLogic/5_modSpec/60_PlatformSystems/operationalNotification_module.md`
+
 ---
 
 ## 1. Purpose
@@ -63,7 +71,7 @@ Trigger categories:
 - **Waiting-for-human** (strongest): e.g., `VOID_PENDING`
 - **Outcome feedback**: e.g., `VOID_APPROVED`, `VOID_REJECTED`
 - **Operational awareness**: e.g., `CASH_SESSION_CLOSED`
-- **Exception alert**: e.g., “Z variance exceeds threshold”
+- **Exception alert**: e.g., “cash session closed with variance” (March: no thresholding; humans evaluate)
 
 ---
 
@@ -117,20 +125,13 @@ Recipient strategies:
 ### ON-04: Notify Managers — Cash Session Closed (Optional Baseline)
 **Trigger:** CashSession transitions to `CLOSED`  
 **Intent:** Awareness  
-**Recipients:** Users with `CASH_SESSION_CLOSE_VIEW` (or equivalent managerial permission) in branch  
+**Recipients:** Users eligible for `cashSession.z.view` in branch  
 **UI Deep Link:** Z Report / Cash session summary  
 **Notes:**  
 - This is informational; no action required.
+- Include variance values in the notification body so humans can evaluate significance.
 
 ---
-
-### ON-05: Alert Admins — Large Variance on Close (Optional Baseline)
-**Trigger:** CashSession closed AND `abs(variance) >= threshold`  
-**Intent:** Alert  
-**Recipients:** Admin/Owner role (tenant-level or branch-level)  
-**UI Deep Link:** Z Report variance section  
-**Notes:**  
-- Threshold is a configuration value (can be fixed for Capstone 1, configurable later).
 
 ---
 
