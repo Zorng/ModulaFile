@@ -63,6 +63,7 @@ BusinessLogic
 │   │   └── branch_domain.md
 │   ├── 30_HR
 │   ├── 40_POSOperation
+│   ├── 50_Reporting
 │   └── _archived
 │
 ├── 3_contract
@@ -75,7 +76,8 @@ BusinessLogic
 │   ├── 10_WorkForce
 │   ├── 20_IdentityAccess
 │   ├── 20_OrgAccount
-│   └── 30_POSOperation
+│   ├── 30_POSOperation
+│   └── 50_Reporting
 │
 ├── 5_modSpec
 │   ├── 00_guide

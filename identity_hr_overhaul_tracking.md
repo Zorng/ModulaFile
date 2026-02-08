@@ -1,4 +1,4 @@
-# Identity + HR Overhaul Tracking
+# IdentityAccess + HR + OrgAccount Overhaul Tracking
 
 This document tracks the progress of the **Identity, Authorization, HR, and OrgAccount overhaul**.
 
@@ -10,6 +10,8 @@ This tracker is the source of truth for **where we are in the overhaul**.
 
 This overhaul and the KnowledgeBase itself are a direct response to earlier backlash from poor design and coordination.
 The KB exists to preserve alignment, prevent hidden assumptions, and keep the product vision consistent as the system grows.
+
+Note: IdentityAccess, HR, and OrgAccount are batched into one overhaul because they depend on each other heavily and must remain consistent across layers.
 
 ---
 
@@ -37,10 +39,10 @@ This overhaul ensures the system can support:
 | --------- | ------------------------------ | ----------- |
 | Phase 1   | Anchor Stories (Human reality) | ✅ Completed |
 | Phase 2   | Domain Derivation              | ✅ Completed |
-| Phase 2.5 | Edge Case Sweep                | ✅ Completed |
+| Phase 2.5 | Contracts (Edge Cases + UX)    | ✅ Completed |
 | Phase 2.6 | OrgAccount Alignment           | ✅ Completed |
-| Phase 3   | Process Definition             | ⏳ Next      |
-| Phase 4   | ModSpec Revamp                 | 🔜 Later     |
+| Phase 3   | Process Definition             | ✅ Completed |
+| Phase 4   | ModSpec Revamp                 | ✅ Completed (March baseline) |
 
 ---
 
@@ -80,16 +82,16 @@ These domains establish the conceptual model of **people and work** in Modula.
 
 ---
 
-# Phase 2.5 — Edge Case Sweep (Completed)
+# Phase 2.5 — Contracts (Edge Cases + UX) (Completed)
 
 Several critical edge-case documents were produced and normalized:
 
 Edge case contracts:
-- identity_hr_edge_case_sweep.md
-- identity_hr_pos_boundary_edge_cases.md
+- `BusinessLogic/3_contract/10_edgecases/identity_hr_edge_case_sweep_patched.md`
+- `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`
 
 UX specifications:
-- identity_tenant_workflow_ux_spec.md
+- `BusinessLogic/3_contract/20_ux_specs/identity_tenant_workflow_ux_spec.md`
 
 These documents ensure:
 - cross-module consistency
@@ -121,65 +123,81 @@ New/updated work:
   - existing branch modspec
 
 Result:
-- `branch_domain.md` created under `BusinessLogic/2_domain/`
+- `branch_domain.md` created under `BusinessLogic/2_domain/20_OrgAccount/branch_domain.md`
 
 At this point, the **organizational foundation is aligned** with the new people/work model.
 
 ---
 
-# Current Status
+# Phase 3 — Process Definition (Completed)
 
-We now have a consistent foundation across:
+Canonical, cross-domain orchestration for March MVP:
 
-Stories  
-Domains  
-Edge cases  
-OrgAccount alignment  
-
-The system is ready to move to the next layer.
-
-Context reminder:
-- Modules under `POSOperation` are stabilized (with potential patches as new discoveries appear).
-- We are actively overhauling Identity & Authorization, HR, and OrgAccount to make Modula a real SaaS.
-- Next after this is System/Platform.
-
----
-
-# Phase 3 — Process Definition (Next)
-
-We now begin defining cross-domain orchestration for the work lifecycle.
-
-Planned process documents:
-
-1. Work Start / Check-in orchestration
-2. Work End / Check-out orchestration
-3. Shift vs Attendance evaluation
-4. Authorization + capacity gating during work start
-
-These processes will connect:
-Authentication → Membership → Branch → Shift → Attendance → Access Control.
-
-This phase is the equivalent of **Finalize Sale orchestration** for POS.
+- Identity activation + recovery + context selection:
+  - `BusinessLogic/4_process/20_IdentityAccess/10_identity_activation_recovery_orchestration.md`
+- Tenant membership administration (grant / role change / revoke):
+  - `BusinessLogic/4_process/20_OrgAccount/10_tenant_membership_administration_process.md`
+- Staff provisioning (owner/admin provisioned onboarding):
+  - `BusinessLogic/4_process/10_WorkForce/05_staff_provisioning_orchestration.md`
+- Work lifecycle processes:
+  - `BusinessLogic/4_process/10_WorkForce/10_work_start_end_orchestration.md`
+  - `BusinessLogic/4_process/10_WorkForce/20_work_end_orchestrastion.md`
+  - `BusinessLogic/4_process/10_WorkForce/30_shift_vs_attendance_evaluation.md`
+  - `BusinessLogic/4_process/10_WorkForce/40_attendance_report.md`
 
 ---
 
-# Phase 4 — ModSpec Revamp (Future)
+# Phase 4 — ModSpec Revamp (Completed for March Baseline)
 
-After processes are defined, the following modules will be rewritten:
+Aligned modspecs for March MVP foundations:
 
-Identity & Authorization:
-- authentication_module
-- accessControl_module
-
-HR:
-- staffManagement_module
-- staffAttendance_module
+IdentityAccess:
+- `BusinessLogic/5_modSpec/10_IdentityAccess/authentication_module.md`
+- `BusinessLogic/5_modSpec/10_IdentityAccess/accessControl_module.md`
 
 OrgAccount:
-- tenant_module
-- branch_module
+- `BusinessLogic/5_modSpec/20_OrgAccount/tenant_module.md`
+- `BusinessLogic/5_modSpec/20_OrgAccount/branch_module.md`
 
-This will complete the overhaul.
+HR:
+- `BusinessLogic/5_modSpec/30_HR/staffManagement_module.md`
+- `BusinessLogic/5_modSpec/30_HR/attendance_module.md`
+
+Note:
+- Shift and Work Review are defined at the domain/process level, but do not need dedicated modspecs until they become implementation targets.
+
+---
+
+# Locked Decisions Snapshot (March)
+
+- One identity may belong to multiple tenants (multi-tenant SaaS).
+- Staff onboarding is owner/admin provisioned, while credentials remain user-owned (OTP/self-service).
+- Branch access is explicit via assignments; no implicit “admins can access all branches”.
+- Attendance location verification is evidence-first (record MATCH/MISMATCH/UNKNOWN; do not block solely due to GPS).
+- RBAC must be extendable: new roles are added as `role_key` + policy mapping (permission-first), without rewriting HR.
+- “Owner” is governance and must not be overloaded into the same mechanism as operational authorization roles.
+
+---
+
+# Current Status (2026-02-08)
+
+We now have consistent, implementable design across:
+- Stories
+- Domains
+- Contracts
+- Processes
+- ModSpecs (for March baseline)
+
+Context reminder:
+- Modules under `POSOperation` are stabilized (but may be patched as new discoveries appear).
+- IdentityAccess + HR + OrgAccount foundation is considered **closed for March baseline**; remaining work should be hygiene and implementation, not inventing new rules.
+
+---
+
+# Remaining Overhauls (Not Started)
+
+- Reporting
+- PlatformSystem
 
 ---
 

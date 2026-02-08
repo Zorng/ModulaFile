@@ -52,6 +52,7 @@ This orchestration connects:
 - Work Review Domain → interpreted work outcomes
 - Attendance Domain → raw attendance data
 - Shift Domain → planned schedules
+- Access Control → permission + scope enforcement (branch vs tenant-wide)
 - Reporting Module (future consumer)
 
 ---
@@ -86,7 +87,9 @@ Raw data → Patterns → Insights.
 User selects:
 
 - Time range (day/week/month/custom)
-- Branch (optional)
+- Branch scope (Access Control enforced):
+  - a single branch (`branch_id`), OR
+  - `ALL_BRANCHES` (tenant-wide; owners/admins only when allowed)
 - Staff member (optional)
 
 This defines the **reporting window**.
@@ -101,6 +104,11 @@ System fetches Work Review entries that match:
 - Selected branch or tenant
 - Selected staff (if applicable)
 
+Work Review entries include:
+- expected vs actual timestamps (when available)
+- a classification (e.g., ON_TIME / LATE / ABSENT / etc.)
+- minute deltas such as `late_minutes`, `early_leave_minutes`, `overtime_minutes` (when applicable)
+
 Domain involved:
 - Work Review
 
@@ -108,7 +116,7 @@ Domain involved:
 
 ### Step 3 — Aggregate attendance outcomes
 
-System computes totals such as:
+System computes totals such as (derived from Work Review classifications):
 
 Per staff:
 - Number of shifts planned
@@ -116,8 +124,14 @@ Per staff:
 - Number of absences
 - Number of late arrivals
 - Number of early departures
+- Number of overtime occurrences (optional)
+- Number of unscheduled work records (when attendance exists without a planned shift)
+- Number of incomplete records (missing checkout or otherwise incomplete evidence)
 
 This creates **behavior indicators**.
+
+Degradation rule:
+- If shift planning data is missing for the reviewed window, the system must not present "planned shifts" or "absence" as facts. In that case, show actual attendance-driven summaries and UNSCHEDULED_WORK visibility only.
 
 ---
 
@@ -129,6 +143,8 @@ System calculates:
 - Total hours worked
 - Overtime hours
 - Missing hours
+- Total late minutes (optional)
+- Total early leave minutes (optional)
 
 These metrics help evaluate:
 - Workforce planning

@@ -84,6 +84,10 @@ BusinessLogic/4_process
 │   ├── 21_voidOrder_process.md
 │   ├── 22_void_sale_inventory_reversal_process.md
 │   └── 23_void_sale_cash_reversal_process.md
+│
+├── 50_Reporting
+│   ├── 10_sales_reporting_process.md
+│   └── 20_restock_spend_reporting_process.md
 ```
 
 This structure is designed to scale without becoming unreadable.

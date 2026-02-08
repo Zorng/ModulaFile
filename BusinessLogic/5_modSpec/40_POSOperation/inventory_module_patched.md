@@ -58,6 +58,11 @@ Optional grouping for stock items (Dairy, Packaging).
 ### 3.4 Restock Batch
 A record of stock received for a stock item at a branch, with optional metadata (expiry, cost, note). Restock quantity is immutable after creation.
 
+Restock cost notes (March baseline):
+- Restock cost is optional metadata used for management spending visibility.
+- Cost is recorded as a total purchase cost for the batch (not used for stock truth).
+- If cost is not recorded, spending summaries must treat it as **unknown** (not zero).
+
 ### 3.5 Inventory Journal (Source of Truth)
 An immutable, append-only log of all stock movements:
 - RESTOCK (IN)
@@ -143,7 +148,8 @@ Inventory no longer uses global “feature toggles” to define core behavior (e
 **Actor:** Admin, Manager  
 **Preconditions:** Item ACTIVE; Branch ACTIVE (not frozen)  
 **Flow:**
-- Enter quantity (base unit) and optional expiry date, note, cost, supplier
+- Enter quantity (base unit) and optional expiry date, note, supplier
+- Optional: enter purchase cost for this restock batch (total cost, March baseline captured in USD)
 - System creates RestockBatch and appends RESTOCK journal movement (IN)
 - System updates Branch Stock projection
 **Postconditions:** On-hand increased; journal auditable; batch visible
@@ -156,7 +162,7 @@ Inventory no longer uses global “feature toggles” to define core behavior (e
 ## UC-9 — Update Restock Batch Metadata
 **Actor:** Admin  
 **Preconditions:** Branch ACTIVE (not frozen)  
-**Flow:** Update metadata only (expiry_date, note, supplier, cost)  
+**Flow:** Update metadata only (expiry_date, note, supplier, purchase cost)  
 **Rules:** No stock quantity change; journal unchanged  
 **Postconditions:** Updated metadata visible
 

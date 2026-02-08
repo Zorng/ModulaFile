@@ -79,6 +79,8 @@ Inventory is modeled as **ledger-first**:
   - branch_id
   - quantity_in_base_unit
   - received_at
+  - supplier_name (optional; free-text reference)
+  - purchase_cost (optional; Money snapshot for management spending visibility)
   - expiry_date (optional)
   - note (optional)
   - created_by

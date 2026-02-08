@@ -1,253 +1,318 @@
-# Report Module
+# Reporting Module
 
-**Version:** 1.3  
-**Status:** Patched (Demo scope: Cash X + Z reports; access rules aligned to implementation)  
+**Version:** 1.4  
+**Status:** Draft (March scope: Sales management + Attendance insights; cash closeout surfaced as operational artifacts)  
 **Module Type:** Feature Module  
-**Depends on:**  
-- Authentication & Authorization (Core)  
-- Tenant & Branch Context (Core)  
-- Policy & Configuration (Core) — branch-scoped resolution  
-- Sale Module  
-- Cash Session Module  
+**Depends on:**
+- Authentication & Authorization (Core)
+- Tenant & Branch Context (Core)
+- Access Control (Core)
+- Sale/Order (Feature; source of finalized sales truth)
+- Attendance + Work Review (HR; interpreted attendance insight)
+- Cash Session (Feature; operational closeout artifacts X/Z)
+- Inventory (Feature; restock batch metadata for spend visibility)
 - Audit Logging (Core)
 
 ---
 
 ## 1. Purpose
 
-The Report Module provides **accurate, auditable business insights** for administrators by aggregating operational data from sales and cash sessions.  
-It ensures that **financial truth is preserved**, while clearly exposing provisional states such as pending voids without silently mutating historical records.
+The Reporting module provides **read-only management insight** by aggregating and presenting business facts owned by other domains.
 
-This module prioritizes:
-- Accounting safety
-- Operational transparency
-- Auditability
-- Clear separation between finalized and provisional data
+For March, the primary outcomes are:
+- **Sales performance reporting** (owners/admins/managers)
+- **Attendance insight reporting** (owners/admins/managers) using Work Review summaries
+- **Restock spending visibility** (owners/admins/managers) using Inventory restock batch metadata
+
+Cash session X/Z views are treated as **operational closeout artifacts** owned by Cash Session.
+Reporting may surface them for navigation/review, but must not redefine their meaning or mutate their history.
+
+Authoritative references:
+- Reporting trust rules: `BusinessLogic/2_domain/50_Reporting/reporting_domain.md`
+- Reporting edge cases: `BusinessLogic/3_contract/10_edgecases/reporting_edge_case_sweep.md`
+- Management reporting UX behavior: `BusinessLogic/3_contract/20_ux_specs/management_reporting_ux_spec.md`
+- Sales reporting process: `BusinessLogic/4_process/50_Reporting/10_sales_reporting_process.md`
+- Restock spend reporting process: `BusinessLogic/4_process/50_Reporting/20_restock_spend_reporting_process.md`
+- Attendance reporting process: `BusinessLogic/4_process/10_WorkForce/40_attendance_report.md`
+- Cash Session X/Z artifacts (owner-of-truth): `BusinessLogic/5_modSpec/40_POSOperation/cashSession_module_patched_v2.md`
 
 ---
 
-## 2. Scope (Capstone 1)
+## 2. Scope (March Baseline)
 
 Included:
-- Cash session reporting (X + Z)
-- Branch-scoped access control
-- Branch-scoped policy interpretation for display only (when applicable)
-- **Reporting remains accessible for frozen branches** (read-only history)
+- Sales performance reporting:
+  - time window filters (day/week/month/custom)
+  - branch scope filters (single branch or `ALL_BRANCHES` tenant-wide when allowed; enforced by Access Control)
+  - summary + drill-down lists
+  - provisional exposure visibility (`VOID_PENDING`)
+- Attendance insight reporting:
+  - time window filters (day/week/month/custom)
+  - branch scope filters (single branch or `ALL_BRANCHES` tenant-wide when allowed)
+  - summary + drill-down (per staff)
+  - fair degradation when shift plan data is missing
+- Restock spend reporting:
+  - time window filters (month/custom range)
+  - branch scope filters (single branch or `ALL_BRANCHES` tenant-wide when allowed)
+  - totals + missing-cost visibility + drill-down
+- Frozen branches remain reportable (read-only history)
+- Report access is audit logged (observational)
 
-Excluded (Capstone 2+):
-- Branch-level sales summary reporting
-- Branch-level item-level sales reporting
-- Cross-branch aggregated reports (tenant-wide totals)
-- Scheduled or automated reports
-- Advanced analytics (trend, forecasting)
+Excluded (explicit):
 - Export automation (email, scheduled PDF)
-- Real-time dashboards
+- Real-time dashboards and streaming analytics
+- Forecasting and anomaly detection
+- Inventory valuation / COGS (requires explicit costing method design)
+- Inventory usage/waste analytics beyond existing Inventory views (deferred story)
+- advanced multi-branch comparison dashboards (beyond simple tenant-wide totals)
 
 ---
 
 ## 3. Actors & Access Control
 
-Access to reports is **read-only**.
+All reporting is **read-only**.
 
-- **Admin**
-  - View all X reports within a branch
-  - View Z summary (end-of-day) for a branch
-  - View Z session detail for a closed session (admin-only audit view)
+### 3.1 Management Reporting (Sales + Attendance + Restock Spend)
+
+Requires `reports.view`.
+
+- **Owner / Admin**
+  - May view per-branch, and may view `ALL_BRANCHES` (tenant-wide) when Access Control allows (requires explicit access to all branches)
 - **Manager**
-  - View all X reports within own branch
+  - May view within single-branch scope only (no `ALL_BRANCHES`)
 - **Cashier**
-  - View only their own X reports within own branch
+  - No management reporting access by default
+
+### 3.2 Cash Session Closeout Review (X/Z Operational Artifacts)
+
+X/Z are owned by Cash Session.
+If the UI surfaces them under "Reports", scope must follow Cash Session rules:
+- **Cashier**: view only sessions they opened (March baseline)
+- **Manager / Admin / Owner**: view sessions in branch scope
 
 ---
 
 ## 4. Core Concepts
 
-### 4.1 Final vs Provisional Data
+### 4.1 Final vs Provisional
 
-Reports distinguish between:
-- **Finalized data**: confirmed and immutable
-- **Provisional data**: subject to approval or reversal
+Reports must distinguish between:
+- **Finalized facts** (stable outcomes)
+- **Provisional facts** (pending approval/completion)
 
-Pending voids are treated as **provisional** and are never silently excluded.
+`VOID_PENDING` is provisional and must never be silently hidden.
 
-### 4.2 Branch-Scoped Policy vs Reporting Truth
+### 4.2 Policy vs Reporting Truth (No Retroactive Recompute)
 
-Policies (VAT, FX, rounding, inventory behaviors) are **configured per branch**.
+Reports must aggregate totals from **stored finalized values** captured at the time of sale finalization.
 
-However, **reports must not recompute historical totals using “current policy”**.
-- Sales reporting must aggregate **stored finalized amounts** (computed during sale finalization under the branch policy at that time).
-- If UI formatting needs a branch context (e.g., showing “KHR rounding enabled”), the report UI may read the **branch policy** for display hints, but not to alter totals.
+Policies may be used only for display hints (example: label that KHR rounding was enabled),
+but must not change historical totals.
 
-This prevents policy changes from retroactively changing financial history.
+### 4.3 Scope and Time Boundaries
 
-### 4.3 Frozen Branch Visibility (Read-Only History)
+Every report is queried with explicit scope:
+- tenant
+- branch scope (single branch or `ALL_BRANCHES`)
+- time window
 
-Branches may be **frozen** (inactive / billing-frozen / operationally disabled).  
-Reporting must remain available for historical review:
+March timezone assumption:
+- day/week boundaries use Cambodia time (`Asia/Phnom_Penh`) until branch timezone is introduced explicitly.
 
-- Frozen branches **must remain selectable in report filters**.
-- Frozen branches must be clearly labeled (e.g., “Frozen” badge/status).
-- Reports remain **read-only** and do not enable any operational actions.
+### 4.4 Frozen Branch Reporting
+
+Frozen branches remain reportable (read-only history) and must be labeled as frozen.
 
 ---
 
 ## 5. Use Cases
 
-### UC-1: View Cash X Reports (Branch)
+### UC-1: View Sales Performance (Summary)
 
-**Actors:** Admin, Manager, Cashier (role-scoped)
-
-**Preconditions:**
-- User is authenticated
-- Branch context is resolved (active or frozen)
+**Actors:** Owner, Admin, Manager (`reports.view`)
 
 **Main Flow:**
-1. User opens Cash Reports → X
-2. User selects branch (if applicable) and filters (date range, status)
-3. System returns a list of cash sessions (X reports) in that branch:
-   - session status
-   - opened by name
-   - opened at / closed at
+1. Actor opens Reports → Sales.
+2. Actor selects a scope (time window + branch or `ALL_BRANCHES`).
+3. System returns:
+   - confirmed sales totals (FINALIZED only)
+   - key breakdowns (tender/payment, discounts, VAT if applicable)
+   - exception visibility (VOIDED + VOID_PENDING), shown separately
 
 **Acceptance Criteria:**
-- Admin/Manager see all sessions in their branch scope.
-- Cashier sees only sessions they opened.
-- Report list is read-only and does not allow tampering.
+- Uses stored finalized values (no recompute).
+- Shows `VOID_PENDING` exposure explicitly.
+
+**Minimum Output (March Baseline):**
+- **Scope echo**: tenant + branch scope + time window + timezone rule
+- **Confirmed (FINALIZED only)**:
+  - transaction count
+  - total grand amount (USD + KHR totals, aggregated from stored sale snapshots)
+  - VAT total (if enabled; aggregated from stored sale snapshots)
+  - discount total (sum of discounts applied; aggregated from stored sale discount snapshots)
+  - average ticket size (optional derived metric)
+  - total items sold (sum of finalized line item quantities)
+- **Tender / payment breakdown (FINALIZED only)**:
+  - by payment method (cash / QR; extend later)
+  - for cash: breakdown by tender currency (USD vs KHR) (optional)
+- **Order type comparison (FINALIZED only)**:
+  - by sale type (dine-in / takeaway / delivery): counts + revenue + item quantity
+- **Top items (FINALIZED only)**:
+  - top N sold menu items by quantity (include item snapshot display name; show quantity and optionally revenue)
+- **Category comparison (FINALIZED only)**:
+  - totals by menu category (quantity + optionally revenue)
+  - include `Uncategorized` where category is missing
+- **Exceptions / visibility**:
+  - `VOID_PENDING` exposure: count + amount (shown separately; excluded from confirmed totals)
+  - `VOIDED`: count + amount (shown separately; excluded from confirmed totals)
+
+Notes:
+- Amounts must come from **stored finalized snapshots** (including FX/VAT/rounding snapshots at the time of finalize). Reporting must not “recompute” using current policy.
+- Item, order-type, and category aggregations must be derived from the **stored sale line snapshot** captured at finalize (do not join to current Menu in a way that rewrites historical reports when items/categories are edited later).
+- “Confirmed totals” are about sales performance, not cash drawer reconciliation. Cash drawer accountability remains owned by Cash Session (X/Z + cash movements).
 
 ---
 
-### UC-2: View Cash X Report Detail (Session)
+### UC-2: Drill Down Into Sales (Lists + Exceptions)
 
-**Actors:** Admin, Manager, Cashier (role-scoped)
-
-**Preconditions:**
-- Session exists in the branch
+**Actors:** Owner, Admin, Manager (`reports.view`)
 
 **Main Flow:**
-1. User opens an X report detail for a session
-2. System displays:
-   - status, opener, opened/closed timestamps
-   - opening float
-   - cash sale movement totals
-   - paid-in / paid-out totals
-   - expected cash (by currency)
+1. Actor drills down from the sales summary.
+2. System shows:
+   - sale list within scope (status labeled)
+   - filtered exception lists (example: VOID_PENDING)
+3. Actor opens sale detail/eReceipt (read-only).
 
 ---
 
-### UC-3: View Cash Z Summary (End of Day)
+### UC-3: View Attendance Insights (Work Review Summary)
 
-**Actor:** Admin
-
-**Preconditions:**
-- Branch context resolved (active or frozen)
-- Date selected (YYYY-MM-DD)
+**Actors:** Owner, Admin, Manager (`reports.view`)
 
 **Main Flow:**
-1. Admin requests Z summary for a branch + date
-2. System computes and returns the end-of-day totals by aggregating sessions for that day
+1. Actor opens Reports → Attendance.
+2. Actor selects scope (time window + branch or `ALL_BRANCHES` + optional staff).
+3. System returns Work Review summaries:
+   - planned vs actual (when shift planning exists)
+   - explainable indicators (late/absent/early leave/overtime)
+   - pattern hints (non-judgmental)
 
 **Acceptance Criteria:**
-- Z summary is computed on request (no reactive aggregation to X changes).
-- Z summary is read-only.
+- If shift planning data is missing, reporting degrades fairly (does not fabricate "absence").
+
+**Minimum Output (March Baseline):**
+- **Scope echo**: tenant + branch scope + time window + timezone rule
+- **Per-staff summary list** (within scope):
+  - planned shift count (only when shift planning exists for the window)
+  - attended count
+  - classification counts (from Work Review): ON_TIME / LATE / EARLY_LEAVE / ABSENT / OVERTIME / UNSCHEDULED_WORK / INCOMPLETE_RECORD
+  - total scheduled hours (only when shift planning exists)
+  - total worked hours
+  - total overtime minutes (optional derived metric; sum of Work Review `overtime_minutes`)
+  - total late minutes (optional derived metric; sum of Work Review `late_minutes`)
+- **Branch summary** (aggregate across staff):
+  - totals for the above metrics within scope
+- **Fair degradation / data quality**:
+  - if no shift planning exists in the selected window:
+    - do not show absences or "planned shifts"
+    - show actual attendance/worked-time driven metrics and UNSCHEDULED_WORK visibility only
+- **Drill-down**:
+  - list Work Review entries with: staff identity, branch, expected vs actual times, classification, evidence notes, and optional location results (MATCH/MISMATCH/UNKNOWN where recorded)
 
 ---
 
-### UC-4: View Cash Z Session Detail (Closed Session)
+### UC-4: View Cash Session Closeout (X/Z Artifacts)
 
-**Actor:** Admin  
-
-**Preconditions:**
-- Cash session is closed
-- Branch may be active or frozen
+**Actors:** Cashier (own sessions), Manager, Admin, Owner
 
 **Main Flow:**
-1. Admin opens Z Report
-2. System displays:
-   - Final cash totals
-   - Counted cash
-   - Variance
-   - Session metadata
+1. Actor opens Reports → Cash Sessions.
+2. System lists sessions in scope (date range + optional status).
+3. Actor opens a session detail:
+   - X snapshot for OPEN sessions
+   - Z closeout summary for CLOSED sessions
 
 **Acceptance Criteria:**
-- Session detail is read-only
-- Corrections occur via explicit future movements/adjustments (if allowed)
+- Cashier is limited to sessions they opened.
+- Read-only; no mutation of ledger/history.
+
+**Minimum Output (March Baseline):**
+- **Session list**:
+  - session status (OPEN/CLOSED)
+  - opened_at/closed_at
+  - opened_by (and closed_by where applicable)
+  - branch identity
+- **X snapshot (OPEN)**:
+  - opening float
+  - sum of cash movements so far
+  - expected cash-in-drawer at this moment
+- **Z summary (CLOSED)**:
+  - opening float
+  - total cash movements
+  - counted cash
+  - variance
+  - closure metadata (who, when, reason)
+
+Note:
+- X/Z are operational reconciliation artifacts owned by Cash Session (see `BusinessLogic/5_modSpec/40_POSOperation/cashSession_module_patched_v2.md`). Reporting surfaces them read-only and must not reinterpret their logic.
 
 ---
 
-### UC-5: View Pending Void Exposure (Deferred)
+### UC-5: View Restock Spend (Summary)
 
-**Actor:** Admin
-
-**Preconditions:**
-- Not in Capstone 1 demo scope
+**Actors:** Owner, Admin, Manager (`reports.view`)
 
 **Main Flow:**
-- Deferred
+1. Actor opens Reports → Inventory Spend.
+2. Actor selects scope (time window + branch or `ALL_BRANCHES`).
+3. System returns:
+   - total restock spend from batches with known purchase cost
+   - count of restock batches with unknown cost
+4. Actor drills down to restock batch history (read-only) and may identify missing cost records.
 
 **Acceptance Criteria:**
-- Deferred
+- Missing cost is treated as UNKNOWN (not zero).
+- Reporting is read-only and audit logged.
+
+**Minimum Output (March Baseline):**
+- **Scope echo**: tenant + branch scope + time window + timezone rule
+- **Spending summary**:
+  - total restock spend from batches with known purchase cost
+  - count of batches with unknown cost (not treated as zero)
+  - optional time breakdown (sum per month) when the selected window spans multiple months
+- **Drill-down**:
+  - list restock batches included in the scope, including stock item, quantity, received_at, branch, and purchase cost (known/unknown)
 
 ---
 
-## 6. Reporting Rules
+## 6. Reporting Rules (Locked for March)
 
-- VOID_PENDING sales:
-  - Included in reports
-  - Clearly labeled as provisional
-  - Excluded from confirmed revenue
-- VOIDED sales:
-  - Fully excluded from all totals
-- Finalized monetary totals:
-  - Must be aggregated from **stored finalized values**
-  - Must not be recalculated from current branch policy
-- Cash reports:
-  - Never retroactively changed
-  - Corrections occur through future movements only (subject to cash policy)
+- `VOID_PENDING` sales:
+  - visible and labeled as provisional
+  - excluded from confirmed totals
+  - included in exposure summaries (count/value)
+- Historical totals:
+  - aggregated from stored finalized values
+  - never recomputed from current policy/config
+- Offline/staleness:
+  - reporting may be blocked while offline, or show last-known results with an explicit stale indicator
 - Frozen branches:
-  - Must remain visible/selectable in reporting filters
-  - Must be labeled as frozen in UI
-  - Do not block viewing historical reports
+  - remain reportable as read-only history
+- Restock spend:
+  - missing cost is UNKNOWN (not treated as zero)
 
 ---
 
 ## 7. Non-Functional Requirements
 
-- Reports must be:
-  - Deterministic
-  - Auditable
-  - Role-restricted
-- Performance must support:
-  - Daily and monthly views
-  - Branch-level aggregation
-- All report access must be logged via Audit Module
+- Deterministic: same scope + same facts → same output
+- Auditable: report access is logged (observational)
+- Role-restricted: scope enforcement is consistent across filters
 
 ---
 
-## 8. Out of Scope (Explicit)
+## Audit Events (Observational)
 
-- Cross-branch totals (tenant-wide)
-- Export automation
-- Real-time analytics
-- Manager-level reporting
-- Financial forecasting
-
----
-
-## 9. Design Rationale (Summary)
-
-This module follows mature POS principles by:
-- Separating operational state from accounting truth
-- Avoiding retroactive mutation of financial records
-- Making provisional risk visible instead of hidden
-- Preserving reporting access even when branches are frozen
-
-This ensures trust, auditability, and long-term system integrity.
-
----
-
-## Audit Events Emitted
-
-The following events MUST be written to the Audit Log when triggered (with tenant_id, branch_id where applicable, actor_id, and relevant entity IDs):
-
-- `REPORT_VIEWED`
-- `REPORT_EXPORTED`
+- `REPORT_VIEWED` (include report type + scope metadata)
+- `REPORT_EXPORTED` (future; export is out-of-scope for March)

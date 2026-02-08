@@ -18,7 +18,7 @@ Draft (Branch access is mandatory — academic promise)
 
 The Access Control domain answers one question consistently:
 
-- **Is an authenticated actor allowed to perform an action in a specific tenant and branch?**
+- **Is an authenticated actor allowed to perform an action in a specific tenant — and when required, in a specific branch?**
 
 This domain is the **authorization layer** of Modula.
 It must remain:
@@ -82,11 +82,12 @@ Access Control **consumes facts** (membership, role, branch assignment, tenant s
 | Tenant | The business workspace boundary |
 | Branch | A physical operating location within a tenant |
 | Action (Permission Key) | A stable operation key (e.g., `sale.finalize`, `inventory.adjust`) |
+| Action Scope | Whether an action is `TENANT`-scoped or `BRANCH`-scoped |
 | Role Key | Tenant-scoped authorization role identifier (e.g., `ADMIN`, `MANAGER`, `CASHIER`, …) |
 | Membership | Actor ↔ Tenant relationship (status + `role_key` + optional ownership flag) |
 | Branch Assignment | Actor ↔ Branch relationship (ACTIVE/REVOKED) |
 | Decision | ALLOW or DENY with a reason code |
-| Context | The chosen tenant + branch the user is operating in |
+| Context | The chosen tenant, and branch when required by the action |
 | Entitlements | SaaS capability snapshot (future) |
 
 ---
@@ -106,6 +107,7 @@ Example deny reasons:
 - NO_BRANCH_ACCESS
 - BRANCH_ACCESS_REVOKED
 - BRANCH_FROZEN
+- BRANCH_CONTEXT_REQUIRED
 - ACTION_NOT_PERMITTED
 - ENTITLEMENT_BLOCKED (future)
 
@@ -127,6 +129,27 @@ Examples:
 - `reports.view`
 
 Design rule: actions are stable public contract keys, not method names.
+
+### 3.2.1 Action Scope (TENANT vs BRANCH)
+
+Not every action is tied to a specific branch.
+
+Access Control classifies actions into two scopes:
+
+- **TENANT-scoped actions**: operate on tenant-owned resources.
+  - require `tenant_id`
+  - do **not** require `branch_id`
+  - do **not** require branch assignment
+  - examples: `tenant.updateProfile`, tenant membership administration, tenant-wide policy configuration (future)
+
+- **BRANCH-scoped actions**: operate on branch-scoped operational records.
+  - require `tenant_id` + `branch_id`
+  - require explicit branch assignment (fail closed)
+  - examples: `sale.finalize`, `cashSession.open`, `inventory.adjust`, `reports.view`
+
+Design rule:
+- If an action is BRANCH-scoped and `branch_id` is missing → deny with `BRANCH_CONTEXT_REQUIRED`.
+- Multi-branch queries (example: reporting `ALL_BRANCHES`) are implemented as repeated BRANCH-scoped authorization checks across each included branch; there is no implicit bypass.
 
 ---
 
@@ -160,7 +183,7 @@ Access Control consumes branch assignment facts:
 
 Owned by Staff Management (or a staff/organization domain), but consumed here.
 
-Branch access is **mandatory** for operational actions.
+Branch access is **mandatory** for BRANCH-scoped operational actions.
 
 ---
 
@@ -192,9 +215,10 @@ without rewriting all modules
 
 ## 4. Invariants
 
-- INV-AC1: Every operational request must include a `tenant_id` and `branch_id` context.
+- INV-AC0: Every authorization request must include a `tenant_id` context. `branch_id` is required only for BRANCH-scoped actions.
+- INV-AC1: Every BRANCH-scoped operational request must include a `tenant_id` and `branch_id` context.
 - INV-AC2: A user must have an ACTIVE membership to a tenant to operate within it.
-- INV-AC3: A user must have ACTIVE branch assignment to operate within that branch.
+- INV-AC3: A user must have ACTIVE branch assignment to operate within that branch (BRANCH-scoped actions only).
 - INV-AC4: If branch access cannot be verified, deny (fail closed).
 - INV-AC5: Authorization decisions must be deterministic based on current facts.
 - INV-AC6: RolePolicy must be stable and versionable (for auditability).
@@ -260,6 +284,7 @@ If an actor is logged in and operating in a branch, and their branch assignment 
 If an actor is a valid member of a tenant but has zero branch assignments:
 - They may authenticate and select the tenant.
 - They **cannot** enter branch-scoped operational mode because no branch context can be selected.
+- They may still perform TENANT-scoped actions if permitted by role policy (example: update tenant profile).
 - Client UX: show “No branch assigned. Contact admin/manager.”
 
 ### Edge Case C — Admin/Manager needs access to all branches (explicit assignment)
@@ -267,6 +292,13 @@ Modula uses **explicit branch assignments** to grant branch access (academic pro
 - Admin/Manager does **not** automatically get access to all branches by role alone.
 - To grant “all branches,” create assignments for every branch.
 - Authorization remains branch-scoped and provable for every operation.
+
+### Edge Case D — Tenant-wide Report Scope Must Not Bypass Branch Assignment
+If a reporting surface offers tenant-wide aggregation (`ALL_BRANCHES`):
+- The system must authorize `reports.view` across **every branch included** in the tenant-wide scope.
+- If the actor is missing access to any branch, tenant-wide aggregation must be denied (or not offered) and the actor must choose a specific allowed branch.
+
+This preserves the “explicit branch access” promise while still supporting tenant-wide summaries when the actor truly has access to all branches.
 
 
 ## 10. Out of Scope

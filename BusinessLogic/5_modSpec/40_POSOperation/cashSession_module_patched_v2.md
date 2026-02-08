@@ -254,7 +254,7 @@ Cash movements are immutable and auditable.
 ---
 
 ### UC-10: View X Report (Operational Snapshot)
-**Actor:** Manager, Admin  
+**Actor:** Cashier (own session), Manager, Admin  
 **When:** Cash session is OPEN  
 **Purpose:**  
 Provide a **real-time operational snapshot** of the current cash session.
@@ -272,7 +272,7 @@ Includes:
 ---
 
 ### UC-11: View Z Report (Session Close Summary)
-**Actor:** Manager, Admin  
+**Actor:** Cashier (own session), Manager, Admin  
 **When:** Cash session is CLOSED  
 **Purpose:**  
 Provide a **final reconciliation summary** for the session.
