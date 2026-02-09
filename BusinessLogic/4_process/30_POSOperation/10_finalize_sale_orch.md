@@ -117,6 +117,8 @@ Notes:
   - inventory ledger append
   - receipt snapshot creation
   - order creation
+- The platform idempotency gate is defined in:
+  - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
 
 ---
 
@@ -134,6 +136,9 @@ This matches the boundary contract in `BusinessLogic/3_contract/10_edgecases/ide
 ## 6. Orchestration Steps (Happy Path)
 
 ### Step 0 — Idempotency Gate (Process Layer)
+- Apply the platform idempotency gate using:
+  - `action_key = sale.finalize`
+  - `idempotency_key = sale_id` (stable per draft cart)
 - If a finalized sale already exists for `(branch_id, sale_id)`:
   - return the existing finalized snapshot (no-op)
 - Otherwise:

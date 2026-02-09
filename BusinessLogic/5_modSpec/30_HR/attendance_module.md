@@ -253,6 +253,8 @@ Some legacy policy keys exist in the current policy schema (e.g., out-of-shift a
 - A staff member may have at most one ACTIVE attendance session per tenant.
 - Historical attendance remains tied to the original branch context at time of record creation.
 - Offline-created records must be idempotent under sync replay (use client operation IDs).
+- Attendance start/end writes must pass the platform idempotency gate:
+  - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
 
 ---
 

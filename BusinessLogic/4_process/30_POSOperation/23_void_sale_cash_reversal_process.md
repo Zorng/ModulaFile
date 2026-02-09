@@ -74,6 +74,14 @@ If that session is no longer OPEN, this process must not proceed.
 
 ## 6. Process Steps (Happy Path)
 
+0. **Idempotency Gate (Process Layer)**
+   - Apply platform idempotency gate:
+     - `action_key = cashSession.refund`
+     - `idempotency_key = sale_id`
+   - If a refund was already recorded for this sale, return success (no duplicate)
+   - Reference:
+     - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
+
 1. **Load Sale Snapshot (Sale/Order)**
    - Read sale totals and payment snapshot (cash tender + change)
    - Read `branch_id`, `sale_id`, and `cash_session_id`
@@ -141,4 +149,3 @@ After successful completion:
 ---
 
 _End of Cash Refund on Sale Void process_
-

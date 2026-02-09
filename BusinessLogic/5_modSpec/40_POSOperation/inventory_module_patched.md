@@ -235,6 +235,8 @@ Inventory participates in cross-module flows but does not own the orchestration.
 
 ### Write Path
 - Every stock mutation appends journal movement(s) and updates projection safely under concurrency.
+- All inventory mutations must pass the platform idempotency gate:
+  - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
 - External mutations (deduction/reversal) require unique idempotency keys.
 
 ### Projection Rebuild & Maintenance

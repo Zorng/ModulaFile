@@ -72,6 +72,20 @@ Typically via the POS or staff app.
 
 # Step-by-Step Flow
 
+## Step 0 — Idempotency Gate (Process Layer)
+
+Apply the platform idempotency gate:
+- `action_key = attendance.startWork`
+- `idempotency_key = client_op_id` (request-level key)
+
+If a matching attendance session already exists for this key:
+- return the existing session (no duplicate check-in)
+
+Reference:
+- `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
+
+---
+
 ## Step 1 — Authentication Gate
 
 The system verifies the user is authenticated.

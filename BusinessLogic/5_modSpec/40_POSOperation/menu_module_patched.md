@@ -352,6 +352,8 @@ Examples:
 - FR-6: Stock deduction is based on **TRACKED components**, not on “has recipe”
 - FR-7: Modifier price deltas affect sale total
 - FR-8: Modifier component deltas affect composition evaluation
+- FR-9: Menu writes (create/update/archive/restore/assignment) must pass the platform idempotency gate:
+  - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
 
 ---
 

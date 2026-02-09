@@ -90,6 +90,20 @@ The system protects the business before closing attendance.
 
 ---
 
+## Step 0 — Idempotency Gate (Process Layer)
+
+Apply the platform idempotency gate:
+- `action_key = attendance.endWork`
+- `idempotency_key = client_op_id` (request-level key)
+
+If the attendance session is already closed for this key:
+- return success (no duplicate checkout)
+
+Reference:
+- `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
+
+---
+
 ## Step 1 — Validate active attendance
 
 System verifies:

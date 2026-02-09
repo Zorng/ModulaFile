@@ -323,6 +323,8 @@ Reporting must not:
 
 ## 6. Idempotency & Invariants
 
+- All critical cash session writes must pass the platform idempotency gate:
+  - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
 - Only one OPEN cash session per branch
 - Cash movements are append-only
 - Sale-based cash movements are idempotent per sale_id

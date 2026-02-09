@@ -129,6 +129,7 @@ Examples:
 - `inventory.adjust`
 - `menu.manage`
 - `reports.view`
+- `audit.view`
 
 Design rule: actions are stable public contract keys, not method names.
 
@@ -142,7 +143,7 @@ Access Control classifies actions into two scopes:
   - require `tenant_id`
   - do **not** require `branch_id`
   - do **not** require branch assignment
-  - examples: `tenant.updateProfile`, tenant membership administration, tenant-wide policy configuration (future)
+  - examples: `tenant.updateProfile`, tenant membership administration, `audit.view`, tenant-wide policy configuration (future)
 
 - **BRANCH-scoped actions**: operate on branch-scoped operational records.
   - require `tenant_id` + `branch_id`

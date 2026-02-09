@@ -92,7 +92,12 @@ BusinessLogic/4_process
 ├── 60_PlatformSystems
 │   ├── 10_update_tax_currency_policy_process.md
 │   ├── 20_resolve_tax_currency_policy_process.md
-│   └── 30_operational_notification_emission_process.md
+│   ├── 30_operational_notification_emission_process.md
+│   ├── 40_audit_event_recording_process.md
+│   ├── 50_audit_log_query_process.md
+│   ├── 60_offline_operation_queue_process.md
+│   ├── 70_offline_sync_replay_process.md
+│   └── 80_idempotency_gate_process.md
 ```
 
 This structure is designed to scale without becoming unreadable.

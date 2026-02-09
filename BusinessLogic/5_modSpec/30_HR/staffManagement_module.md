@@ -132,6 +132,8 @@ The storage mechanism is an implementation detail; the definition is canonical.
 - INV-SM4: BranchAssignment revocation is immediate.
 - INV-SM5: Concurrent staff limits gate operation, not staff record creation.
 - INV-SM6: `role_key` does not bypass branch assignment or licensing limits (including for ADMIN/MANAGER).
+- INV-SM7: Staff lifecycle and branch assignment writes must pass the platform idempotency gate:
+  - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
 
 ---
 
