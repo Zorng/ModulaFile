@@ -251,6 +251,9 @@ Failures here:
 - must be retryable
 - must not invalidate the finalized sale
 
+Printing dispatch reference:
+- `BusinessLogic/4_process/60_PlatformSystems/55_printing_effects_dispatch_process.md`
+
 ---
 
 ## 7. Transaction Boundary (March-Preferred)

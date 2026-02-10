@@ -22,6 +22,11 @@ It manages:
 - session lifecycle (issue/refresh/revoke)
 - security controls (OTP verification, lockouts, rate limits)
 
+**Fair-use note (safety, not pricing)**
+- Authentication rate limits and lockouts are security/fair-use controls.
+- They must never be treated as subscription monetization.
+- Canonical reference: `BusinessLogic/2_domain/60_PlatformSystems/fair_use_limits_domain.md`
+
 ### What this module intentionally does *not* own
 
 This module does **not** own:

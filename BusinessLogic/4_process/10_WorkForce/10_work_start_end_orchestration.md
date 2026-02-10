@@ -150,18 +150,25 @@ This keeps authorization centralized and consistent.
 
 ---
 
-## Step 6 — Capacity Gate (Concurrent Staff)
+## Step 6 — Capacity Gate (Operator Seats)
 
-Ensure branch staff capacity is not exceeded.
+Ensure branch operator seat capacity is not exceeded.
 
 Check:
 - Current active attendance sessions at branch
-- Must be below branch staff capacity
+- Must be below branch operator seat limit
 
 Failure example:
 - Maximum active staff already reached.
 
-This enforces the **concurrent staff licensing model**.
+This enforces the **concurrent operator seat model**.
+
+Notes:
+- Seats are a branch-scoped commercial limit (Subscription & Entitlements), consumed at `START_WORK`.
+- This gate applies to both staff and admins when operating the branch.
+
+Implementation-neutral read requirement:
+- Resolve seat limit from Subscription & Entitlements (conceptually: `GetOperatorSeatLimit(tenant_id, branch_id)`).
 
 ---
 

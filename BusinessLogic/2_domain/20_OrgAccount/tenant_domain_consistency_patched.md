@@ -118,7 +118,7 @@ Reserved for future:
 - INV-T1: All operational data must belong to exactly one tenant.
 - INV-T2: Cross-tenant data access is forbidden.
 - INV-T3: A tenant is created through a **controlled provisioning flow** (admin provisioning today; self-serve signup later). It is not arbitrary UI CRUD.
-- INV-T4: A tenant must have at least one **ACTIVE branch before POS operations** can run. (Provisioning may create the first branch immediately.)
+- INV-T4: POS operations require at least one **ACTIVE branch**. A tenant may temporarily have **zero branches** until the first paid branch is activated/provisioned.
 - INV-T5: Tenant identity is stable; renaming a business does not change tenant identity.
 - INV-T6: Tenant status is a **fact**, not a permission decision (enforced elsewhere).
 
@@ -170,7 +170,7 @@ Typical read queries:
 ### Tenant ↔ Branch
 - A tenant owns one or more branches.
 - Branch lifecycle is managed by the Branch domain.
-- Tenant guarantees that **at least one branch exists** after provisioning.
+- Tenant does not guarantee a branch exists immediately after provisioning; the first branch may be provisioned only after subscription activation/payment.
 
 ### Tenant ↔ Authentication
 - Tenant does not manage identities.

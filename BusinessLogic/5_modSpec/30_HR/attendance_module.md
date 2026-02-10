@@ -56,6 +56,7 @@ Design rule (locked): location verification is **evidence-first** and must not b
   - Branch switching mid-shift is not allowed: END_WORK at Branch A before START_WORK at Branch B.
 - **Branch Status**:
   - If a branch is **FROZEN** (not ACTIVE), start-work/check-in must be blocked for that branch.
+  - March baseline: end-work/check-out is also blocked when branch is frozen (no safe-closure exception is specified).
 - **Shift Alignment (Soft)**:
   - Shift schedules represent planned expectations (Shift domain).
   - Attendance does not hard-block out-of-shift work; it records timestamps and (optionally) shift alignment context for later Work Review.
@@ -72,6 +73,21 @@ Design rule (locked): location verification is **evidence-first** and must not b
 - Work review reporting: `BusinessLogic/4_process/10_WorkForce/40_attendance_report.md`
 - HR edge cases: `BusinessLogic/3_contract/10_edgecases/identity_hr_edge_case_sweep_patched.md`
 - HR ↔ POS boundary: `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md`
+
+---
+
+## Subscription & Entitlements Integration (Billing Guard Rails)
+
+Attendance is a Workforce capability and is branch-scoped for enforcement.
+
+- **Entitlement key (branch-scoped):** `module.workforce`
+- If `module.workforce` enforcement is `READ_ONLY` (not subscribed):
+  - allow viewing attendance history (read actions),
+  - block attendance start/end writes (`START_WORK`, `END_WORK`).
+- If tenant subscription state is `FROZEN`:
+  - operational writes are blocked (Attendance becomes view-only).
+
+Enforcement is performed by Access Control using action metadata (scope + effect) and entitlements.
 
 ---
 
@@ -97,7 +113,7 @@ Design rule (locked): location verification is **evidence-first** and must not b
 - Staff has ACTIVE membership + ACTIVE staff profile + ACTIVE branch assignment for the branch
 - Branch is ACTIVE (not FROZEN)
 - Staff has no existing ACTIVE attendance session in this tenant
-- Concurrent staff capacity is available (Staff Licensing gate via orchestration)
+- Operator seat capacity is available (Subscription & Entitlements gate via orchestration)
 
 **Main Flow**:
 1. User taps **Start Work / Check In**.
@@ -111,7 +127,7 @@ Design rule (locked): location verification is **evidence-first** and must not b
 
 **Postconditions**:
 - Staff has one ACTIVE attendance session for the tenant (in the selected branch).
-- Capacity slot is consumed (concurrent staff).
+- Operator seat is consumed (concurrent operator seats).
 
 **Acceptance Criteria**:
 - Duplicate check-in is idempotent (returns the existing ACTIVE session).
@@ -127,7 +143,7 @@ Design rule (locked): location verification is **evidence-first** and must not b
 **Preconditions**:
 - User has an ACTIVE attendance session in the current tenant + branch context
 - Work End orchestration confirms there are no unresolved responsibilities (e.g., open cash session)
-- If branch becomes frozen after check-in, check-out is still allowed to close attendance cleanly
+- If branch becomes frozen after check-in, check-out may be blocked (March baseline has no safe-closure exception specified)
 
 **Main Flow**:
 1. User taps **End Work / Check Out**.

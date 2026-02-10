@@ -43,6 +43,35 @@ This design keeps Inventory correct and usable even after years of operation and
 
 ---
 
+## 2.1 Subscription & Entitlements Integration (Billing Guard Rails)
+
+Inventory is an optional branch-scoped capability.
+
+- **Entitlement key (branch-scoped):** `module.inventory`
+- If `module.inventory` enforcement is `READ_ONLY` (not subscribed):
+  - allow inventory reads (stock list, journal, restock history, projections),
+  - block all inventory writes (restock, adjustments, item/category mutations).
+- If tenant subscription state is `FROZEN`:
+  - operational writes are blocked system-wide; Inventory becomes view-only.
+
+Cross-module writes into Inventory (sale deduction / void reversal) must only run when
+`module.inventory` is `ENABLED` for the branch; otherwise they are skipped and the sale remains valid
+but stock tracking is not applied for that period.
+
+---
+
+## 2.2 Fair-Use Limits (Safety, Not Pricing)
+
+Inventory may enforce operational working-set limits (module-owned) and also respects platform fair-use caps:
+- these limits are not monetization and must not be framed as "upgrade plan",
+- they exist to prevent resource exhaustion (accidental or malicious).
+
+Canonical references:
+- Domain: `BusinessLogic/2_domain/60_PlatformSystems/fair_use_limits_domain.md`
+- Gate process: `BusinessLogic/4_process/60_PlatformSystems/85_fair_use_limit_gate_process.md`
+
+---
+
 ## 3. Core Concepts
 
 ### 3.1 Stock Item
@@ -210,6 +239,7 @@ Inventory participates in cross-module flows but does not own the orchestration.
 **Trigger:** Sale/Order finalization process  
 **Inputs:** (branch_id, sale_id/order_id, actor_id, deduction_lines[{stock_item_id, qty_base_unit}])  
 **Rules (Locked):**
+- **Entitlement requirement:** execute this cross-module mutation only when `module.inventory` is `ENABLED` for the branch.
 - **Idempotent per sale_id/order_id:** retry must not create duplicate SALE_DEDUCTION movements
 - **Atomic from system perspective:** finalize + deduction + projection update behaves as one operation (transaction or outbox-consistent)
 - **Branch frozen check:** reject if branch frozen
@@ -221,6 +251,7 @@ Inventory participates in cross-module flows but does not own the orchestration.
 **Trigger:** Void Order process  
 **Inputs:** (branch_id, sale_id/order_id, actor_id)  
 **Rules:**
+- **Entitlement requirement:** execute this cross-module mutation only when `module.inventory` is `ENABLED` for the branch.
 - Reverse only what was deducted for that sale_id/order_id (compensating IN movements)
 - Idempotent under retry
 **Outputs:** VOID_REVERSAL movements + updated projection

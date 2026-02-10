@@ -112,6 +112,8 @@ This prevents central catalog drift as modules evolve.
 - Attendance: `BusinessLogic/5_modSpec/30_HR/attendance_module.md`
 - Policy: `BusinessLogic/5_modSpec/60_PlatformSystems/policy_module.md`
 - Reporting (observational): `BusinessLogic/5_modSpec/50_Reporting/report_module.md`
+- Subscription & Entitlements (billing guard rails): `BusinessLogic/5_modSpec/60_PlatformSystems/subscriptionEntitlements_module.md`
+- Printing (operational effects): `BusinessLogic/5_modSpec/60_PlatformSystems/printing_module.md`
 
 OrgAccount and IdentityAccess processes also require auditability for governance changes (membership changes, staff provisioning).
 Their event names are defined by their process/modspec artifacts and must remain stable once introduced.

@@ -48,6 +48,34 @@ This design avoids hidden rules such as “has recipe = deduct” and supports b
 
 ---
 
+## 2.1 Subscription & Entitlements Integration (Inventory Optional)
+
+Menu is part of the core POS bundle, but **inventory tracking is optional**.
+
+- Inventory tracking entitlement (branch-scoped): `module.inventory`
+- When `module.inventory` is not `ENABLED` for a branch:
+  - the business may still create and sell menu items normally,
+  - but any **stock-linked composition** (TRACKED components / direct-stock mapping) must be treated as **inactive** for deduction output,
+  - and mutation of composition that references stock items is blocked (upgrade required).
+
+Practical effect:
+- Sale finalization must not attempt inventory deduction unless `module.inventory` is `ENABLED`.
+- This prevents partial failures where selling is allowed but Inventory writes are blocked.
+
+---
+
+## 2.2 Fair-Use Limits (Safety, Not Pricing)
+
+Menu may enforce operational working-set limits (module-owned) and also respects platform fair-use caps:
+- these limits are not monetization and must not be framed as "upgrade plan",
+- they exist to prevent resource exhaustion (accidental or malicious).
+
+Canonical references:
+- Domain: `BusinessLogic/2_domain/60_PlatformSystems/fair_use_limits_domain.md`
+- Gate process: `BusinessLogic/4_process/60_PlatformSystems/85_fair_use_limit_gate_process.md`
+
+---
+
 ## 3. Core Concepts
 
 ### 3.1 Menu Item

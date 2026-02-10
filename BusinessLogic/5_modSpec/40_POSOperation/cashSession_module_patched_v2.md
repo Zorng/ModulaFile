@@ -39,6 +39,20 @@ This module models **operational cash handling**, not long-term financial analyt
 
 ---
 
+## 2.1 Subscription & Entitlements Integration (Billing Guard Rails)
+
+Cash Session is part of the core POS bundle and is required for operational accountability (X/Z).
+
+- If tenant subscription state is `PAST_DUE`:
+  - cash session operations continue (authorization allows), but UX must warn.
+- If tenant subscription state is `FROZEN`:
+  - cash session write actions are blocked (cannot open/close or record manual movements),
+  - historical reads (past sessions, X/Z artifacts) may remain available.
+
+Enforcement is performed by Access Control using action metadata (scope + effect) and subscription state.
+
+---
+
 ## 3. Core Concepts
 
 ### 3.1 Cash Session

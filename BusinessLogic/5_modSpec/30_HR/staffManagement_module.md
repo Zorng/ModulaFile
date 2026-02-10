@@ -3,10 +3,10 @@
 ## Module: Staff Management
 
 **Version:** 3.1  
-**Status:** Patched (simplified onboarding; user-owned credentials; aligned with Authentication, Access Control, Tenant, and Concurrent Staff Licensing)  
+**Status:** Patched (simplified onboarding; user-owned credentials; aligned with Authentication, Access Control, Tenant, and Operator Seats)  
 **Module Type:** Supporting Domain (Org Operations / HR-light)  
 **Depends on:** Authentication (identity & credentials), Tenant (membership facts: `membership_kind` + `role_key`), Branch (branch entity), Access Control (authorization), Attendance (signals), Audit (logging)  
-**Related Modules:** Attendance, Cash Session, Sale, Access Control, Staff Licensing, Subscription/Entitlements (future)
+**Related Modules:** Attendance, Cash Session, Sale, Access Control, Subscription/Entitlements
 
 ---
 
@@ -16,7 +16,7 @@ Staff Management manages the business-facing representation of people who operat
 - staff profiles and lifecycle,
 - explicit branch assignments (authorization facts),
 - operational readiness of staff,
-- alignment with **Concurrent Staff** licensing.
+- alignment with **Operator Seat** limits (commercial concurrency guard rail).
 
 To prioritize shipping and reduce onboarding complexity, Modula adopts **owner-provisioned staff onboarding** (no invite flow).
 
@@ -55,7 +55,26 @@ A staff member can operate only if all are true:
 - ACTIVE tenant membership (Tenant),
 - ACTIVE branch assignment (this module),
 - authorization decision is ALLOW (Access Control),
-- concurrent staff capacity is available (Staff Licensing).
+- operator seats are available (Subscription & Entitlements).
+
+**Entitlements note (billing guard rail)**
+- When Workforce is not subscribed for a branch, Staff Management becomes read-only for that branch:
+  - viewing history may remain available,
+  - but staff lifecycle and branch assignment writes are blocked.
+- Entitlement key (branch-scoped): `module.workforce`
+
+---
+
+## 2.4 Fair-Use Limits (Safety, Not Pricing)
+
+Staff creation and management can be abused by automation (e.g., creating extreme numbers of staff profiles).
+Modula enforces technical safety limits as guard rails:
+- these limits are not monetization and must not be framed as "upgrade plan",
+- they exist to prevent resource exhaustion (accidental or malicious).
+
+Canonical references:
+- Domain: `BusinessLogic/2_domain/60_PlatformSystems/fair_use_limits_domain.md`
+- Gate process: `BusinessLogic/4_process/60_PlatformSystems/85_fair_use_limit_gate_process.md`
 
 ---
 
@@ -115,10 +134,9 @@ Minimum fields:
 
 ### 4.3 Concurrent Operator (Logical Concept)
 
-A staff member consumes a concurrent slot if:
-- authenticated,
-- operating within `{tenant_id, branch_id}`,
-- and in an operational state (attendance check-in, POS session, or cash session).
+A staff member consumes an operator seat when they **start work** at a branch:
+- `START_WORK` creates an ACTIVE attendance session,
+- the active attendance session is the canonical "active operator" signal for seat consumption.
 
 The storage mechanism is an implementation detail; the definition is canonical.
 
@@ -130,7 +148,7 @@ The storage mechanism is an implementation detail; the definition is canonical.
 - INV-SM2: DISABLED or ARCHIVED staff cannot perform operational actions.
 - INV-SM3: Branch access requires explicit BranchAssignment.
 - INV-SM4: BranchAssignment revocation is immediate.
-- INV-SM5: Concurrent staff limits gate operation, not staff record creation.
+- INV-SM5: Operator seat limits gate operation, not staff record creation.
 - INV-SM6: `role_key` does not bypass branch assignment or licensing limits (including for ADMIN/MANAGER).
 - INV-SM7: Staff lifecycle and branch assignment writes must pass the platform idempotency gate:
   - `BusinessLogic/4_process/60_PlatformSystems/80_idempotency_gate_process.md`
@@ -225,22 +243,20 @@ Canonical process reference:
 
 ---
 
-## 8. Concurrent Staff Licensing Enforcement
+## 8. Operator Seat Enforcement
 
 ### 8.1 Enforcement Points
-Concurrent limits are enforced when:
-- staff checks in (Attendance),
-- staff starts a POS operating session,
-- staff opens a cash session.
+Operator seats are enforced at:
+- `START_WORK` (Work Start orchestration)
 
 If limit reached:
-- deny with `STAFF_LIMIT_REACHED`
+- deny with `SEAT_LIMIT_REACHED`
 - no silent fallback
 
 ### 8.2 What Does Not Count
 - inactive sessions
 - DISABLED / ARCHIVED staff
-- staff profiles without operational activity
+- staff profiles without an ACTIVE attendance session
 
 ---
 
@@ -262,7 +278,7 @@ If limit reached:
 - STAFF_NOT_ACTIVE
 - NO_BRANCH_ASSIGNMENT
 - BRANCH_NOT_ACTIVE
-- STAFF_LIMIT_REACHED
+- SEAT_LIMIT_REACHED
 
 ---
 
@@ -282,7 +298,7 @@ Log:
 - Invite-based onboarding
 - Email-based login
 - Payroll / HR documents
-- Subscription billing enforcement
+- Billing payment collection automation (entitlement enforcement is in-scope via Access Control)
 - Multi-tenant franchise hierarchies
 
 ---
@@ -291,4 +307,4 @@ Log:
 
 - Authentication handles password security and reset flows.
 - Access Control enforces permissions using tenant membership + branch assignments.
-- Staff Licensing enforces concurrency limits using Attendance and session signals.
+- Operator seat gating enforces concurrency limits using Attendance sessions as the canonical active-operator signal.

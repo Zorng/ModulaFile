@@ -83,12 +83,14 @@ Access Control **consumes facts** (membership, role, branch assignment, tenant s
 | Branch | A physical operating location within a tenant |
 | Action (Permission Key) | A stable operation key (e.g., `sale.finalize`, `inventory.adjust`) |
 | Action Scope | Whether an action is `TENANT`-scoped or `BRANCH`-scoped |
+| Action Effect | Whether an action is `READ` or `WRITE` (writes mutate business truth) |
 | Role Key | Tenant-scoped authorization role identifier (e.g., `ADMIN`, `MANAGER`, `CASHIER`, …) |
 | Membership | Actor ↔ Tenant relationship (status + `role_key` + optional ownership flag) |
 | Branch Assignment | Actor ↔ Branch relationship (ACTIVE/REVOKED) |
 | Decision | ALLOW or DENY with a reason code |
 | Context | The chosen tenant, and branch when required by the action |
-| Entitlements | SaaS capability snapshot (future) |
+| Subscription State | Tenant commercial state: `ACTIVE` / `PAST_DUE` / `FROZEN` |
+| Entitlements | Capability snapshot (what is unlocked + whether it is writable vs read-only) |
 
 ---
 
@@ -109,7 +111,9 @@ Example deny reasons:
 - BRANCH_FROZEN
 - BRANCH_CONTEXT_REQUIRED
 - ACTION_NOT_PERMITTED
-- ENTITLEMENT_BLOCKED (future)
+- SUBSCRIPTION_FROZEN (writes blocked; read-only allowed)
+- ENTITLEMENT_BLOCKED
+- ENTITLEMENT_READ_ONLY (write blocked; read actions may still be allowed)
 
 ---
 
@@ -196,6 +200,14 @@ Access Control consumes tenant status:
 
 Owned by Tenant domain/module.
 
+### 3.6.1 Subscription State (External Fact)
+Access Control consumes subscription enforcement state:
+- `ACTIVE`: normal operation
+- `PAST_DUE`: operations continue (authorization still allows; UX must warn loudly)
+- `FROZEN`: operational **writes** must be blocked; read-only may remain allowed
+
+Owned by Subscription & Entitlements (PlatformSystems).
+
 ---
 
 ### 3.7 Branch Status (External Fact)
@@ -206,13 +218,24 @@ Owned by Branch domain/module.
 
 ---
 
-### 3.8 Entitlements Snapshot (External Fact — Future)
-A computed snapshot of capabilities for the tenant.
-Access Control must be compatible with adding:
-- feature gating
-- branch limits
-- staff limits
-without rewriting all modules
+### 3.8 Entitlements Snapshot (External Fact)
+A computed snapshot of capabilities for the tenant/branch.
+
+Access Control consumes entitlements to enforce:
+- module enablement (enabled vs disabled-visible)
+- read-only mode (view allowed; writes denied)
+- branch-scoped capability gating (per-branch subscription)
+
+Design rule:
+- entitlements are evaluated as part of authorization, not left to each module to interpret differently.
+
+### 3.9 Action Metadata (Scope + Effect + Entitlement Requirements)
+Access Control requires an action catalog that defines, per `action_key`:
+- `scope`: `TENANT` or `BRANCH`
+- `effect`: `READ` or `WRITE`
+- required entitlement(s), if any
+
+This is how Modula makes "disabled modules are read-only" enforceable without ad-hoc checks.
 
 ---
 
@@ -225,8 +248,8 @@ without rewriting all modules
 - INV-AC4: If branch access cannot be verified, deny (fail closed).
 - INV-AC5: Authorization decisions must be deterministic based on current facts.
 - INV-AC6: RolePolicy must be stable and versionable (for auditability).
-- INV-AC7: Tenant frozen status must block operational actions (unless explicitly allow-listed).
-- INV-AC8: Branch frozen status must block operational actions (unless explicitly allow-listed).
+- INV-AC7: Subscription `FROZEN` must block **WRITE** actions (READ actions may be allowed).
+- INV-AC8: Tenant/Branch frozen status must block **WRITE** actions (READ actions may be allowed via explicit allow-list).
 
 ---
 
@@ -256,7 +279,8 @@ Access Control performs read queries against:
 - Membership store (roles + membership status)
 - Branch assignment store
 - Tenant status store
-- (future) Entitlements snapshot store/cache
+- Subscription state store (`ACTIVE` / `PAST_DUE` / `FROZEN`)
+- Entitlements snapshot store/cache
 
 ---
 

@@ -254,6 +254,9 @@ The Sale Module must read policy values using the backend-implemented keys (from
 ### Inventory Deduction (Not a Policy)
 - Sale-based inventory deduction is derived from **Menu composition** (recipe/direct-stock mapping), not a policy toggle.
 - Finalize should produce `deduction_lines` (may be empty). Inventory deduction executes only when `deduction_lines` is non-empty.
+- Inventory deduction must also be gated by entitlements:
+  - execute stock deduction/reversal only when `module.inventory` is `ENABLED` for the branch,
+  - otherwise treat inventory deduction as a no-op (selling remains valid; stock tracking is off for that period).
 
 ---
 
@@ -262,6 +265,19 @@ The Sale Module must read policy values using the backend-implemented keys (from
 **Product rule (Capstone 1):** a user must have an OPEN cash session in the current branch before creating a cart / adding items / finalizing a sale.
 
 This prevents draft-sale spam, enforces cash discipline, and ensures X/Z reporting is always available.
+
+---
+
+## 3.7.1 Subscription & Entitlements Integration (Billing Guard Rails)
+
+Sale is an operational write-heavy module and must rely on Access Control for consistent enforcement.
+
+- If tenant subscription state is `PAST_DUE`:
+  - selling continues (authorization allows), but UX must warn.
+- If tenant subscription state is `FROZEN`:
+  - operational writes are blocked (no new carts/sales/voids), but historical reads (receipts, reports) may remain available.
+- Branch/module entitlements influence dependent steps:
+  - `module.inventory` gates whether inventory deduction/reversal is executed (see 3.6).
 
 ---
 

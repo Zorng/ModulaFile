@@ -49,8 +49,8 @@ This domain exists to make those expectations explicit and enforceable.
 Branch creation is **provisioning-driven**, not a typical CRUD feature.
 
 A branch record is created by the system when:
-- a Tenant is provisioned (initial/default branch), and/or
-- a subscription entitlement enables additional branches (future billing engine), and/or
+- a tenant activates/pays for branch capacity (first branch activation; future billing engine), and/or
+- a subscription entitlement enables additional branches, and/or
 - developers/admin tooling provision branches manually (Capstone 1 practicality).
 
 **Implication:** End-users can update branch profile/configuration, but do not create branches directly in the MVP.

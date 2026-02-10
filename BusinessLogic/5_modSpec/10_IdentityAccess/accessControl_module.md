@@ -5,7 +5,7 @@
 **Version:** 1.0  
 **Status:** Draft (Branch access is mandatory)  
 **Module Type:** Platform / Supporting Module  
-**Depends on:** Authentication (actor identity), Tenant (status), Staff/Tenant Membership, Staff Branch Assignment, Policy (optional), Audit (logging), Offline Sync (caching)  
+**Depends on:** Authentication (actor identity), Tenant (status), Branch (status), Subscription & Entitlements (state + entitlements), Staff/Tenant Membership, Staff Branch Assignment, Policy (optional), Audit (logging), Offline Sync (caching)  
 **Related Modules:** Tenant, Branch, Staff Management, Staff Attendance, Sale, Cash Session, Inventory, Menu, Audit, Offline Sync, Policy
 
 ---
@@ -69,13 +69,21 @@ They should call this module consistently.
 
 Decision evaluation order (fast denial first):
 
-0) **Action scope**
-- Determine whether the action is TENANT-scoped or BRANCH-scoped.
+0) **Action metadata**
+- Determine:
+  - action scope (`TENANT` vs `BRANCH`)
+  - action effect (`READ` vs `WRITE`)
 - If action is BRANCH-scoped and `branch_id` is missing → DENY(BRANCH_CONTEXT_REQUIRED)
 
-1) **Tenant status**
-- If tenant is not ACTIVE → DENY(TENANT_NOT_ACTIVE)
-- Exception allow-list (optional): read-only actions, support actions
+1) **Subscription / operational status gates**
+- Subscription state:
+  - If subscription is `FROZEN` and action effect is `WRITE` → DENY(SUBSCRIPTION_FROZEN)
+  - If subscription is `PAST_DUE` → allow (UX must warn; not an authorization denial)
+- Tenant/branch operational status:
+  - If tenant is `FROZEN` and action effect is `WRITE` → DENY(TENANT_NOT_ACTIVE)
+  - If branch is `FROZEN` and action effect is `WRITE` → DENY(BRANCH_FROZEN)
+- Read allow-list:
+  - Some `READ` actions may remain allowed while frozen (history, invoices). This must be explicit in the action catalog.
 
 2) **Membership**
 - If no active membership for actor in tenant → DENY(NO_MEMBERSHIP)
@@ -88,8 +96,10 @@ Decision evaluation order (fast denial first):
 4) **Role policy**
 - If `role_key` does not permit action → DENY(ACTION_NOT_PERMITTED)
 
-5) **Entitlements (future hook)**
-- If entitlements block feature → DENY(ENTITLEMENT_BLOCKED)
+5) **Entitlements (billing guard rail)**
+- Resolve entitlement requirements for the action (from catalog metadata).
+- If entitlement enforcement is `DISABLED_VISIBLE` → DENY(ENTITLEMENT_BLOCKED)
+- If entitlement enforcement is `READ_ONLY` and action effect is `WRITE` → DENY(ENTITLEMENT_READ_ONLY)
 
 If all pass → ALLOW
 
@@ -121,6 +131,17 @@ Needed fields:
 - `tenant_id`
 - `status` (ACTIVE/FROZEN)
 
+### 5.3.1 Subscription state
+Needed fields:
+- `tenant_id`
+- `subscription_state` (`ACTIVE` | `PAST_DUE` | `FROZEN`)
+
+### 5.3.2 Entitlements snapshot
+Needed fields (conceptual):
+- `tenant_id`
+- `branch_id` (for branch-scoped entitlements)
+- `entitlement_key -> enforcement` mapping (`ENABLED` | `READ_ONLY` | `DISABLED_VISIBLE`)
+
 ### 5.4 Role policy
 MVP: code-defined mapping.
 
@@ -136,6 +157,22 @@ Use stable string keys. Examples:
 - `tenant.updateProfile`
 - `tenant.changeStatus` (reserved)
 
+### Subscription / Billing (Tenant governance)
+- `subscription.view`
+- `subscription.invoice.download`
+- `subscription.payNow`
+- `subscription.activateFirstBranch` (zero-branch flow)
+- `subscription.addBranch`
+- `subscription.changeBranchPlan` (branch exists; enables/disables modules, seats)
+
+Action metadata guidance (so tenants can recover while `FROZEN`):
+- `subscription.view`, `subscription.invoice.download`, `subscription.payNow`:
+  - scope: `TENANT`
+  - effect: `READ`
+- `subscription.activateFirstBranch`, `subscription.addBranch`, `subscription.changeBranchPlan`:
+  - scope: `TENANT`
+  - effect: `WRITE`
+
 ### POS Operations
 - `sale.create`
 - `sale.finalize`
@@ -144,6 +181,12 @@ Use stable string keys. Examples:
 - `cashSession.open`
 - `cashSession.close`
 - `receipt.print`
+- `order.print.kitchen` (kitchen ticket/sticker print; operational effect)
+
+Printing action metadata guidance:
+- `receipt.print`, `order.print.kitchen`:
+  - scope: `BRANCH`
+  - effect: `READ` (printing is observational; must remain usable for history)
 
 ### Inventory & Menu
 - `inventory.view`
@@ -163,6 +206,7 @@ Example baseline mapping (adjust as needed):
 
 - CASHIER:
   - sale.create, sale.finalize, receipt.print
+  - order.print.kitchen
   - cashSession.open, cashSession.close
 - MANAGER:
   - everything CASHIER can do
@@ -185,6 +229,8 @@ The POS client should cache:
 - memberships + `role_key`
 - branch assignments
 - tenant status
+- subscription state (best-effort)
+- entitlements snapshot (best-effort)
 - policy version
 
 ### 8.2 Offline decision

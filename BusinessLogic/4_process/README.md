@@ -96,9 +96,17 @@ BusinessLogic/4_process
 │   ├── 30_operational_notification_emission_process.md
 │   ├── 40_audit_event_recording_process.md
 │   ├── 50_audit_log_query_process.md
+│   ├── 55_printing_effects_dispatch_process.md
 │   ├── 60_offline_operation_queue_process.md
 │   ├── 70_offline_sync_replay_process.md
 │   └── 80_idempotency_gate_process.md
+│   ├── 85_fair_use_limit_gate_process.md
+│   ├── 90_first_branch_activation_orchestration.md
+│   ├── 91_enable_branch_module_or_seats_proration_process.md
+│   ├── 92_disable_branch_module_downgrade_pending_process.md
+│   └── 93_subscription_renewal_grace_and_freeze_orchestration.md
+│   └── 94_additional_branch_activation_orchestration.md
+│   └── 95_payment_collection_and_confirmation_orchestration.md
 ```
 
 This structure is designed to scale without becoming unreadable.

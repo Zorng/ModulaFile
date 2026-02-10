@@ -208,10 +208,10 @@ Domain:
 Once attendance is closed:
 
 - Staff is no longer considered **actively working**
-- Staff slot capacity is freed
+- Operator seat capacity is freed
 - Real-time presence updates immediately
 
-This supports the **Concurrent Staff Licensing model**.
+This supports the **Concurrent Operator Seat model** (Subscription & Entitlements).
 
 Domains:
 - Staff Capacity / Licensing
