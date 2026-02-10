@@ -23,6 +23,10 @@ Key rules:
 
 Triggered when an owner/admin requests to disable a branch module/add-on.
 
+Note (March):
+- The "effective date" enforcement in Step 3 is executed by the Job Scheduler tick:
+  - `BusinessLogic/4_process/60_PlatformSystems/97_job_scheduler_tick_and_execution_process.md`
+
 ---
 
 ## Inputs (Minimum)

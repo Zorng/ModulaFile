@@ -25,6 +25,10 @@ Triggered automatically at:
 - the tenant billing anchor (renewal),
 - and the end of the 24h grace window if still unpaid.
 
+Execution mechanism (March):
+- This process is run by the Job Scheduler tick:
+  - `BusinessLogic/4_process/60_PlatformSystems/97_job_scheduler_tick_and_execution_process.md`
+
 ---
 
 ## Inputs (Minimum)

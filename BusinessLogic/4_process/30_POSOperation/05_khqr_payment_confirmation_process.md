@@ -86,6 +86,10 @@ The sale may only be finalized when state is `PAID_CONFIRMED`.
 
 Note: registering the payment attempt is not the same as persisting a draft cart. It is a payment artifact.
 
+Note (March):
+- If you want webhook-driven payment status updates, the attempt must be registered so the backend can resolve `md5 -> (tenant_id, branch_id, sale_id)` deterministically.
+- If the attempt is not registered, the system can still confirm payment by polling at finalize time, but it cannot dispatch webhook updates for that attempt.
+
 ### 5.1 Regenerate KHQR (March Baseline)
 
 - Regeneration creates a new payment attempt (new KHQR payload and new `md5`).
@@ -105,15 +109,20 @@ If confirmation cannot be performed (connectivity loss) but the cashier needs to
 
 The backend is the only component that is trusted to confirm payment.
 
+Confirmation can be driven by:
+- Bakong webhook ingestion (preferred):
+  - `BusinessLogic/4_process/60_PlatformSystems/96_webhook_ingestion_and_dispatch_process.md`
+- Polling/query (degradation, and also used as a re-check at manual finalize):
+  - backend calls Bakong `check_transaction_by_md5` using the `md5`.
+
 Happy path:
-1. Backend calls Bakong `check_transaction_by_md5` using the `md5`.
-2. If paid, backend receives proof fields (amount/currency/from/to/hash/time).
-3. Backend validates that proof matches expected:
+1. Backend receives or fetches proof fields (amount/currency/from/to/hash/time).
+2. Backend validates that proof matches expected:
 - `toAccountId` equals configured receiver for `(tenant_id, branch_id, currency)`
 - `currency` equals selected tender currency
 - `amount` equals expected payable in that currency
-4. Backend stores confirmation result (linked to `sale_id`) and marks `PAID_CONFIRMED`.
-5. Backend pushes a status update to the POS client (Modula-driven "webhook UX").
+3. Backend stores confirmation result (linked to `sale_id`) and marks `PAID_CONFIRMED`.
+4. Backend pushes a status update to the POS client (Modula push/realtime; not a Bakong webhook).
 
 If unpaid:
 - keep `WAITING_FOR_PAYMENT` and allow retry/poll.

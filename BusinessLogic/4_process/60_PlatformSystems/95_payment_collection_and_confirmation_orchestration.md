@@ -120,8 +120,18 @@ Notes:
 Client confirmation is not trusted.
 
 Backend confirmation may occur via:
-- webhook (preferred), or
+- webhook (preferred; shared gateway), or
 - polling/query on the payment network (degradation)
+
+Webhook ingestion reference:
+- `BusinessLogic/4_process/60_PlatformSystems/96_webhook_ingestion_and_dispatch_process.md`
+
+Reconciliation mechanism (March):
+- When webhook is missed/delayed, polling confirmation is run by the Job Scheduler tick:
+  - `BusinessLogic/4_process/60_PlatformSystems/97_job_scheduler_tick_and_execution_process.md`
+
+Correlation rule (March):
+- invoice `payment_reference_code` must be embedded in the KHQR payload so the webhook can resolve the target invoice deterministically.
 
 Confirmation outcome:
 - If payment is confirmed for `payment_reference_code` and expected amount:
@@ -193,4 +203,3 @@ Rules:
 
 - `BusinessLogic/3_contract/10_edgecases/subscription_billing_edge_case_sweep.md`
 - Audit event catalog: `BusinessLogic/5_modSpec/60_PlatformSystems/subscriptionEntitlements_module.md`
-

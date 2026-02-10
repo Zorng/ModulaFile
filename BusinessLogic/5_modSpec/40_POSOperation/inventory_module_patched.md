@@ -276,6 +276,9 @@ The system must support:
 - Integrity checks (detect projection drift)
 - Optional rollups for reporting (daily/monthly), executed via Job Scheduler
 
+Job Scheduler reference (platform primitive):
+- `BusinessLogic/5_modSpec/60_PlatformSystems/jobScheduler_module.md`
+
 ### Recommended Indexing (Implementation Guidance)
 - InventoryJournal: (tenant_id, branch_id, stock_item_id, occurred_at)
 - InventoryJournal: unique constraint for idempotency on (branch_id, movement_type/source_type, source_id) or (idempotency_key)
