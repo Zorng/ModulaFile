@@ -10,6 +10,7 @@
   - **March**: must be handled or explicitly degraded safely
   - **Later**: explicitly deferred
 - **Related Docs**:
+  - `BusinessLogic/4_process/30_POSOperation/05_khqr_payment_confirmation_process.md`
   - `BusinessLogic/4_process/30_POSOperation/10_finalize_sale_orch.md`
   - `BusinessLogic/4_process/30_POSOperation/13_stock_deduction_on_finalize_sale_process.md`
   - `BusinessLogic/4_process/30_POSOperation/20_void_sale_orch.md`
@@ -171,6 +172,46 @@ It exists to prevent “hidden logic” scattered across module specs and to mak
   - System retries idempotently; audit the failure.
 - **Owner**: Void Sale orchestration + Cash Session
 - **March**: Yes
+
+### EC-POS-13 — KHQR Paid but Sale Not Finalized (Connectivity Loss / App Reload)
+- **Scenario**: Customer completes KHQR payment successfully, but the cashier device loses connection or reloads before finalizing the sale.
+- **Trigger**: Payment is confirmed by the network, but `Finalize Sale` was not executed.
+- **Expected Behavior (March baseline)**:
+  - The POS must not block the cashier from starting a new sale just because KHQR confirmation cannot be performed immediately.
+  - The cashier must be able to **park** the in-flight KHQR payment as `PENDING_CONFIRMATION` (not finalized) and continue operating.
+  - The system must allow recovery by re-checking payment status using the KHQR tracking key (`md5`) when connectivity returns.
+  - Sale finalization remains manual and safe to retry; no duplicate finalized sales are created for the same sale intent.
+- **Owner**: KHQR payment confirmation process + Finalize Sale orchestration
+- **March**: Yes
+
+### EC-POS-14 — KHQR Payment Proof Mismatch (Wrong Amount/Currency/Receiver)
+- **Scenario**: A KHQR payment is reported as paid, but the proof does not match the sale being finalized (wrong amount, wrong currency, or wrong receiver account).
+- **Trigger**: Backend verification returns a paid transaction whose `amount/currency/toAccountId` does not match expected values.
+- **Expected Behavior**:
+  - For March, KHQR amount must not be cashier-entered; QR generation must use the computed payable amount to reduce operator error.
+  - Reject finalize; no partial truth is written.
+  - Emit an audit/operational signal for investigation (future: manager resolution workflow).
+- **Owner**: Payment domain validation + Finalize Sale orchestration
+- **March**: Yes (reject + signal)
+
+### EC-POS-15 — KHQR Unpaid / Expired
+- **Scenario**: Cashier generates a KHQR code but the customer does not complete payment before the payment window closes.
+- **Trigger**: Confirmation checks never reach "paid" and the QR expires.
+- **Expected Behavior**:
+  - Sale is not finalizable.
+  - Allow the cashier to regenerate a new KHQR attempt for the same sale intent.
+  - Only the latest attempt is eligible for finalize; older attempts become `SUPERSEDED`.
+- **Owner**: KHQR payment confirmation process
+- **March**: Yes
+
+### EC-POS-16 — Superseded KHQR Attempt Is Paid Later
+- **Scenario**: The cashier regenerates KHQR (creating a new attempt), but a customer later pays an older (superseded) QR attempt.
+- **Trigger**: Backend confirmation detects "paid" for a `SUPERSEDED` attempt `md5`.
+- **Expected Behavior (March baseline)**:
+  - Do not finalize any sale automatically from a superseded attempt.
+  - Emit an operational notification + audit signal for investigation and business handling (refund/settlement workflows are deferred).
+- **Owner**: KHQR payment confirmation process + Audit + OperationalNotification
+- **March**: Yes (signal-only; no automated resolution)
 
 ---
 

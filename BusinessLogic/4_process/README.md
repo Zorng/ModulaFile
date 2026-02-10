@@ -75,6 +75,7 @@ BusinessLogic/4_process
 │   └── 10_tenant_membership_administration_process.md
 │
 ├── 30_POSOperation
+│   ├── 05_khqr_payment_confirmation_process.md
 │   ├── 10_finalize_sale_orch.md
 │   ├── 11_deviceDraft_process.md
 │   ├── 12_finalizeOrder_process.md

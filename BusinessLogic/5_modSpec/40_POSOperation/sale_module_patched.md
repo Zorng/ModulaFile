@@ -42,9 +42,11 @@ Order status changes must never modify finalized sale totals.
 - Menu browsing (always allowed)
 - Draft sale (cart) creation and management (local-only)
 - Sale types: Dine-in, Takeaway, Delivery
-- Payment methods: Cash, QR
+- Payment methods: Cash, KHQR (Bakong)
 - Cash tender currency selection (USD or KHR) for cash payments
 - Change calculation for cash payments
+- KHQR tender currency selection (USD or KHR) for KHQR payments
+- KHQR payment confirmation (manual finalize after paid)
 - Automatic application of:
   - VAT (from Policy — branch-scoped)
   - Currency conversion & KHR rounding (from Policy — branch-scoped)
@@ -66,7 +68,7 @@ Order status changes must never modify finalized sale totals.
 - Loyalty / customer accounts
 - Advanced payment settlement
 - Refund workflows after day-close (Capstone II)
-- Voiding QR payments (Capstone I decision: blocked)
+- Voiding KHQR payments (Capstone I decision: blocked)
 
 ---
 
@@ -137,8 +139,13 @@ Totals snapshot (captured at finalize time; no recompute later):
 - grand totals (USD + KHR) and any rounded payable value used at checkout
 
 Tender snapshot:
-- payment method (cash / QR; extend later)
+- payment method (cash / KHQR; extend later)
 - if cash: tender currency (USD vs KHR) and change results (recommended)
+- if KHQR: tender currency (USD vs KHR) and KHQR proof fields (required):
+  - `khqr_md5` (tracking key used for confirmation)
+  - `khqr_hash` (network transaction reference, if available)
+  - `khqr_to_account_id` (receiver account id used)
+  - `khqr_confirmed_at` (timestamp of confirmation used for finalize)
 
 Line snapshot (for item/category reporting and receipts):
 - `menu_item_id`
@@ -308,6 +315,12 @@ If payment method is Cash:
 - system computes amount due in both currencies, but change is computed in the selected tender currency
 - KHR tender uses rounding policy and change respects rounding rules
 
+### 4.4 KHQR tender (March)
+If payment method is KHQR:
+- cashier selects KHQR tender currency: USD or KHR
+- KHQR amount is not manually entered; it is derived from the computed payable total in the selected currency
+- generating KHQR locks the pricing snapshot for that sale intent; any cart change requires regenerate
+
 ---
 
 ## 5. Use Cases
@@ -371,8 +384,9 @@ If payment method is Cash:
    - review item-level discounts (applied automatically, branch-scoped)
 3. User selects:
    - sale type (dine-in / takeaway / delivery)
-   - payment method (cash / QR)
+   - payment method (cash / KHQR)
    - if cash: tender currency (USD or KHR) and amount received (for change calculation)
+   - if KHQR: tender currency (USD or KHR)
 4. System computes and displays:
    - line totals (including item discounts applied to base+add-ons)
    - subtotal
@@ -381,6 +395,9 @@ If payment method is Cash:
    - grand totals in USD and KHR (using `saleFxRateKhrPerUsd`) — branch-scoped
    - KHR rounded payable (using `saleKhrRounding*`) — branch-scoped
    - cash change (if cash payment)
+5. If payment method is KHQR:
+   - system allows KHQR generation for the payable amount in the selected tender currency
+   - system does not allow finalize until payment is confirmed (paid) via backend verification
 
 **Postconditions**
 - Order is ready for finalize
@@ -404,6 +421,7 @@ If payment method is Cash:
    - resolves discounts for current `branch_id`
    - locks discount snapshot (including `branch_id` used)
    - locks policy snapshot values used (VAT/FX/Rounding) as applied for this branch
+   - if payment method is KHQR: requires KHQR proof and verifies it via backend confirmation before committing truth
    - persists finalized sale (`status = FINALIZED`)
 3. If cash:
    - cash movement is recorded via Cash Session module
@@ -489,7 +507,7 @@ If payment method is Cash:
 - Void request exists and is PENDING
 - Sale status is VOID_PENDING
 - Capstone I business rules:
-  - Payment method must be CASH (QR void blocked)
+  - Payment method must be CASH (KHQR void blocked)
   - Related cash session must be OPEN (void blocked if session is CLOSED)
 
 **Main Flow**
@@ -552,10 +570,11 @@ If payment method is Cash:
 - FR-10: Offline finalize is safe and idempotent
 - FR-11: Draft carts do not pollute database
 - FR-12: Cashier can request void; Manager/Admin can approve/reject
-- FR-13: Voiding QR sales is blocked in Capstone I
+- FR-13: Voiding KHQR sales is blocked in Capstone I
 - FR-14: Voiding is blocked if related cash session is CLOSED
 - FR-15: Approving void marks the order VOIDED and reverses cash/inventory exactly once
 - FR-16: Finalize sale must be idempotent (duplicate prevention on retries and offline replay)
+- FR-17: KHQR finalize requires backend-confirmed payment proof bound to amount/currency/receiver
 
 ---
 
@@ -574,6 +593,7 @@ If payment method is Cash:
 - AC-12: Approving void sets sale VOIDED, order VOIDED, and reverses effects; audit logged
 - AC-13: Rejecting void restores sale FINALIZED and keeps fulfillment unchanged
 - AC-14: If the same finalize request is retried (network drop/double submit/offline replay), the backend persists it exactly once
+- AC-15: KHQR checkout cannot finalize until payment is confirmed; finalize validates proof matches expected tender
 
 ---
 
@@ -594,7 +614,7 @@ If payment method is Cash:
 - Partial refunds
 - Loyalty
 - Advanced payment settlement
-- QR refunds/voids
+- KHQR refunds/voids
 - Voids after day close / Z-close (refund workflows in Capstone II)
 
 ---

@@ -50,7 +50,7 @@ This process must be called by:
 ## 4. Preconditions (March Baseline)
 
 - Sale exists and is eligible for void (typically FINALIZED/VOID_PENDING)
-- Sale payment method is CASH (Capstone I rule: QR void/refund is blocked)
+- Sale payment method is CASH (Capstone I rule: KHQR void/refund is blocked)
 - Sale has a `cash_session_id` captured at finalize time
 - The related cash session is OPEN (void is blocked if the session is CLOSED)
 - Branch is ACTIVE (not frozen), unless explicitly allow-listed by policy
@@ -143,7 +143,7 @@ After successful completion:
 ## 10. Out of Scope
 
 - Refund workflows after day-close / Z-close (Capstone II)
-- Payment gateway refunds (QR refunds)
+- Payment gateway refunds (KHQR refunds)
 - Partial refunds (line-level)
 
 ---

@@ -26,6 +26,8 @@ This document exists because finalize-sale behavior spans multiple domains and *
 Related contracts:
 - `BusinessLogic/3_contract/10_edgecases/pos_operation_edge_case_sweep_patched.md`
 - `BusinessLogic/3_contract/10_edgecases/identity_hr_pos_boundary_edge_cases_patched.md` (HR ↔ POS boundary)
+- KHQR payment confirmation (pre-finalize):
+  - `BusinessLogic/4_process/30_POSOperation/05_khqr_payment_confirmation_process.md`
 
 ---
 
@@ -51,6 +53,7 @@ The trigger mechanism does **not** change the business rules below.
 | Menu | Provides composition metadata |
 | Inventory | Records stock movements (ledger + projection) |
 | CashSession | Records cash movements |
+| Payment (KHQR verification) | Confirms external payment proof when method is KHQR |
 | Receipt | Persists immutable receipt snapshot |
 | Hardware / Effects | Printing, drawer opening (best-effort) |
 | Process Layer | Enforces sequencing and idempotency |
@@ -64,6 +67,9 @@ The trigger mechanism does **not** change the business rules below.
 - Branch is active (not frozen)
 - An OPEN cash session exists for the branch (Capstone 1 product rule; required even for non-cash sales)
 - Required payment method information is present
+- If payment method is KHQR:
+  - a valid KHQR tracking key (`md5`) is provided
+  - payment proof can be confirmed by the backend and matches expected `amount + currency + receiver`
 - Required domain data (Menu, Discount, Inventory) is accessible
 
 Failure to meet any precondition aborts the process with **no partial truth written**.
@@ -158,6 +164,9 @@ Validate:
 - an OPEN cash session exists for the branch (Capstone 1 product rule)
 - cart/draft contains at least one line item
 - payment method and tender details are valid
+- if payment method is KHQR:
+  - verify payment status via backend confirmation using `md5`
+  - validate proof binds to expected `amount + currency + receiver`
 
 Load required read facts:
 - branch policy snapshot inputs (VAT/FX/Rounding)
@@ -196,7 +205,7 @@ If payment includes cash:
 - append `SALE_IN` cash movement linked to `(branch_id, sale_id)`
 - enforce idempotency per the same anchor
 
-If payment is non-cash (e.g., QR):
+If payment is non-cash (e.g., KHQR):
 - no cash ledger mutation occurs
 
 ---

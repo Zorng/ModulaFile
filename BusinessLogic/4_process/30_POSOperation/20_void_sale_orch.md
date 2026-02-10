@@ -66,7 +66,7 @@ OperationalNotification note:
 - Sale has not already been VOIDED
 - Branch context is valid
 - March baseline business rules:
-  - Payment method must be CASH (QR void/refund is blocked)
+  - Payment method must be CASH (KHQR void/refund is blocked)
   - Related cash session must be OPEN (void is blocked if session is CLOSED)
 
 Failure to meet preconditions aborts the process with **no partial reversals**.
