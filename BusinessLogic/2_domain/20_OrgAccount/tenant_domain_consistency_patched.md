@@ -117,7 +117,7 @@ Reserved for future:
 
 - INV-T1: All operational data must belong to exactly one tenant.
 - INV-T2: Cross-tenant data access is forbidden.
-- INV-T3: A tenant is created through a **controlled provisioning flow** (admin provisioning today; self-serve signup later). It is not arbitrary UI CRUD.
+- INV-T3: A tenant is created through a **controlled provisioning flow** (user-triggered in ModulaPOS for March). It is not arbitrary UI CRUD.
 - INV-T4: POS operations require at least one **ACTIVE branch**. A tenant may temporarily have **zero branches** until the first paid branch is activated/provisioned.
 - INV-T5: Tenant identity is stable; renaming a business does not change tenant identity.
 - INV-T6: Tenant status is a **fact**, not a permission decision (enforced elsewhere).
@@ -129,7 +129,7 @@ Reserved for future:
 The Tenant domain supports these commands:
 
 - `ProvisionTenant`
-  - provisioning command (admin provisioning today; self-serve signup later)
+  - controlled provisioning command (user-triggered in ModulaPOS for March)
   - creates tenant in ACTIVE state
 - `UpdateTenantProfile`
   - updates business name, logo, contact info

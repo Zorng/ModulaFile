@@ -3,7 +3,7 @@
 **Version:** 1.1  
 **Status:** Revised (Branch provisioning is system-driven)  
 **Module Type:** Core Module  
-**Depends on:** Auth & Authorization (Core), Tenant & Branch Context (Core)  
+**Depends on:** Authentication (identity), Access Control (authorization decisions), Tenant (workspace boundary), Audit (logging)  
 **Related Modules:** Subscription/Billing (Phase 2), Sale & Orders, Inventory, Cash Session, Attendance, Reporting, Receipt/eReceipt, Policy, Audit Logging
 
 ---
@@ -16,9 +16,9 @@ The Branch module manages the **lifecycle state and profile** of branches under 
 - Providing branch identity as a consistent reference for branch-scoped modules
 
 **Branch provisioning is NOT user-driven.** Branch records are created by the system when:
-- A tenant is provisioned (tenant provisioning creates an initial/default branch), and/or
-- A subscription item entitles additional branches (Phase 2 billing engine), and/or
-- Developers provision branches manually (Capstone I temporary approach)
+- A tenant activates/pays for branch capacity (first branch activation; branch provisioned after payment confirmation), and/or
+- A subscription item entitles additional branches (additional branch activation), and/or
+- Developers/system operators provision branches manually (Capstone I temporary approach)
 
 ---
 
@@ -46,8 +46,8 @@ Any operation that creates or mutates branch-scoped operational records requires
 **Preconditions:**
 - Tenant exists
 - Provisioning trigger occurs:
-  - Tenant provisioned (creates default branch), or
-  - Subscription upgrade entitles extra branch (Phase 2), or
+  - First-branch activation payment confirmed, or
+  - Additional-branch activation payment confirmed, or
   - Developer executes provisioning command (Capstone I)
 
 **Main Flow:**
@@ -61,7 +61,7 @@ Any operation that creates or mutates branch-scoped operational records requires
 - Audit log entry recorded (if audit is enabled).
 
 **Acceptance Criteria:**
-- No end-user UI allows “Create Branch”.
+- No end-user UI creates a branch record directly (branch creation is system provisioning).
 - Branch creation is only accessible via system provisioning path.
 - Provisioned branch is `ACTIVE` by default.
 

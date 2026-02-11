@@ -101,7 +101,10 @@ This orchestration begins when:
 1. List tenant memberships for `auth_account_id`.
 2. Filter to **ACTIVE** memberships only.
 3. Resolve:
-   - **0 active memberships** → session remains global-only; user cannot operate tenant-scoped features.
+   - **0 active memberships** → session remains global-only.
+     - User intent splits here:
+       - If the user wants to run a business: allow `ProvisionTenant` ("Create Business"), then re-run Flow C.
+       - If the user is joining an employer: they must be granted membership by an owner/admin; refresh/re-login then re-run Flow C.
    - **1 active membership** → auto-select tenant context.
    - **2+ active memberships** → user must choose; validate membership is still ACTIVE at selection time.
 4. Store `tenant_id` as session context (or return it as an explicit “working context” output).
@@ -122,13 +125,17 @@ This orchestration begins when:
 - `tenant_id`
 
 **Steps:**
-1. List branch assignments for this identity within the selected tenant.
-2. Filter to ACTIVE assignments and ACTIVE branches.
-3. Resolve:
+1. List branches in the selected tenant.
+2. If the tenant has **zero branches**:
+   - return a `TENANT_HAS_NO_BRANCHES` state (owner/admin should be guided to first-branch activation; others should contact owner/admin).
+   - stop here (no branch context can be selected).
+3. List branch assignments for this identity within the selected tenant.
+4. Filter to ACTIVE assignments and ACTIVE branches.
+5. Resolve:
    - **0 eligible branches** → user cannot operate branch-scoped features; show a clear “no branch assigned” state.
    - **1 eligible branch** → auto-select branch context.
    - **2+ eligible branches** → user must choose.
-4. Store `branch_id` as session context (or return it as an explicit output).
+6. Store `branch_id` as session context (or return it as an explicit output).
 
 **Rules:**
 - Branch context is required for operational actions (sale, cash session, attendance work start/end).

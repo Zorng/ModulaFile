@@ -4,7 +4,7 @@
 **Status:** Draft (March scope: Sales management + Attendance insights; cash closeout surfaced as operational artifacts)  
 **Module Type:** Feature Module  
 **Depends on:**
-- Authentication & Authorization (Core)
+- Authentication (Core)
 - Tenant & Branch Context (Core)
 - Access Control (Core)
 - Sale/Order (Feature; source of finalized sales truth)

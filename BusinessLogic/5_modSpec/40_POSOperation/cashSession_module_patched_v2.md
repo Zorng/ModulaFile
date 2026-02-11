@@ -4,7 +4,7 @@
 **Status:** Clarified to distinguish operational reconciliation (X/Z) from analytics reporting.  
 **Module Type:** Feature Module  
 **Primary Domain:** POS Operations → Cash Session  
-**Depends on:** Auth & Authorization, Tenant & Branch Context, Sale/Order, Audit Logging  
+**Depends on:** Authentication, Access Control, Tenant & Branch Context, Sale/Order, Audit Logging  
 **Collaborates with (Cross-Module):** Sale/Order (Finalize Sale, Void Sale), Reporting (read-only consumption)
 
 ---

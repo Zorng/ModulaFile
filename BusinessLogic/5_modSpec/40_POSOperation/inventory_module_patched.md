@@ -4,7 +4,7 @@
 **Status:** Patched to align with **Inventory Domain (ledger + projections)** and the new **Self-Contained vs Cross-Module** structure.  
 **Module Type:** Feature Module  
 **Primary Domain:** POS Operations → Inventory  
-**Depends on:** Auth & Authorization, Tenant & Branch Context, Policy & Configuration (operational limits only), Sync & Offline, Audit Logging  
+**Depends on:** Authentication, Access Control, Tenant & Branch Context, Policy & Configuration (operational limits only), Sync & Offline, Audit Logging  
 **Collaborates with (Cross-Module):** Sale/Order (finalize), Menu (recipe/direct-stock mapping), Cash Session (cash accountability), Job Scheduler (rollups/rebuild jobs)
 
 ---

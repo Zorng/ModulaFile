@@ -72,6 +72,7 @@ BusinessLogic/4_process
 │   └── 10_identity_activation_recovery_orchestration.md
 │
 ├── 20_OrgAccount
+│   ├── 05_tenant_provisioning_orchestration.md
 │   └── 10_tenant_membership_administration_process.md
 │
 ├── 30_POSOperation

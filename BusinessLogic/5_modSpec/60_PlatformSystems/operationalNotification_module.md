@@ -3,7 +3,7 @@
 **Version:** 1.0  
 **Status:** Draft (Baseline locked: in-app only; signals not tasks)  
 **Module Type:** Platform System (Core Capability)  
-**Depends on:** Authentication & Authorization, Tenant & Branch Context, Access Control, Offline Sync (replay safety), Audit Logging (optional)  
+**Depends on:** Authentication, Tenant & Branch Context, Access Control, Offline Sync (replay safety), Audit Logging (optional)  
 **Related Modules/Processes:** Void Sale orchestration, Cash Session closeout, HR signals (future)
 
 Authoritative references:

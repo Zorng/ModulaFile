@@ -94,6 +94,13 @@ Each list item shows:
 
 **Only memberships with status = ACTIVE are shown.**
 
+### Create New Business (Tenant)
+
+This screen must allow the user to create a new business workspace:
+- Action: `Create Business`
+- On success: the new tenant appears in the list immediately.
+- If the new tenant has zero branches, continue into the "first branch activation" flow (see Branch rules below).
+
 ---
 
 ### Empty State: No Active Memberships
@@ -102,12 +109,20 @@ Message example:
 > “You are not currently active in any business.”
 
 Actions:
+- Create business (start a new tenant)
 - Log out
-- Contact employer / tenant owner
+- If you are joining an employer: contact the tenant owner/admin to add your phone number, then refresh/re-login.
 
 ---
 
 ## 3. Branch Selection Screen
+
+### Special Case: Tenant Has Zero Branches
+
+If the selected tenant has **zero branches**:
+- Owners/Admins should see a clear call-to-action to **activate the first branch** (payment -> branch is provisioned after confirmation).
+- Non-owners should see a clear message:
+  > “This business has not activated any branches yet. Contact the owner/admin.”
 
 ### When This Screen Appears
 - Selected tenant has multiple branches

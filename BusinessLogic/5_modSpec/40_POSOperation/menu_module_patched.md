@@ -4,7 +4,7 @@
 **Status:** Patched to align with Menu Domain (composition + TRACKED components)  
 **Module Type:** Feature Module  
 
-**Depends on:** Auth & Authorization, Tenant & Branch Context, Policy (limits only), Sync  
+**Depends on:** Authentication, Access Control, Tenant & Branch Context, Policy (limits only), Sync  
 **Collaborates with (Cross-Module):** Sale/Order (Finalize Sale process), Inventory (ledger deductions), Discount (pricing only)
 
 ---

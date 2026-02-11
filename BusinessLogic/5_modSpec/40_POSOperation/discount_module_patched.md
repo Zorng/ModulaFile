@@ -4,7 +4,7 @@
 **Status:** Patched to align with `discount_domain.md` (eligibility + scope, no money math) and the Self-Contained vs Cross-Module structure.  
 **Module Type:** Feature Module  
 **Primary Domain:** POS Operations → Discount  
-**Depends on:** Tenant & Branch Context, Authentication & Authorization, Audit Logging  
+**Depends on:** Tenant & Branch Context, Authentication, Access Control, Audit Logging  
 **Collaborates with (Cross-Module):** Sale/Order (Finalize Sale), Menu (item/category refs), Reporting
 
 ---

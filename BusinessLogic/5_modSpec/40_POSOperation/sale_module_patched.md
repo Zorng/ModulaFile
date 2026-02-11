@@ -5,12 +5,13 @@
 **Module Type:** Feature Module  
 
 **Depends on:**  
-- Auth & Authorization (Core)  
+- Authentication (Core)  
+- Access Control (Core)  
 - Tenant & Branch Context (Core)  
 - Policy & Configuration (Core)  
 - Menu (Feature)  
 - Inventory (Feature)  
-- Cash Session & Reconciliation (Feature)  s
+- Cash Session & Reconciliation (Feature)  
 - Discount Management (Feature)  
 - Sync & Offline Support (Core)  
 - Receipt (Feature)  
@@ -181,8 +182,8 @@ The Sale module always operates within an active branch context (`branch_id`).
 
 **Branch provisioning rule (Capstone I):**
 - A branch is provisioned by the system, not created by an end-user inside operational modules.
-- At initial onboarding, the system provisions Tenant + default Branch (tenant creation currently developer-triggered in Capstone I; billing engine will automate in Capstone II).
-- Additional branches are provisioned when the tenant subscribes to add capacity (billing scope in Capstone II; developer-triggered in Capstone I).
+- At initial onboarding, the user provisions a tenant ("Create Business"), then activates the first paid branch; the branch is provisioned only after payment is confirmed.
+- Additional branches are provisioned via the additional-branch activation flow (system-provisioned after payment confirmation), or via developer/system operator tooling (capstone practicality).
 
 Therefore:
 - Sale does not include any use case to create a branch.

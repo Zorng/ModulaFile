@@ -221,8 +221,8 @@ But:
 3. System stores branch context in the session (or returns it)
 
 **Notes:**
-- If your MVP uses “all staff can operate any branch,” this step becomes a simple selection with no restriction.
-- If branch restrictions exist, Auth validates using assignment truth owned elsewhere.
+- Branch eligibility is determined by **explicit branch assignments** (no implicit "all branches" access).
+- Auth validates using assignment truth owned by Staff Management / Org domains.
 
 ---
 

@@ -3,7 +3,7 @@
 **Version:** 1.4  
 **Status:** Patched (Branch-scoped; configurable policies limited to Tax & Currency)  
 **Module Type:** Core Module  
-**Depends on:** Authentication & Authorization (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
+**Depends on:** Authentication (Core), Access Control (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
 **Related Modules:** Sale, Receipt, Reporting
 
 ---

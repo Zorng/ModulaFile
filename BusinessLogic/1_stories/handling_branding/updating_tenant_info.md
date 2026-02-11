@@ -2,8 +2,8 @@
 
 ## Context
 
-When a business first becomes a Modula customer, the system provisions a new tenant automatically.  
-At that moment, the tenant is created with **basic default information** — usually the business name and contact details provided during signup.
+When a business first starts using Modula, the owner creates a business workspace (tenant) using the "Create Business" flow.  
+At that moment, the system provisions the tenant with **basic default information** — usually the business name and contact details provided during creation.
 
 This information represents the **business as a company**, not a specific store location.
 

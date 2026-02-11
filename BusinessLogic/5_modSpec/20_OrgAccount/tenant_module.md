@@ -81,7 +81,7 @@ Minimum fields:
 - INV-T3: Tenant status is a fact; Access Control enforces behavior based on it.
 - INV-T4: Membership must be tenant-scoped (not global).
 - INV-T5: A disabled/archived membership must be reflected immediately in authorization decisions.
-- INV-T6: A tenant should have at least one branch provisioned (enforced via provisioning workflow).
+- INV-T6: A tenant may temporarily have **zero branches** until the first paid branch is activated; branch-scoped operations require at least one ACTIVE branch.
 - INV-T7: A tenant must have at least one ACTIVE OWNER membership (governance safety).
 - INV-T8: An OWNER must never be less powerful than an ADMIN in Access Control policy (for March: keep `role_key = ADMIN` for owners).
 
@@ -89,24 +89,28 @@ Minimum fields:
 
 ## 5. Self-Contained Processes (Owned by Tenant)
 
-### UC-T1 — Provision Tenant (System Provisioning)
+### UC-T1 — Provision Tenant (Controlled Provisioning; User-Triggered)
 **Goal:** Create a tenant workspace in the system.
 
-**Trigger:** internal provisioning flow (manual/paper onboarding at launch is fine).  
+**Trigger:** an authenticated user chooses "Create Business" inside ModulaPOS (new owner flow, or create another tenant later).  
 **Inputs:** business name, initial owner identity (auth_account_id), optional metadata.  
 **Steps:**
 - create Tenant (status ACTIVE)
 - create initial membership for owner:
   - `membership_kind = OWNER`
   - `role_key = ADMIN` (March baseline)
-- (recommended) create first branch via Branch module provisioning
+- guide the user to activate the first paid branch (branch is provisioned only after payment is confirmed)
 - log to Audit
+
+**Canonical process reference:**
+- `BusinessLogic/4_process/20_OrgAccount/05_tenant_provisioning_orchestration.md`
+- First paid branch activation: `BusinessLogic/4_process/60_PlatformSystems/90_first_branch_activation_orchestration.md`
 
 **Outputs:**
 - tenant_id
 - initial membership created
 
-**Notes:** Tenant creation is system-level. End users do not “sign up and auto-create tenants” for March MVP.
+**Notes:** Tenant creation is still a controlled provisioning action (not arbitrary UI CRUD), but it is user-triggered for March. Branch remains system-provisioned after payment.
 
 ---
 

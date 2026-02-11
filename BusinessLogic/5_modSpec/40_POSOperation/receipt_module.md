@@ -7,7 +7,8 @@
 **Depends on:**  
 Tenant & Branch Context (Core)  
 Sale (Feature)  
-Auth & Authorization (Core)  
+Authentication (Core)  
+Access Control (Core)  
 Policy & Configuration (Core)  
 Sync & Offline Support (Core)  
 Audit Logging (Core)
@@ -215,4 +216,3 @@ The following events MUST be written to the Audit Log when triggered (with tenan
 
 - `RECEIPT_VIEWED`
 - `RECEIPT_PRINT_REQUESTED`
-
