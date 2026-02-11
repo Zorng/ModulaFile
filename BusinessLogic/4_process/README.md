@@ -77,6 +77,10 @@ BusinessLogic/4_process
 │
 ├── 30_POSOperation
 │   ├── 05_khqr_payment_confirmation_process.md
+│   ├── 06_place_order_open_ticket_process.md
+│   ├── 07_add_items_to_open_ticket_process.md
+│   ├── 08_checkout_open_ticket_process.md
+│   ├── 09_cancel_unpaid_ticket_process.md
 │   ├── 10_finalize_sale_orch.md
 │   ├── 11_deviceDraft_process.md
 │   ├── 12_finalizeOrder_process.md
@@ -92,8 +96,8 @@ BusinessLogic/4_process
 │   └── 20_restock_spend_reporting_process.md
 │
 ├── 60_PlatformSystems
-│   ├── 10_update_tax_currency_policy_process.md
-│   ├── 20_resolve_tax_currency_policy_process.md
+│   ├── 10_update_branch_policy_process.md
+│   ├── 20_resolve_branch_policy_process.md
 │   ├── 30_operational_notification_emission_process.md
 │   ├── 40_audit_event_recording_process.md
 │   ├── 50_audit_log_query_process.md

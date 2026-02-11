@@ -56,6 +56,8 @@ It exists to prevent “hidden logic” scattered across module specs and to mak
 - **March**: must be handled or explicitly degraded safely
 - **Signal**: audit/log/UX signal expected
 - **Idempotency anchor**: `(branch_id, sale_id)` for finalize + void cascades
+- **Open Ticket**: a persisted order in `UNPAID` state created by “place order” (pay-later workflow)
+- **Fulfillment Batch**: a batch of items added at place-order or add-items; kitchen printing is batch-scoped
 
 ---
 
@@ -212,6 +214,45 @@ It exists to prevent “hidden logic” scattered across module specs and to mak
   - Emit an operational notification + audit signal for investigation and business handling (refund/settlement workflows are deferred).
 - **Owner**: KHQR payment confirmation process + Audit + OperationalNotification
 - **March**: Yes (signal-only; no automated resolution)
+
+### EC-POS-17 — Close Cash Session With Unpaid Tickets
+- **Scenario**: Staff attempts to close the cash session while there are open tickets (orders in `UNPAID` state).
+- **Trigger**: Close cash session action.
+- **Expected Behavior (March baseline)**:
+  - Deny close with a clear message: “There are unpaid orders. Settle or cancel them before closing.”
+  - Provide a way to list the unpaid orders so staff can resolve them.
+- **Owner**: Cash Session + POSOperation processes
+- **March**: Yes
+
+### EC-POS-18 — Cancel Unpaid Ticket vs Void Paid Sale (Different Workflows)
+- **Scenario**: An order was placed but the customer leaves before paying, or the staff needs to terminate it before settlement.
+- **Trigger**: Staff tries to “void” an order that is still `UNPAID`.
+- **Expected Behavior (March baseline)**:
+  - If `UNPAID`: allow cancellation (no cash/inventory reversal; record reason; audit it).
+  - If `PAID`: use the existing void workflow (approval boundary + compensating effects).
+- **Owner**: Order/Sale domain + POSOperation processes + Audit
+- **March**: Yes
+
+### EC-POS-19 — Duplicate Add-Items Must Not Create Duplicate Batches/Prints
+- **Scenario**: Cashier double-taps “Add Items” or retries due to unstable connectivity.
+- **Trigger**: Duplicate add-items request for the same batch intent.
+- **Expected Behavior (March baseline)**:
+  - Only one fulfillment batch is created.
+  - Kitchen auto-print for that batch is best-effort idempotent (dedupe by `(branch_id, sale_id, batch_id)` or equivalent).
+  - Manual reprint remains allowed and explicit.
+- **Owner**: Order (batch creation) + Printing effects (dedupe) + Idempotency gate
+- **March**: Yes
+
+### EC-POS-20 — Pay-Later Enabled but Network Unavailable
+- **Scenario**: The branch enables pay-later, but connectivity is unstable and “place order” cannot reach the backend.
+- **Trigger**: Attempt to place an order while offline/unreachable.
+- **Expected Behavior (March baseline)**:
+  - Deny pay-later placement (do not pretend an open ticket was created).
+  - Provide a safe degradation path:
+    - either use pay-first offline flows, or
+    - wait until connectivity returns.
+- **Owner**: Offline Sync + POSOperation processes
+- **March**: Yes (explicit degradation)
 
 ---
 

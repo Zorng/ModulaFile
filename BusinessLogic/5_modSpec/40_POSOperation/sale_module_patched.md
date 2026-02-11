@@ -42,6 +42,10 @@ Order status changes must never modify finalized sale totals.
 ### Includes
 - Menu browsing (always allowed)
 - Draft sale (cart) creation and management (local-only)
+- Pay-later (table service) workflow when enabled by branch policy:
+  - place order (create an open ticket before payment)
+  - add items (new fulfillment batch)
+  - settle/checkout later (finalize sale from an existing ticket)
 - Sale types: Dine-in, Takeaway, Delivery
 - Payment methods: Cash, KHQR (Bakong)
 - Cash tender currency selection (USD or KHR) for cash payments
@@ -54,7 +58,10 @@ Order status changes must never modify finalized sale totals.
   - Discounts (via Discount module, branch-scoped, lock-in on finalize)
 - Dual-currency totals display (USD & KHR)
 - Finalize sale (creates immutable financial record)
-- Order creation after finalize and fulfillment statuses:
+- Orders / fulfillment tracking:
+  - pay-first: order is created after finalize
+  - pay-later: order exists as an open ticket before payment
+  - fulfillment statuses:
   - IN_PREP → READY → DELIVERED
   - VOIDED (via approved void)
   - CANCELLED (controlled; reserved)
@@ -161,8 +168,10 @@ Design rule:
 
 ### 3.3 Order (Fulfillment Record)
 An operational record used for fulfillment tracking.
-- Created when a sale is finalized.
-- Default status: `IN_PREP`
+- Created either:
+  - when a sale is finalized (pay-first), or
+  - when an order is placed as an Open Ticket (pay-later; before payment)
+- Default fulfillment status: `IN_PREP`
 - Status may transition to: `READY`, `DELIVERED`, or `CANCELLED` (controlled)
 - When a sale is voided, the associated order transitions to `VOIDED` (terminal).
 - Changing order status must not change finalized sale totals.
@@ -174,6 +183,10 @@ The Order lifecycle is intentionally simple for Capstone I:
 - `IN_PREP` → `READY` → `DELIVERED`
 - `IN_PREP` or `READY` → `VOIDED` (only via approved void workflow)
 - `CANCELLED` is reserved for controlled administrative termination (not used by Cashier flows in Capstone I).
+
+Pay-later note (March):
+- An order may exist in an `UNPAID` financial state while fulfillment progresses.
+- Cancelling an `UNPAID` ticket is not a refund/void; it records operational cancellation only.
 
 ---
 
@@ -249,6 +262,9 @@ The Sale Module must read policy values using the backend-implemented keys (from
 - `saleKhrRoundingMode` (`NEAREST | UP | DOWN`)
 - `saleKhrRoundingGranularity` (`100 | 1000`)
 
+### Sale Workflow
+- `saleAllowPayLater` (boolean)
+
 ### Cash Session Control
 - Cash sessions are required for cart/sales in Capstone 1 (product rule; not configurable).
 
@@ -263,7 +279,11 @@ The Sale Module must read policy values using the backend-implemented keys (from
 
 ## 3.7 Cash Session Dependency (UX Rule)
 
-**Product rule (Capstone 1):** a user must have an OPEN cash session in the current branch before creating a cart / adding items / finalizing a sale.
+**Product rule (Capstone 1):** a user must have an OPEN cash session in the current branch before:
+- creating a cart / adding items (draft)
+- placing an order (creating an open ticket)
+- adding items to an open ticket
+- finalizing/settling a sale
 
 This prevents draft-sale spam, enforces cash discipline, and ensures X/Z reporting is always available.
 
@@ -444,12 +464,14 @@ If payment method is KHQR:
    - cash movement is recorded via Cash Session module
 4. If sale evaluation produces `deduction_lines`:
    - inventory deduction is executed
-5. An Order is created with status IN_PREP
-6. eReceipt becomes available for the finalized sale/order
+5. Fulfillment linkage:
+   - pay-first: an Order is created with initial status `IN_PREP`
+   - pay-later: the existing Open Ticket is marked `PAID` and linked to the finalized sale (no duplicate order created)
+6. eReceipt becomes available for the finalized sale
 
 **Postconditions**
 - Sale stored as FINALIZED (immutable)
-- Order stored as IN_PREP
+- Fulfillment record exists and is linked to the finalized sale
 - Side effects applied once
 - Backend integrity guarantees apply (see 3.8)
 
@@ -564,9 +586,10 @@ If payment method is KHQR:
 
 **Main Flow**
 1. User finalizes sale while offline.
-2. Sale and order are created locally.
-3. On reconnect, sync runs idempotently.
-4. Server receives and persists exactly-once.
+2. Pay-first only: sale and order are created locally.
+3. Pay-later note: place-order/add-items are blocked while offline (no silent “open ticket” queuing in March).
+4. On reconnect, sync runs idempotently.
+5. Server receives and persists exactly-once.
 
 **Postconditions**
 - No duplicates
@@ -574,24 +597,113 @@ If payment method is KHQR:
 
 ---
 
+### UC-10 — Place Order (Pay Later; Create Open Ticket)
+**Actors:** Cashier, Manager, Admin
+
+**Preconditions**
+- Branch context active (`branch_id` resolved)
+- An OPEN cash session exists for the branch (Capstone 1 product rule)
+- Branch policy `saleAllowPayLater = true`
+- System is online (March baseline)
+- Draft cart contains items
+
+**Main Flow**
+1. User builds a draft cart.
+2. User selects “Place Order”.
+3. System creates an Open Ticket (`UNPAID`) with an initial fulfillment batch (`IN_PREP`) using locked snapshots.
+4. System triggers kitchen printing for the new batch (best-effort).
+5. Local draft cart is cleared.
+
+**Postconditions**
+- Open Ticket exists and is visible in Orders.
+- No cash movement and no inventory deduction has occurred (payment not settled yet).
+
+---
+
+### UC-11 — Add Items to Open Ticket (New Batch)
+**Actors:** Cashier, Manager, Admin
+
+**Preconditions**
+- Open Ticket exists and is `UNPAID`
+- Branch policy `saleAllowPayLater = true`
+- An OPEN cash session exists for the branch
+- System is online (March baseline)
+
+**Main Flow**
+1. User opens an existing Open Ticket.
+2. User adds items (draft).
+3. User selects “Add Items”.
+4. System appends a new fulfillment batch with locked snapshots.
+5. System triggers kitchen printing for the new batch (best-effort).
+
+**Postconditions**
+- Ticket contains multiple batches.
+- No payment is finalized yet.
+
+---
+
+### UC-12 — Checkout Open Ticket (Settle Later)
+**Actors:** Cashier, Manager, Admin
+
+**Preconditions**
+- Open Ticket exists and is `UNPAID`
+- An OPEN cash session exists for the branch
+- Payment method selected (Cash or KHQR)
+
+**Main Flow**
+1. User opens an Open Ticket.
+2. User selects payment method:
+   - Cash: tender currency + amount received
+   - KHQR: tender currency and generate/confirm payment
+3. System finalizes the sale (immutable snapshot) and links it to the existing ticket.
+4. Ticket becomes `PAID` and remains in Orders history.
+5. Receipt becomes available (and may be printed).
+
+**Postconditions**
+- Sale is FINALIZED (immutable).
+- Cash movement recorded only if payment is cash.
+- Inventory deduction executes as per existing rules (if enabled/applicable).
+
+---
+
+### UC-13 — Cancel Unpaid Ticket
+**Actors:** Cashier, Manager, Admin
+
+**Preconditions**
+- Open Ticket exists and is `UNPAID`
+- Actor provides a cancellation reason
+
+**Main Flow**
+1. User opens an Open Ticket.
+2. User selects “Cancel Ticket”.
+3. System marks the ticket as CANCELLED (terminal) and audit logs the reason.
+
+**Postconditions**
+- Ticket remains visible for history/audit.
+- No cash movements and no inventory reversals occur (this is not a refund/void).
+
+---
+
 ## 6. Functional Requirements
 - FR-1: Admin, Manager, Cashier can perform sales
-- FR-2: Sale requires an OPEN cash session for cart/sales (Capstone 1 product rule)
+- FR-2: Sale requires an OPEN cash session for cart/sales (Capstone 1 product rule; includes pay-later place/add/checkout)
 - FR-3: Discounts are resolved per branch context, stacked multiplicatively, and snapshot locked on finalize
 - FR-4: VAT/FX/Rounding policies are loaded and applied per branch using the canonical keys
 - FR-5: Cart supports quantity edit and removal prior to finalize
 - FR-6: Cash tender supports USD/KHR selection and change computation
-- FR-7: Finalized sale creates an order in IN_PREP
-- FR-8: Order status updates do not modify finalized sale totals
-- FR-9: Inventory deduction executes on finalize only when the sale produces `deduction_lines` (from Menu composition)
-- FR-10: Offline finalize is safe and idempotent
-- FR-11: Draft carts do not pollute database
-- FR-12: Cashier can request void; Manager/Admin can approve/reject
-- FR-13: Voiding KHQR sales is blocked in Capstone I
-- FR-14: Voiding is blocked if related cash session is CLOSED
-- FR-15: Approving void marks the order VOIDED and reverses cash/inventory exactly once
-- FR-16: Finalize sale must be idempotent (duplicate prevention on retries and offline replay)
-- FR-17: KHQR finalize requires backend-confirmed payment proof bound to amount/currency/receiver
+- FR-7: Pay-first: finalized sale creates an order in IN_PREP
+- FR-8: Pay-later: placing an order creates an Open Ticket (`UNPAID`) and checkout links/settles it
+- FR-9: Order status updates do not modify finalized sale totals
+- FR-10: Inventory deduction executes on finalize only when the sale produces `deduction_lines` (from Menu composition)
+- FR-11: Offline finalize is safe and idempotent (pay-first only)
+- FR-12: Draft carts do not pollute database
+- FR-13: Cashier can request void; Manager/Admin can approve/reject
+- FR-14: Voiding KHQR sales is blocked in Capstone I
+- FR-15: Voiding is blocked if related cash session is CLOSED
+- FR-16: Approving void marks the order VOIDED and reverses cash/inventory exactly once
+- FR-17: Finalize sale must be idempotent (duplicate prevention on retries and offline replay)
+- FR-18: KHQR finalize requires backend-confirmed payment proof bound to amount/currency/receiver
+- FR-19: Pay-later place/add operations are denied when `saleAllowPayLater = false` (fail closed)
 
 ---
 
@@ -602,7 +714,7 @@ If payment method is KHQR:
 - AC-4: Cash tender supports USD/KHR and computes change in tender currency
 - AC-5: Discounts apply to (base + add-ons) before discount, are branch-scoped, and are immutable after finalize
 - AC-6: VAT/FX/Rounding values applied during pricing match the policies configured for the current branch
-- AC-7: Finalize creates an order in IN_PREP
+- AC-7: Pay-first finalize creates an order in IN_PREP
 - AC-8: Order status can transition IN_PREP→READY→DELIVERED without changing sale totals
 - AC-9: Clicking an order opens its eReceipt
 - AC-10: Cashier can submit void request; sale shows VOID_PENDING badge
@@ -611,6 +723,9 @@ If payment method is KHQR:
 - AC-13: Rejecting void restores sale FINALIZED and keeps fulfillment unchanged
 - AC-14: If the same finalize request is retried (network drop/double submit/offline replay), the backend persists it exactly once
 - AC-15: KHQR checkout cannot finalize until payment is confirmed; finalize validates proof matches expected tender
+- AC-16: When `saleAllowPayLater = true`, staff can place an order before payment and settle it later
+- AC-17: When `saleAllowPayLater = false`, the system denies place-order/add-items pay-later operations (fail closed)
+- AC-18: Closing a cash session is denied while unpaid tickets exist (March baseline)
 
 ---
 
@@ -641,8 +756,11 @@ If payment method is KHQR:
 The following events MUST be written to the Audit Log when triggered (with tenant_id, branch_id where applicable, actor_id, and relevant entity IDs):
 - CART_CREATED
 - CART_UPDATED
+- ORDER_PLACED
+- ORDER_ITEMS_ADDED
 - SALE_FINALIZED
 - ORDER_STATUS_UPDATED
+- OPEN_TICKET_CANCELLED
 - VOID_REQUESTED
 - VOID_APPROVED
 - VOID_REJECTED

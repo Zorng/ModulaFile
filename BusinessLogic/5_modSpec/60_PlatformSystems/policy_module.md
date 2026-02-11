@@ -1,7 +1,7 @@
 # Policy Module — Core Module (Capstone 1)
 
 **Version:** 1.4  
-**Status:** Patched (Branch-scoped; configurable policies limited to Tax & Currency)  
+**Status:** Patched (Branch-scoped; configurable policies include Tax/Currency + minimal Sale workflow toggles)  
 **Module Type:** Core Module  
 **Depends on:** Authentication (Core), Access Control (Core), Tenant & Branch Context (Core), Audit Logging (Core)  
 **Related Modules:** Sale, Receipt, Reporting
@@ -10,10 +10,11 @@
 
 ## 1. Purpose
 
-The Policy module centralizes **configurable pricing behavior** that affects how sales are computed and displayed.
+The Policy module centralizes **branch-scoped configuration** that affects how sales are computed and operated.
 
 For Capstone 1, Policy is intentionally small:
-- **Configurable:** VAT, FX rate, KHR rounding
+- **Configurable (Money):** VAT, FX rate, KHR rounding
+- **Configurable (Workflow):** pay-later enablement (table service)
 - **Not configurable (moved to product rules / other modules):** attendance gating, cash session controls, inventory deduction toggles
 
 Policy values are read-only at the point of sale and cannot be overridden by staff.
@@ -23,8 +24,8 @@ Authoritative references:
 - Domain: `BusinessLogic/2_domain/60_PlatformSystems/policy_domain.md`
 - Edge cases: `BusinessLogic/3_contract/10_edgecases/policy_edge_case_sweep.md`
 - Processes:
-  - `BusinessLogic/4_process/60_PlatformSystems/10_update_tax_currency_policy_process.md`
-  - `BusinessLogic/4_process/60_PlatformSystems/20_resolve_tax_currency_policy_process.md`
+  - `BusinessLogic/4_process/60_PlatformSystems/10_update_branch_policy_process.md`
+  - `BusinessLogic/4_process/60_PlatformSystems/20_resolve_branch_policy_process.md`
 - Downstream snapshot requirement: `BusinessLogic/5_modSpec/40_POSOperation/sale_module_patched.md`
 
 ---
@@ -42,6 +43,7 @@ Policies are **branch-scoped**.
 - VAT enablement + VAT rate
 - FX rate (KHR per USD) for display/checkout
 - KHR rounding enablement + rounding rules
+- Sale workflow toggle: pay-later enablement (table service)
 
 ### 2.3 This Module Does Not Cover
 
@@ -69,6 +71,11 @@ Policies are **not creatable**. Modula ships a fixed set of keys with default va
 | Enable KHR rounding | `saleKhrRoundingEnabled` | boolean | true/false | If on, KHR tender/totals follow rounding rules. |
 | KHR rounding mode | `saleKhrRoundingMode` | enum | `NEAREST` \| `UP` \| `DOWN` | How to round KHR. |
 | KHR rounding step | `saleKhrRoundingGranularity` | enum | `"100"` \| `"1000"` | Rounding granularity in riel. |
+
+### Sale Workflow (Branch Policies)
+| UI Label | Data Key | Type | Values / Options | Description |
+|---|---|---|---|---|
+| Allow pay later | `saleAllowPayLater` | boolean | true/false | If on, staff may place an order before payment (open ticket workflow). |
 
 ### Update Behavior
 - Partial updates use `UpdateBranchPoliciesInput` (all fields optional).
@@ -138,6 +145,19 @@ Sale-based inventory deduction is not a policy toggle.
 
 ---
 
+### UC-4: Admin enables/disables pay-later (branch-scoped)
+**Actor:** Admin  
+**Main Flow:**
+1. Admin opens branch settings → Sale workflow
+2. Admin toggles `saleAllowPayLater`
+3. System validates and persists the policy atomically
+4. Audit log entry is written
+**Acceptance:**
+- Only Admin can change this toggle
+- Toggle applies only to the selected branch
+
+---
+
 ## 6. Functional Requirements
 
 ### General
@@ -150,8 +170,12 @@ Sale-based inventory deduction is not a policy toggle.
 - **FR-5:** FX rate must be used consistently in sale calculations and display.
 - **FR-6:** Rounding settings must apply when tender currency is KHR.
 
+### Sale Workflow
+- **FR-7:** `saleAllowPayLater` must be stored and resolved per `(tenant_id, branch_id)`.
+- **FR-8:** Disabling pay-later must not rewrite history; existing open tickets must be handled by POS processes (not by Policy).
+
 ### Audit
-- **FR-7:** Policy modifications must create an audit entry containing old and new values.
+- **FR-9:** Policy modifications must create an audit entry containing old and new values.
 
 ---
 
@@ -161,6 +185,7 @@ Sale-based inventory deduction is not a policy toggle.
 - **AC-2:** Policy updates affect only the selected branch (no unintended cross-branch bleed).
 - **AC-3:** Sale finalize stores a policy snapshot (VAT/FX/Rounding values used) for historical correctness.
 - **AC-4:** All changes produce audit logs visible to admins.
+- **AC-5:** When `saleAllowPayLater = false`, pay-later operations are denied (system fails closed).
 
 ---
 

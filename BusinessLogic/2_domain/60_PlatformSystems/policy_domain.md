@@ -1,7 +1,7 @@
 # Policy Domain Model — Modula POS
 
 ## Domain Name
-Policy (Tax & Currency Configuration)
+Policy (Branch Configuration)
 
 ## Domain Type
 Supporting Domain (Configuration)
@@ -10,13 +10,19 @@ Supporting Domain (Configuration)
 60_PlatformSystems
 
 ## Status
-Draft (Patched: branch-scoped; Capstone 1 includes Tax & Currency only)
+Draft (Patched: branch-scoped; Capstone 1 includes Tax & Currency + minimal Sale workflow toggles)
 
 ---
 
 ## Purpose
 
-The Policy domain provides a single, explicit source of truth for **configurable sale computation inputs**:
+The Policy domain provides a single, explicit source of truth for **branch-scoped configuration** that affects:
+- sale computation inputs (tax/currency), and
+- a small set of sale workflow toggles (to support different operating styles without rewriting the core flow).
+
+For March, Policy intentionally remains small.
+
+### Sale Computation Inputs (Tax & Currency)
 - VAT enablement + VAT rate
 - FX rate (KHR per USD)
 - KHR cash rounding rules
@@ -26,7 +32,10 @@ It exists to keep money behavior:
 - explainable to operators
 - stable for historical records (via snapshots stored at finalization time)
 
-Policy is configuration, not workflow.
+### Sale Workflow Toggles (March Baseline)
+- Pay-later enablement (table service): allow placing an order before payment.
+
+Policy is configuration, not workflow execution.
 
 ---
 
@@ -69,6 +78,7 @@ Policy keys are stable identifiers that other modules depend on:
 - `saleKhrRoundingEnabled`
 - `saleKhrRoundingMode`
 - `saleKhrRoundingGranularity`
+- `saleAllowPayLater`
 
 Keys are **not creatable** at runtime.
 
@@ -123,4 +133,3 @@ Policy is a small, branch-scoped configuration domain that ensures VAT/FX/KHR ro
 - consistent in sale computation,
 - auditable in changes,
 - and historically safe through downstream snapshots.
-

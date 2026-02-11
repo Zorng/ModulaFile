@@ -1,11 +1,10 @@
-# 10 — Update Tax & Currency Policy (Branch-Scoped)
+# 10 — Update Branch Policy (Branch-Scoped)
 
 ## Purpose
 
-This process updates the branch-scoped **Tax & Currency** policy values used by Sale:
-- VAT enablement + VAT rate
-- FX rate (KHR per USD)
-- KHR rounding rules
+This process updates the branch-scoped Policy values used by Sale:
+- Tax & Currency (VAT, FX rate, KHR rounding)
+- Sale workflow toggle (pay-later enablement)
 
 It exists to keep sale computation inputs explicit, validated, and auditable.
 
@@ -17,6 +16,7 @@ This process mutates policy configuration only. It does not mutate sales.
 
 Derived primarily from:
 - `BusinessLogic/1_stories/handling_money/configuring_tax_and_currency_settings.md`
+- `BusinessLogic/1_stories/selling_and_checkout/placing_order_and_paying_later.md` (pay-later motivation; toggle is still configuration)
 
 ---
 
@@ -62,6 +62,7 @@ Validate updated fields against Policy invariants:
 - FX rate `> 0`
 - rounding mode in `NEAREST | UP | DOWN`
 - rounding granularity in `100 | 1000`
+- `saleAllowPayLater` must be a boolean
 
 Reject invalid updates with a clear validation error.
 
@@ -104,4 +105,3 @@ Return the updated policy object (or at minimum updated metadata such as `update
 ## Related Contracts
 
 - `BusinessLogic/3_contract/10_edgecases/policy_edge_case_sweep.md`
-

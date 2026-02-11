@@ -73,7 +73,7 @@ Rationale:
 ## 4. Interfaces (Conceptual)
 
 - `PrintReceipt(tenant_id, branch_id, actor_id, sale_id | receipt_id, purpose)`
-- `PrintKitchenSticker(tenant_id, branch_id, actor_id, sale_id | order_id, purpose)`
+- `PrintKitchenSticker(tenant_id, branch_id, actor_id, sale_id | order_id, purpose, batch_id?)`
 
 Where `purpose` is:
 - `AUTO_AFTER_FINALIZE`
@@ -103,7 +103,8 @@ Auto-after-finalize print attempts should be deduped best-effort using `(branch_
 
 Recommended idempotency keys:
 - `print:receipt:{branch_id}:{sale_id}`
-- `print:kitchen:{branch_id}:{sale_id}`
+- `print:kitchen:{branch_id}:{sale_id}` (pay-first)
+- `print:kitchen:{branch_id}:{sale_id}:{batch_id}` (pay-later batch prints)
 
 ### 6.2 Manual reprint
 
@@ -143,4 +144,3 @@ Optional (recommended for support):
 - per-item routing (different kitchen stations)
 - print templates designer
 - label printer formatting engines
-

@@ -76,6 +76,8 @@ Key attributes (conceptual):
 - `source_anchor`:
   - receipt prints are anchored to `(branch_id, sale_id)` via `receipt_id`
   - kitchen prints are anchored to `(branch_id, sale_id)` via `order_id`
+  - for pay-later add-items, kitchen prints may be batch-scoped using `batch_id` as:
+    - `(branch_id, sale_id, batch_id)` (print only the new batch)
 - `requested_by` (`actor_id` or `SYSTEM`)
 - `purpose`:
   - `AUTO_AFTER_FINALIZE` (best-effort)
@@ -103,7 +105,7 @@ The domain does not enforce how assignment is stored; it only requires that the 
 - **INV-PRN-2 (No rollback on print failure):** a finalized sale must never be rolled back due to printer failures.
 - **INV-PRN-3 (Snapshot-based payloads):**
   - receipt prints must use the immutable receipt snapshot,
-  - kitchen prints must use the immutable order snapshot.
+  - kitchen prints must use the immutable order snapshot (or the immutable batch snapshot within the order).
 - **INV-PRN-4 (Retry-safe auto printing):**
   - auto-after-finalize printing must be safe under retries (best-effort idempotency).
 - **INV-PRN-5 (Manual reprint is explicit):** manual reprints are allowed and do not require idempotent suppression.
@@ -129,4 +131,3 @@ The domain does not enforce how assignment is stored; it only requires that the 
 
 Printing is orchestrated as an operational effect:
 - `BusinessLogic/4_process/60_PlatformSystems/55_printing_effects_dispatch_process.md`
-

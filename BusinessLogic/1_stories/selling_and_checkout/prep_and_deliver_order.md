@@ -10,6 +10,10 @@ This phase is less visible to the customer but just as important to the overall 
 The sale is already done.  
 Now the work is about **fulfillment**.
 
+Note:
+- This story describes the **pay-first** flow (checkout first, then fulfillment).
+- For table-service **pay-later**, see: `BusinessLogic/1_stories/selling_and_checkout/placing_order_and_paying_later.md`.
+
 ---
 
 ## The Situation

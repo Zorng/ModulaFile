@@ -1,11 +1,10 @@
-# 20 — Resolve Tax & Currency Policy (Branch-Scoped)
+# 20 — Resolve Branch Policy (Branch-Scoped)
 
 ## Purpose
 
-This process defines how modules consistently resolve the branch-scoped Tax & Currency policy:
-- VAT enablement + VAT rate
-- FX rate (KHR per USD)
-- KHR rounding rules
+This process defines how modules consistently resolve the branch-scoped Policy record:
+- Tax & Currency (VAT, FX rate, KHR rounding)
+- Sale workflow toggle (pay-later enablement)
 
 It exists so Sale/Receipt/Reporting do not “guess” policy values or re-implement their own sources of truth.
 
@@ -23,7 +22,7 @@ This is a read process. It does not mutate policy or sales.
 
 ## When This Process Runs
 
-Triggered whenever the system needs tax/currency inputs, for example:
+Triggered whenever the system needs policy inputs, for example:
 - sale pre-checkout pricing display
 - sale finalization
 - admin viewing branch policy settings
@@ -72,4 +71,3 @@ Return the canonical policy values (and metadata such as `updated_at`) so client
 ## Related Contracts
 
 - `BusinessLogic/3_contract/10_edgecases/policy_edge_case_sweep.md`
-

@@ -40,6 +40,7 @@ References:
 
 Triggered:
 - automatically after a sale finalizes successfully (auto printing), and/or
+- automatically after a fulfillment batch is created (pay-later: place order / add-items), and/or
 - manually by a user choosing "Print" or "Reprint".
 
 ---
@@ -54,6 +55,7 @@ Triggered:
 - `source_anchor`:
   - `sale_id` (stable idempotency anchor)
   - and either `receipt_id` (for receipt) or `order_id` (for kitchen)
+  - `batch_id` (optional; when present, kitchen print is batch-scoped)
 
 ---
 
@@ -73,7 +75,8 @@ Auto printing must avoid spamming duplicates under retries.
 
 Recommended idempotency keys (conceptual):
 - `print:receipt:{branch_id}:{sale_id}`
-- `print:kitchen:{branch_id}:{sale_id}`
+- `print:kitchen:{branch_id}:{sale_id}:{batch_id}` (batch-scoped kitchen prints; pay-later)
+- `print:kitchen:{branch_id}:{sale_id}` (fallback when batch_id is not applicable; pay-first)
 
 Manual reprints bypass this suppression by design (explicit operator intent).
 
@@ -111,6 +114,7 @@ If the mapping is missing:
   - load receipt snapshot by `receipt_id` (or by `(branch_id, sale_id)` if needed)
 - For `KITCHEN_STICKER`:
   - load order snapshot by `order_id` (or by `(branch_id, sale_id)` if needed)
+  - if `batch_id` is provided, print only that batch payload (pay-later add-items semantics)
 
 If snapshot cannot be loaded:
 - return failure with `DEPENDENCY_MISSING`
@@ -155,4 +159,3 @@ These events must not be used to drive business truth.
 - Never rollback a finalized sale due to printing issues.
 - Always allow manual reprint from receipt/order detail views.
 - Kitchen staff must have an on-screen Orders fallback; printing is a convenience.
-

@@ -3,6 +3,11 @@
 ## 1. Process Overview
 Finalize a customer order and produce atomic financial, inventory, and cash effects.
 
+> Note:
+> - This file is a legacy summary view kept for reference.
+> - The canonical entry point is `BusinessLogic/4_process/30_POSOperation/10_finalize_sale_orch.md`.
+> - With pay-later enabled, an Order/Open Ticket may already exist in `UNPAID` state before checkout.
+
 ## 2. Trigger and Actors
 - Trigger: Cashier finalizes order
 - Actor: Cashier

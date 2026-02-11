@@ -30,7 +30,9 @@ Related docs:
 
 - Actor is authorized to finalize sales for the current tenant/branch.
 - Branch context is resolved (`tenant_id`, `branch_id`).
-- Sale draft/cart exists locally (device-scoped).
+- A sale intent exists:
+  - pay-first: local draft/cart exists (device-scoped)
+  - pay-later: an Open Ticket exists (`financial_state = UNPAID`)
 - An OPEN cash session exists for the branch (Capstone I product rule; still required even for KHQR).
 - Branch KHQR receiver configuration exists for:
 - selected tender currency (`KHR` or `USD`)
@@ -43,7 +45,9 @@ Related docs:
 ## 3. Inputs (At Generate Time)
 
 - `sale_id` (stable identifier for the draft cart; reused for retries)
-- Payable totals (USD, KHR rounded payable) derived from Sale pricing computation
+- Payable totals (USD, KHR rounded payable) derived from:
+  - the current draft pricing computation (pay-first), or
+  - the Open Ticket’s stored batch snapshots (pay-later)
 - Tender currency selected for KHQR (`KHR` or `USD`)
 - Receiver account id (`toAccountId`) resolved from branch config
 
@@ -73,6 +77,7 @@ The sale may only be finalized when state is `PAID_CONFIRMED`.
 - If `USD`: use the USD payable amount (no KHR rounding applied).
 2. Lock the pricing snapshot for this sale intent at QR generation time.
 - If the cart changes after generating KHQR, the existing attempt becomes invalid and must be regenerated.
+  - For pay-later, “cart changes” means the Open Ticket changes (add-items) after the QR attempt is generated.
 3. Generate KHQR payload string using the KHQR SDK with:
 - `toAccountId`
 - `currency`

@@ -62,7 +62,9 @@ The trigger mechanism does **not** change the business rules below.
 
 ## 4. Preconditions
 
-- Sale exists and is in a **finalizable** state
+- A sale intent exists with a stable `sale_id` and is in a **finalizable** state:
+  - pay-first: local draft/cart exists
+  - pay-later: an Open Ticket exists (`financial_state = UNPAID`)
 - Sale has not already been finalized (idempotency)
 - Branch is active (not frozen)
 - An OPEN cash session exists for the branch (Capstone 1 product rule; required even for non-cash sales)
@@ -192,9 +194,14 @@ This step is the financial point-of-truth.
 ---
 
 ### Step 3 — Create Fulfillment Order (Sale/Order)
-Create an Order linked to the finalized sale:
+If no fulfillment record exists yet (pay-first):
+- create an Order linked to the finalized sale
 - initial status: `IN_PREP`
 - order lines copied from the finalized sale snapshot
+
+If an Open Ticket already exists (pay-later):
+- do not create a second fulfillment record
+- mark the existing ticket as `PAID` and link it to the finalized sale snapshot
 
 The Order is operational/fulfillment-only; it must not alter sale totals.
 
@@ -244,7 +251,7 @@ If attendance is missing, also record:
 ### Step 8 — Trigger Operational Effects (Best-Effort)
 After truth is committed:
 - request receipt printing
-- request kitchen ticket printing (if used)
+- request kitchen ticket printing (pay-first only; pay-later kitchen printing is triggered at batch creation)
 - request drawer opening (if cash)
 
 Failures here:
@@ -300,7 +307,9 @@ Allowed if used consistently:
 ## 9. Postconditions
 After successful completion:
 - Sale is `FINALIZED` and immutable.
-- Order is created in `IN_PREP` and references the sale.
+- Fulfillment record is present and linked:
+  - pay-first: Order is created in `IN_PREP` and references the sale
+  - pay-later: existing Open Ticket is marked `PAID` and references the sale
 - Cash movement is recorded exactly once (if cash).
 - Inventory deduction is recorded exactly once (if enabled and applicable).
 - Receipt snapshot exists exactly once.
@@ -311,6 +320,11 @@ After successful completion:
 ## 10. Related Sub-Processes
 - Finalize Order (legacy summary):
   - `BusinessLogic/4_process/30_POSOperation/12_finalizeOrder_process.md`
+- Pay-later entry points:
+  - `BusinessLogic/4_process/30_POSOperation/06_place_order_open_ticket_process.md`
+  - `BusinessLogic/4_process/30_POSOperation/07_add_items_to_open_ticket_process.md`
+  - `BusinessLogic/4_process/30_POSOperation/08_checkout_open_ticket_process.md`
+  - `BusinessLogic/4_process/30_POSOperation/09_cancel_unpaid_ticket_process.md`
 - Inventory deduction on finalize:
   - `BusinessLogic/4_process/30_POSOperation/13_stock_deduction_on_finalize_sale_process.md`
 - Device draft constraints:

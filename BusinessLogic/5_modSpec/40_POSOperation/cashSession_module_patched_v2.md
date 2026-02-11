@@ -239,6 +239,7 @@ Cash movements are immutable and auditable.
 - Branch is ACTIVE
 - Session OPEN
 - Actor has permission to close the session
+- No unpaid tickets exist in the branch (pay-later orders must be settled or cancelled first)
 
 **Main Flow:**
 1. Actor taps “Close Session”.

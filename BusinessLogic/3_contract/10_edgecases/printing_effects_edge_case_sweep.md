@@ -37,6 +37,7 @@ Related POS contract (print failures after truth commit):
 **Required behavior:**
 - Finalize sale remains idempotent (already locked in POS process).
 - Auto-after-finalize print intents should be deduped best-effort (by `(branch_id, sale_id, print_kind)`).
+- For pay-later kitchen batch printing, auto print intents should be deduped best-effort by `(branch_id, sale_id, batch_id, print_kind)`.
 - Manual reprint remains allowed and is not suppressed.
 
 ---
@@ -49,7 +50,7 @@ Related POS contract (print failures after truth commit):
 - Kitchen staff must have a non-print fallback source of truth (Orders list).
 - Duplicate kitchen print must not create a second order.
 - If the system cannot guarantee exactly-once physical print, it must clearly label:
-  - order number and timestamp on the sticker so duplicates are recognizable.
+  - order number and timestamp (and batch identifier if applicable) on the sticker so duplicates are recognizable.
 
 ---
 
@@ -83,3 +84,13 @@ Related POS contract (print failures after truth commit):
 - Receipt remains immutable; print must include the VOIDED / VOID_PENDING visual state.
 - Reprinting must not trigger any financial/inventory changes.
 
+---
+
+### PRN-EC-07 — Duplicate Add-Items Batch Print
+
+**Scenario:** A pay-later “add items” operation is retried and the kitchen sticker/ticket risks printing twice.
+
+**Required behavior (March baseline):**
+- The order must not receive a duplicate fulfillment batch for the same intent.
+- Auto printing for the batch must be best-effort idempotent using a batch-scoped key (see printing dispatch process).
+- Manual reprint remains allowed and explicit.

@@ -1,8 +1,8 @@
-# Edge Case Contract — Policy (Tax & Currency)
+# Edge Case Contract — Policy (Branch Configuration)
 
 ## Metadata
 - **Contract Type**: Edge Cases
-- **Scope**: Branch-scoped tax/currency policy (VAT, FX, KHR rounding); update/read behavior; interactions with Sale snapshot + Reporting
+- **Scope**: Branch-scoped policy (tax/currency + minimal sale workflow toggle); update/read behavior; interactions with Sale snapshot + Reporting
 - **Primary Audience**: Frontend, Backend, QA
 - **Owner(s)**: Policy, Sale/Order, Reporting, Access Control, Audit, Tenant/Branch, Offline Sync
 - **Last Updated**: 2026-02-08
@@ -37,7 +37,9 @@ It prevents policy drift where different modules apply VAT/FX/rounding inconsist
 
 ## Definitions / Legend
 
-- **Policy**: branch-scoped tax/currency configuration (VAT, FX, rounding).
+- **Policy**: branch-scoped configuration used by Sale:
+  - tax/currency (VAT, FX, rounding)
+  - sale workflow toggle(s) such as pay-later enablement
 - **Finalized sale snapshot**: the immutable sale totals and inputs captured at finalize time.
 - **Stale**: the client is displaying cached policy values that may not match the server’s latest values.
 
@@ -125,6 +127,16 @@ It prevents policy drift where different modules apply VAT/FX/rounding inconsist
 - **Owner**: Policy + Audit/Monitoring
 - **March**: Yes (defaults + visibility)
 
+### EC-POL-09 — Toggling Pay-Later Must Not Strand Open Tickets
+- **Scenario**: Admin disables pay-later while there are unpaid tickets currently open in the branch.
+- **Trigger**: Policy update `saleAllowPayLater: true → false`.
+- **Expected Behavior (March baseline)**:
+  - New pay-later entry points are denied (no new open ticket creation; no add-items batches).
+  - Existing open tickets remain settleable (checkout/close) so operations can finish safely.
+  - The system must not delete or mutate open tickets due to the policy toggle.
+- **Owner**: Policy (toggle truth) + POSOperation processes (enforcement + safe closure)
+- **March**: Yes
+
 ---
 
 ## Summary
@@ -136,4 +148,3 @@ For March, policy must be:
 - and honest about offline/stale states.
 
 _End of Policy edge case contract_
-
