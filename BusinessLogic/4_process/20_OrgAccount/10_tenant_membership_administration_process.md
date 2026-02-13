@@ -1,9 +1,10 @@
-# Tenant Membership Administration Process (Grant / Role Change / Revoke)
+# Tenant Membership Administration Process (Invite / Accept / Role Change / Revoke)
 
 ## Purpose
 
 This document defines the canonical process for **tenant membership administration**:
-- granting membership by phone number (linking or provisioning an identity)
+- inviting membership by phone number (linking or provisioning an identity)
+- accepting an invitation
 - changing a member’s role
 - revoking membership
 
@@ -13,7 +14,7 @@ It exists to keep “who belongs to this business” consistent across IdentityA
 
 ## Why This Process Exists
 
-Real cafés hire, rotate, and remove people frequently.
+Real cafes hire, rotate, and remove people frequently.
 If membership is not modeled explicitly and enforced consistently:
 - access lingers after someone leaves
 - authorization becomes inconsistent across modules
@@ -28,7 +29,7 @@ This process provides one stable orchestration for March MVP.
 | Artifact | Responsibility |
 |---|---|
 | Authentication | Resolve or provision `auth_account_id` by phone (no admin-owned passwords) |
-| Tenant Membership | Membership lifecycle (ACTIVE/DISABLED/ARCHIVED) + governance kind (`OWNER`/`MEMBER`) + tenant-scoped `role_key` |
+| Tenant Membership | Membership lifecycle (INVITED/ACTIVE/DISABLED/ARCHIVED) + governance kind (`OWNER`/`MEMBER`) + tenant-scoped `role_key` |
 | Tenant | Tenant status gates membership changes (future: FROZEN) |
 | Access Control | Authorize admin actions + enforce membership changes immediately on sensitive actions |
 | Audit (logging) | Traceable membership changes |
@@ -37,15 +38,16 @@ This process provides one stable orchestration for March MVP.
 
 ## Triggers
 
-- Owner/Admin wants to add someone to the tenant (staff or admin)
+- Owner/Admin wants to invite someone to the tenant (staff or admin)
+- Invited user wants to accept or reject the invitation
 - Owner/Admin wants to promote/demote someone
 - Owner/Admin wants to remove someone from the tenant
 
 ---
 
-## Flow A — Grant Membership (Link or Provision Identity)
+## Flow A — Invite Member (Link or Provision Identity)
 
-**Goal:** Add a person to the tenant without creating duplicate identities or setting passwords.
+**Goal:** Invite a person to the tenant without creating duplicate identities or setting passwords.
 
 **Inputs:**
 - `tenant_id`
@@ -55,28 +57,31 @@ This process provides one stable orchestration for March MVP.
 **Steps:**
 1. **Authorization gate**
    - Actor must be authenticated.
-   - Access Control must ALLOW `tenant.membership.grant` (exact action key is implementation detail).
+   - Access Control must ALLOW `tenant.membership.invite` (exact action key is implementation detail).
 2. **Tenant gate**
    - Tenant exists and is ACTIVE.
 3. **Resolve identity**
    - Authentication resolves `auth_account_id` by `phone_number`:
      - if identity exists → reuse it (do not change credentials)
      - if identity does not exist → provision a new AuthenticationAccount (phone only; unverified; no password yet)
-4. **Create membership**
+4. **Create INVITED membership**
    - Create TenantMembership for `(tenant_id, auth_account_id)` with:
-     - `status = ACTIVE`
+     - `status = INVITED`
      - `membership_kind = MEMBER` (owners are created during tenant provisioning; ownership transfer is out of scope for March)
      - `role_key = <role_key>`
+     - `invited_by_member_id`, `invited_at`
    - Enforce uniqueness: no duplicate memberships for the same identity within a tenant.
 5. **Audit**
-   - Record MEMBER_GRANTED (who granted, which role, when).
+   - Record MEMBER_INVITED (who invited, which role, when).
 
 **Rules:**
 - Admins/owners never set or know passwords.
 - Provisioning an identity must not auto-reset an existing identity’s password.
 - If membership already exists and is ACTIVE:
   - idempotent no-op if role is unchanged
-  - otherwise treat as Flow B (role change), not as a duplicate-create.
+  - otherwise treat as Flow C (role change), not as a duplicate-invite.
+- If membership already exists and is INVITED:
+  - idempotent update of `role_key` and metadata.
 
 **Notes (important):**
 - StaffProfile creation and branch assignment are owned by HR workflows (see staff provisioning orchestration).
@@ -84,7 +89,25 @@ This process provides one stable orchestration for March MVP.
 
 ---
 
-## Flow B — Change Member Role
+## Flow B — Accept Invitation (Self-Service)
+
+**Goal:** Activate a pending membership after the user accepts.
+
+**Inputs:**
+- `tenant_id`
+- `auth_account_id`
+
+**Steps:**
+1. Validate membership exists and is `INVITED`.
+2. Set membership `status = ACTIVE` and record `accepted_at`.
+3. Audit MEMBER_ACCEPTED.
+
+**Rule: Immediate effect**
+- Access Control must allow the next sensitive request if all other gates pass.
+
+---
+
+## Flow C — Change Member Role
 
 **Goal:** Promote/demote a member’s authorization role within the tenant.
 
@@ -107,7 +130,7 @@ This process provides one stable orchestration for March MVP.
 
 ---
 
-## Flow C — Revoke Membership (Archive)
+## Flow D — Revoke Membership (Archive)
 
 **Goal:** Remove access while preserving history.
 
@@ -127,6 +150,7 @@ This process provides one stable orchestration for March MVP.
 
 **March-safe note**
 - A revoked membership does not delete operational history (attendance, sales, audits remain traceable).
+- Revoking an INVITED membership cancels the invite.
 
 ---
 
@@ -146,6 +170,7 @@ This process provides one stable orchestration for March MVP.
 - PHONE_INVALID
 - MEMBER_NOT_FOUND
 - MEMBER_ARCHIVED
+- INVITE_NOT_FOUND / INVITE_EXPIRED
 - ROLE_KEY_INVALID
 - DUPLICATE_MEMBERSHIP
 - CANNOT_REMOVE_LAST_OWNER

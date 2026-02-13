@@ -40,6 +40,7 @@ This spec assumes all **domain + edge-case decisions are already locked**.
 
 2. **Only ACTIVE memberships are actionable**
    - Disabled or archived memberships do not grant access.
+   - INVITED memberships are shown only in the invitation inbox (not in tenant list).
    - The UI should never invite the user to “try and fail.”
 
 3. **Reduce friction when there is no choice**
@@ -54,6 +55,20 @@ This spec assumes all **domain + edge-case decisions are already locked**.
 - Self-service recovery/activation: SMS OTP + set password.
 - Login authenticates **Identity only**.
 
+### Account Registration (Self-Service)
+If the user does not have an account yet:
+1. User submits registration form:
+   - first name
+   - last name
+   - gender (optional)
+   - DOB (optional)
+   - phone number
+   - password (must meet security policy, e.g., length >= 8)
+2. System sends OTP.
+3. User submits OTP.
+4. System verifies OTP and activates the account.
+5. User is signed in and proceeds to tenant selection.
+
 ### Provisioned Staff (No Password Yet)
 Staff may be provisioned by a tenant admin before they ever log in.
 
@@ -64,8 +79,8 @@ UX rule:
 Expected flow:
 1. User enters phone number.
 2. User selects `Activate / Forgot password`.
-3. System sends OTP and verifies phone ownership.
-4. User sets a password.
+3. User sets a new password (must meet policy).
+4. System sends OTP and verifies phone ownership.
 5. User is signed in (or returned to login with password set).
 
 ### Success Outcome
@@ -111,7 +126,23 @@ Message example:
 Actions:
 - Create business (start a new tenant)
 - Log out
-- If you are joining an employer: contact the tenant owner/admin to add your phone number, then refresh/re-login.
+- If you are joining an employer: open **Invitation Inbox** to accept/reject invites, or contact the tenant owner/admin if none exist.
+
+---
+
+## 2.5 Invitation Inbox
+
+### Purpose
+Provide a place for users to **accept or reject** pending tenant invites.
+
+### When It Appears
+- From tenant selection (when no ACTIVE memberships exist)
+- As an explicit entry in tenant selection (if invites exist)
+
+### Rules
+- Each invite shows tenant name + role label.
+- Accept → membership becomes ACTIVE; re-run tenant selection.
+- Reject → membership remains inactive; invite is removed or marked rejected.
 
 ---
 
@@ -197,7 +228,7 @@ If disabled memberships are supported:
 This UX does NOT:
 - explain why access was removed in detail
 - handle disputes or appeals
-- manage invitations or onboarding emails
+- manage invitation reminders or onboarding emails
 
 Those are organizational processes, not UI responsibilities.
 

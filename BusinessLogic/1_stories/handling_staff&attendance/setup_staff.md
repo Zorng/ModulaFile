@@ -20,7 +20,7 @@ So the business needs a way to prepare staff accounts quickly, without turning o
 
 A new staff member is joining the café.
 
-The owner needs them to be ready to work as soon as they arrive. There is no time for invitations, confirmations, or waiting for the staff to “set up their own account.” The owner already made the hiring decision. Now the problem is operational:
+The owner needs them to be ready to work as soon as they arrive. There is no time for slow, multi-step onboarding. The owner already made the hiring decision. Now the problem is operational:
 
 > “I want this person ready to work, but I want to stay in control.”
 
@@ -34,13 +34,14 @@ Because mistakes here matter:
 ## What the Owner Expects
 
 The owner expects to:
-- create a staff account quickly
-- decide what the staff member is allowed to do (at least at a practical level: where they can work, what role they play)
-- hand over a way for the staff to log in and start work
+- invite a staff member quickly (by phone)
+- decide what the staff member is allowed to do (where they can work, what role they play)
+- let the staff member activate their own access without password sharing
 - trust the system to enforce those decisions consistently afterwards
 
 They do **not** expect to:
 - manage passwords repeatedly over time
+- share or set staff passwords
 - remember access rules manually
 - “babysit the system” when the store is busy
 
@@ -65,7 +66,7 @@ It must support fast onboarding without sacrificing boundaries.
 
 Modula supports this by making staff setup:
 - fast enough to match real operational needs
-- controlled by the business (no self-registration by default)
+- controlled by the business (explicit invite/accept)
 - structured so that access decisions are explicit (not accidental)
 - enforceable so the owner doesn’t have to manually “police” access later
 

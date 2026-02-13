@@ -173,6 +173,7 @@ It only stores stable facts about people and their workplace eligibility.
 - Tenant Membership defines who belongs to the tenant and their ownership relationships.
 - Staff Profile is the concrete representation of staff members under that tenant.
 - In multi-tenant SaaS, the same authentication identity may have multiple StaffProfiles (one per tenant membership).
+- When membership is INVITED, a staff profile may not exist yet; it is created on acceptance (process-owned).
 
 (Depending on design, Tenant Membership may be merged or remain distinct. For March delivery, Staff Profile is the operational view.)
 
@@ -209,7 +210,6 @@ The business needs control, but the system must remain usable under real operati
 
 ## Out of Scope
 
-- Invitation workflows (explicitly removed for March delivery)
 - Payroll and HR compensation
 - Labor law compliance
 - Scheduling optimization

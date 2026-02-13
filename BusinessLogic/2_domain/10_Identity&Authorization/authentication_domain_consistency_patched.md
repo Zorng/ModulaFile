@@ -112,6 +112,10 @@ Common attributes:
 - auth_account_id (stable internal ID)
 - primary_identifier (Phase 0: phone number)
 - optional_identifier (future: email)
+- first_name
+- last_name
+- gender (optional)
+- date_of_birth (optional)
 - status: ACTIVE | DISABLED
 - created_at, last_login_at
 
@@ -171,7 +175,7 @@ Auth may assist the client in selecting context:
 ## 5. Commands (Write Intents)
 
 Self-contained commands:
-- RegisterAuthenticationAccount (phone + OTP verification)
+- RegisterAuthenticationAccount (phone + OTP verification + basic profile fields)
 - ProvisionAuthenticationAccount (phone only; unverified; no password yet) *(internal, used by staff provisioning)*
 - SetPassword / ChangePassword
 - Login (phone + password)

@@ -60,12 +60,13 @@ This orchestration begins when:
 2. Authentication resolves the identity by phone:
    - if it exists → continue
    - if it does not exist → allow self-registration (but tenant access may be empty)
-3. Authentication sends OTP to the phone (rate-limited).
-4. User submits OTP.
-5. Authentication verifies OTP and marks the phone as verified.
-6. Authentication accepts a **new password** and stores it (password is now set).
-7. Authentication issues a session for the identity.
-8. Continue to **Flow C** (tenant context resolution).
+3. Authentication collects basic profile fields (first name, last name, gender, DOB) if missing.
+4. Authentication accepts a **new password** (or confirms one already set) and validates password policy.
+5. Authentication sends OTP to the phone (rate-limited).
+6. User submits OTP.
+7. Authentication verifies OTP and marks the phone as verified.
+8. Authentication issues a session for the identity.
+9. Continue to **Flow C** (tenant context resolution).
 
 **Rules:**
 - Admins/owners never set or know passwords (credential ownership stays with the person).
@@ -104,7 +105,7 @@ This orchestration begins when:
    - **0 active memberships** → session remains global-only.
      - User intent splits here:
        - If the user wants to run a business: allow `ProvisionTenant` ("Create Business"), then re-run Flow C.
-       - If the user is joining an employer: they must be granted membership by an owner/admin; refresh/re-login then re-run Flow C.
+       - If the user is joining an employer: open **Invitation Inbox** to accept/reject invites, then re-run Flow C after acceptance.
    - **1 active membership** → auto-select tenant context.
    - **2+ active memberships** → user must choose; validate membership is still ACTIVE at selection time.
 4. Store `tenant_id` as session context (or return it as an explicit “working context” output).

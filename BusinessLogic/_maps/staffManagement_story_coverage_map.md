@@ -37,11 +37,11 @@ These contexts reflect how cafés actually run: shift-based staffing, frequent c
 
 ## 3) Story Set (Human Situations)
 
-### Context: Onboarding Staff Quickly (Owner Provisioned)
+### Context: Onboarding Staff Quickly (Invite + Accept)
 
 1. **Setting Up the Business Team Quickly**  
    File: `BusinessLogic/1_stories/handling_staff&attendance/setup_staff.md`  
-   Human situation: the owner needs to add staff quickly and stay in control (no invite flow).
+   Human situation: the owner needs to invite staff quickly and stay in control (explicit invite/accept; no password sharing).
 
 ---
 

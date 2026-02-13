@@ -95,7 +95,8 @@ Design rule:
 
 ### Membership Status
 
-Membership also has a lifecycle:
+Membership has a lifecycle that supports explicit invitations:
+- INVITED (pending acceptance)
 - ACTIVE
 - DISABLED
 - ARCHIVED (removed from active roster; history preserved)
@@ -108,19 +109,19 @@ Historical records remain traceable even after removal.
 
 ### Invitation / Onboarding Method (March Delivery)
 
-For March delivery, staff onboarding is simplified:
-- The owner/admin **adds a member** by phone number (owner-provisioned).
-- The system links that member to an existing Authentication identity (if one already exists for the phone),
-  or **provisions** a new Authentication identity (phone identifier only; unverified; no password set).
-- Authentication handles **phone verification + password setup** using OTP/self-service flows.
-- No membership acceptance/decline workflow is required (membership is created immediately).
+For March delivery, onboarding uses **explicit invitations**:
+- The owner/admin **invites a member** by phone number.
+- An invite creates a TenantMembership in `INVITED` state (no operational access yet).
+- The invited person **accepts or rejects** the invite from their account.
+- Acceptance moves membership to `ACTIVE` and enables downstream HR provisioning.
 
-Tenant Membership stores the fact:
-- this person was created/added as a tenant member,
-- who created them,
-- and when.
+Authentication handles **phone verification + password setup** using OTP/self-service flows.
+Admins/owners never set or know passwords.
 
-Authentication handles password setup/reset and account recovery (Staff Management never sets or knows passwords).
+Tenant Membership stores the facts:
+- this person was invited,
+- who invited them,
+- and when they accepted (or rejected).
 
 ---
 
@@ -132,12 +133,15 @@ A Tenant Member typically includes:
 - `auth_account_id` (link to Authentication identity)
 - `membership_kind` (`OWNER` or `MEMBER`)
 - `role_key` (`ADMIN`, `MANAGER`, `CASHIER`, ...)
-- `membership_status` (ACTIVE, DISABLED, ARCHIVED)
-- `created_by_member_id` (who added them)
+- `membership_status` (INVITED, ACTIVE, DISABLED, ARCHIVED)
+- `invited_by_member_id` (who invited them)
 - `created_at`
 - `updated_at`
 
 Optional:
+- `invited_at`
+- `accepted_at`
+- `rejected_at`
 - `removed_at`
 - `notes`
 
@@ -151,6 +155,7 @@ Optional:
 - Membership must be unique per `(tenant_id, auth_account_id)` (no duplicate memberships for the same person in the same tenant).
 - A tenant member’s identity must be unique within tenant constraints (Authentication enforces credential uniqueness).
 - Removing membership must not delete historical records (attendance, sales, audit).
+- INVITED memberships grant **no** operational access until accepted.
   
 Authorization-aware invariants:
 - Each ACTIVE membership must have a `role_key`.
@@ -218,7 +223,7 @@ The domain keeps belonging explicit so later conflicts (“who had access?”) c
 ## Out of Scope
 
 - Enterprise account hierarchies (grouped tenants, franchise org trees)
-- Advanced invitation workflows (explicitly removed for March)
+- Advanced invitation workflows (bulk invites, reminders, auto-expiry) out of scope for March
 - External SSO
 - Subscription billing implementation
 

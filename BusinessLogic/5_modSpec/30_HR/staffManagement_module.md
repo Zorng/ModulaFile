@@ -18,7 +18,7 @@ Staff Management manages the business-facing representation of people who operat
 - operational readiness of staff,
 - alignment with **Operator Seat** limits (commercial concurrency guard rail).
 
-To prioritize shipping and reduce onboarding complexity, Modula adopts **owner-provisioned staff onboarding** (no invite flow).
+To prioritize shipping and reduce onboarding complexity, Modula adopts **explicit invite + accept** onboarding with user-owned credentials.
 
 ---
 
@@ -80,7 +80,8 @@ Canonical references:
 
 ## 3. Staff Lifecycle (Simplified)
 
-To reduce complexity, the INVITED state is removed.
+INVITED is a **membership** state, not a staff profile state.  
+Staff profiles are created only after an invitation is accepted.
 
 **Lifecycle**
 - `ACTIVE` → `DISABLED` → `ARCHIVED`
@@ -157,8 +158,8 @@ The storage mechanism is an implementation detail; the definition is canonical.
 
 ## 6. Self-Contained Processes
 
-### UC-SM1 — Create Staff Account (Owner Provisioned)
-**Goal:** Owner/admin provisions staff access for a phone number (membership/profile), while credentials remain user-owned.
+### UC-SM1 — Invite Staff Member (Owner/Admin)
+**Goal:** Owner/admin invites a person to join the tenant without sharing credentials.
 
 Canonical process reference:
 - `BusinessLogic/4_process/10_WorkForce/05_staff_provisioning_orchestration.md`
@@ -166,33 +167,49 @@ Canonical process reference:
 **Inputs**
 - tenant_id
 - phone_number (login identifier)
-- display_name
 - initial `role_key` (Tenant membership)
-- initial branch assignments (one or more)
+- intended branch assignments (one or more)
+- optional display_name
 
 **Steps**
 1. Resolve Authentication account by phone number:
    - If it exists, reuse it (do not change credentials).
    - Otherwise provision an Authentication account (phone identifier only; unverified; no password yet).
-2. Trigger Authentication-managed OTP flow for phone verification + password setup (if needed).
-3. Create StaffProfile linked to `auth_account_id` with status ACTIVE.
-4. Ensure TenantMembership exists with:
+2. Create or update TenantMembership with:
+   - `membership_status = INVITED`
    - `membership_kind = MEMBER` (staff provisioning does not create owners)
    - `role_key = <role_key>`
-5. Create BranchAssignment(s).
+3. Record intended branch assignments (pending until acceptance).
+4. Optionally send invitation notification (SMS/in-app).
 
 **Rules**
 - Password is never stored or retrievable by Staff Management.
-- Creation does not fail just because phone number already exists globally.
-- Creation fails if the staff member already has a membership/profile in this tenant (no duplicates).
-- Creation does not consume a concurrent staff slot.
+- Invite does not fail just because phone number already exists globally.
+- Invite fails if the staff member already has an ACTIVE membership in this tenant (no duplicates).
+- Invite does not consume a concurrent staff slot.
+- StaffProfile and BranchAssignment are created only after acceptance.
 
 **Audit**
-- STAFF_ACCOUNT_CREATED
+-- STAFF_INVITED
 
 ---
 
-### UC-SM2 — Disable Staff (Immediate Block)
+### UC-SM2 — Accept Invitation (Self-Service)
+**Goal:** Invited user activates access and becomes operational.
+
+**Steps**
+1. Authentication handles profile fields + password set + OTP verification (if needed).
+2. Set TenantMembership to `ACTIVE` and record acceptance.
+3. Create StaffProfile linked to `auth_account_id` with status ACTIVE.
+4. Create BranchAssignment(s) from the pending branch list.
+
+**Audit**
+- STAFF_INVITE_ACCEPTED
+- STAFF_PROFILE_CREATED
+
+---
+
+### UC-SM3 — Disable Staff (Immediate Block)
 **Goal:** Immediately prevent staff from operating.
 
 **Steps**
@@ -205,7 +222,7 @@ Canonical process reference:
 
 ---
 
-### UC-SM3 — Archive Staff
+### UC-SM4 — Archive Staff
 **Goal:** Remove staff from active operations while preserving history.
 
 **Rules**

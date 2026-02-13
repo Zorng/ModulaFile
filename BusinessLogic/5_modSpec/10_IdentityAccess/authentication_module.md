@@ -100,7 +100,7 @@ But:
 
 ## 4. Ubiquitous Language
 
-- **AuthAccount**: a global identity record (human) that can authenticate
+- **AuthAccount**: a global identity record (human) that can authenticate (includes basic profile fields)
 - **Identifier**: phone number (Phase 0) or email (future)
 - **Credential**: password hash + OTP verification state
 - **Session**: authenticated session (access/refresh tokens, revocation state)
@@ -127,11 +127,12 @@ But:
 **Preconditions:**
 - phone number not already registered (or follow “recover/merge” rule)
 **Main flow:**
-1. User submits phone number
-2. System sends OTP
-3. User submits OTP
-4. System creates AuthAccount (ACTIVE) and marks identifier as verified
-5. User sets initial password (or password is set in a separate step)
+1. User submits registration form (phone, password, basic profile fields)
+2. System validates password policy (e.g., min length >= 8)
+3. System creates AuthAccount with unverified identifier
+4. System sends OTP
+5. User submits OTP
+6. System verifies OTP and marks identifier as verified
 **Postconditions:**
 - AuthAccount exists
 - phone identifier verified
@@ -248,7 +249,7 @@ But:
 ## 6. Data & State
 
 ### Stored by Authentication
-- AuthAccount
+- AuthAccount (including basic profile fields)
 - Credential state (password hash, OTP verification timestamps)
 - Session records (refresh token hash, revocation timestamp)
 
