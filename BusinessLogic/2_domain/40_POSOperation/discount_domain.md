@@ -90,11 +90,15 @@ Common attributes:
 - type: PERCENTAGE | FIXED_AMOUNT | (future: BUY_X_GET_Y)
 - value (e.g., 10% or $1.00)
 - scope: SALE | CATEGORY | ITEM
-- target_ref (category_id, item_id) depending on scope
+- target_ref (category_id, item_id set) depending on scope
 - branch applicability (all branches or selected branches)
 - schedule (always-on or within time window)
 - status: ACTIVE | INACTIVE | ARCHIVED
 - priority (optional; used only if you need deterministic ordering)
+
+Item-level note (March):
+- a single item-level rule may target multiple menu items when they share the same discount properties.
+- branch assignment is still rule-level and must be validated against the selected target items.
 
 ### 3.2 Eligibility (Value Object)
 Defines whether the rule applies.
@@ -110,7 +114,14 @@ Future eligibility (out of scope):
 - membership tiers
 - minimum spend thresholds
 
-### 3.3 Stacking Policy (Domain Rule)
+### 3.3 Available Branch Resolution (Validation Helper)
+For item-level rules with multiple target items, the backend provides a validation helper:
+- `ResolveAvailableBranchesForItems(item_ids)`
+- returns the branch set where all selected items are valid for discount targeting
+
+This helper is used for rule create/update validation, not for money calculation.
+
+### 3.4 Stacking Policy (Domain Rule)
 Defines how multiple discounts interact.
 
 Baseline (Capstone 1):
@@ -121,7 +132,7 @@ Notes:
 - Multiplicative stacking is deterministic and prevents “over 100%” edge cases.
 - If future policies are added (exclusive / best-of), they must be explicit.
 
-### 3.4 AppliedDiscount Snapshot (Read/Write Boundary)
+### 3.5 AppliedDiscount Snapshot (Read/Write Boundary)
 When a sale is finalized, the system captures:
 - which discount rules were applied
 - which lines they affected
@@ -144,6 +155,8 @@ Discount domain itself does **not** own the money calculation, but the system mu
 - INV-D4: Eligibility evaluation must be deterministic (same inputs → same eligible outputs)
 - INV-D5: Stacking policy must be explicit; no “hidden default” behavior
 - INV-D6: Applied discounts snapshot is immutable after sale finalization
+- INV-D7: For item-level multi-item rules, selected `branch_ids` must be a subset of `ResolveAvailableBranchesForItems(item_ids)`.
+- INV-D8: Existing rules are not silently rewritten when later menu/branch mappings change; runtime eligibility filters invalid targets.
 
 ---
 
@@ -154,6 +167,7 @@ Self-contained commands:
 - UpdateDiscountRule
 - ActivateDiscountRule / DeactivateDiscountRule
 - ArchiveDiscountRule
+- ResolveAvailableBranchesForItems (validation helper for item-level multi-item rules)
 
 Cross-module consumed query (read-only):
 - GetEligibleDiscountRules(context)

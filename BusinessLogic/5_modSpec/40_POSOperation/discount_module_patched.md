@@ -6,6 +6,7 @@
 **Primary Domain:** POS Operations → Discount  
 **Depends on:** Tenant & Branch Context, Authentication, Access Control, Audit Logging  
 **Collaborates with (Cross-Module):** Sale/Order (Finalize Sale), Menu (item/category refs), Reporting
+**Related Contracts:** `BusinessLogic/3_contract/10_edgecases/discount_edge_case_sweep.md`
 
 ---
 
@@ -53,7 +54,7 @@ Modula keeps discounts predictable by separating responsibilities:
 
 ### Included
 - Percentage-based discounts only
-- Item-level discounts (targets specific menu items)
+- Item-level discounts (targets one or more menu items in one rule)
 - Branch-wide discounts (applies to all items sold in assigned branches)
 - Discount scheduling (start / end time)
 - Deterministic stacking rule (multiplicative)
@@ -77,7 +78,7 @@ Modula keeps discounts predictable by separating responsibilities:
 A DiscountRule defines:
 - percentage (0–100)
 - scope:
-  - **Item-level** (targets specific menu items)
+  - **Item-level** (targets one or more menu items)
   - **Branch-wide** (targets all items sold in assigned branches)
 - assigned branches (required)
 - optional schedule (active window)
@@ -85,6 +86,11 @@ A DiscountRule defines:
 
 **All discounts are evaluated in branch context.**  
 If a rule is not assigned to the active branch, it is ignored.
+
+For item-level multi-item rules:
+- backend must resolve valid branch candidates from selected items before save
+- selected branches must be a subset of resolved candidates
+- if candidates are empty, rule save must be rejected
 
 ---
 
@@ -132,10 +138,11 @@ Later changes to discount rules must not affect historical sales.
 - at least one branch exists
 **Flow:**
 1. enter name, percentage, scope
-2. assign branches (required)
-3. assign items (required if item-level)
-4. set schedule (optional)
-5. save
+2. assign items (required if item-level)
+3. if item-level, call backend preflight `ResolveAvailableBranchesForItems(item_ids)`
+4. assign branches from preflight result (required)
+5. set schedule (optional)
+6. save
 **Postconditions:** rule can become eligible for future sales in assigned branches
 
 ---
@@ -143,7 +150,11 @@ Later changes to discount rules must not affect historical sales.
 ### UC-3: Update Discount Rule
 **Actors:** Admin  
 **Rules:** changes affect future sales only  
-**Flow:** edit properties; validate; save
+**Flow:**
+1. edit properties
+2. if item-level target set changes, re-run `ResolveAvailableBranchesForItems(item_ids)`
+3. force branch selection to remain within resolved candidates
+4. validate; save
 
 ---
 
@@ -156,13 +167,13 @@ Later changes to discount rules must not affect historical sales.
 
 ### UC-5: Assign / Unassign Menu Items (Item-Level Rules)
 **Actors:** Admin  
-**Flow:** select rule; add/remove menu items; save
+**Flow:** select rule; add/remove menu items; resolve available branches; save
 
 ---
 
 ### UC-6: Assign / Unassign Branches
 **Actors:** Admin  
-**Rules:** branch assignment is required; a rule with zero branches must be INACTIVE  
+**Rules:** branch assignment is required; a rule with zero branches must be INACTIVE; selected branches must be within resolved candidates for item-level rules  
 **Flow:** add/remove branches; save
 
 ---
@@ -208,6 +219,7 @@ Later changes to discount rules must not affect historical sales.
 - R7: Only Admin can mutate discount rules
 - R8: All lifecycle actions are audit logged
 - R9: Historical sales remain immutable via snapshot lock-in
+- R10: Existing rules are not auto-rewritten when menu/branch mappings change later; runtime eligibility handles drift and admin can edit explicitly
 
 ---
 
@@ -220,6 +232,8 @@ Later changes to discount rules must not affect historical sales.
 - AC-5: Changing rules does not change historical sales
 - AC-6: Audit log records all lifecycle events
 - AC-7: GetEligibleDiscountRules returns metadata only; Sale computes money
+- AC-8: Item-level multi-item rule save fails when selected branches are not in preflight-resolved candidates
+- AC-9: Rule records are not silently rewritten by later menu/branch changes
 
 ---
 
