@@ -105,7 +105,7 @@ Output of the domain:
 Example deny reasons:
 - TENANT_NOT_ACTIVE
 - NO_MEMBERSHIP
-- MEMBERSHIP_DISABLED
+- MEMBERSHIP_NOT_ACTIVE
 - NO_BRANCH_ACCESS
 - BRANCH_ACCESS_REVOKED
 - BRANCH_FROZEN
@@ -175,7 +175,7 @@ RolePolicy may be:
 ### 3.4 Membership (External Fact)
 Access Control consumes membership facts:
 - membership exists?
-- membership status ACTIVE? (or not DISABLED/ARCHIVED)
+- membership status ACTIVE? (not INVITED/REVOKED)
  - `role_key` in tenant?
  - optional: membership kind / ownership flag for governance-only invariants
 

@@ -67,7 +67,7 @@ Minimum fields:
 - `auth_account_id` (actor id from Authentication)
 - `membership_kind` = OWNER | MEMBER
 - `role_key` = ADMIN | MANAGER | CASHIER (extend later)
-- `membership_status` = ACTIVE | DISABLED | ARCHIVED
+- `membership_status` = INVITED | ACTIVE | REVOKED
 - `created_at`, `updated_at`
 
 **Design rule:** Membership is keyed by `auth_account_id` to keep authorization deterministic.
@@ -80,7 +80,7 @@ Minimum fields:
 - INV-T2: Cross-tenant data access is forbidden.
 - INV-T3: Tenant status is a fact; Access Control enforces behavior based on it.
 - INV-T4: Membership must be tenant-scoped (not global).
-- INV-T5: A disabled/archived membership must be reflected immediately in authorization decisions.
+- INV-T5: Any non-ACTIVE membership (`INVITED`/`REVOKED`) must be reflected immediately in authorization decisions.
 - INV-T6: A tenant may temporarily have **zero branches** until the first paid branch is activated; branch-scoped operations require at least one ACTIVE branch.
 - INV-T7: A tenant must have at least one ACTIVE OWNER membership (governance safety).
 - INV-T8: An OWNER must never be less powerful than an ADMIN in Access Control policy (for March: keep `role_key = ADMIN` for owners).
@@ -173,24 +173,22 @@ Canonical process reference:
 **Goal:** Remove actor from tenant.
 
 **Rules:**
-- cannot revoke/archive the last ACTIVE OWNER (INV-T7)
+- cannot revoke the last ACTIVE OWNER (INV-T7)
 - revocation takes effect immediately (Access Control must deny next request)
 
 **Effect:**
-- set membership `membership_status` → `ARCHIVED`
+- set membership `membership_status` → `REVOKED`
 
 **Audit:** MEMBER_REVOKED
 
 ---
 
-### UC-T7 — Disable/Reactivate Membership (Optional)
-**Goal:** Temporarily disable a member without deleting history.
-
-**Why:** Useful for HR discipline or temporary leave.
+### UC-T7 — Re-Grant Membership After Rejoin
+**Goal:** Restore workspace access for a returning person using explicit grant flow.
 
 **Rules:**
-- Cannot disable the last ACTIVE OWNER (governance safety).
-- DISABLED behaves like ARCHIVED for authorization (deny operational actions) but is reversible.
+- Rejoin is modeled as membership grant + role assignment, not disable/reactivate toggles.
+- Historical records remain preserved and immutable.
 
 ---
 
@@ -216,7 +214,7 @@ Recommended events (or audit logs):
 - TENANT_MEMBER_GRANTED
 - TENANT_MEMBER_ROLE_CHANGED
 - TENANT_MEMBER_REVOKED
-- TENANT_MEMBER_DISABLED / REACTIVATED
+- TENANT_MEMBER_REGRANTED
 
 These support traceability for academic defense and debugging.
 

@@ -29,7 +29,7 @@ This process provides one stable orchestration for March MVP.
 | Artifact | Responsibility |
 |---|---|
 | Authentication | Resolve or provision `auth_account_id` by phone (no admin-owned passwords) |
-| Tenant Membership | Membership lifecycle (INVITED/ACTIVE/DISABLED/ARCHIVED) + governance kind (`OWNER`/`MEMBER`) + tenant-scoped `role_key` |
+| Tenant Membership | Membership lifecycle (INVITED/ACTIVE/REVOKED) + governance kind (`OWNER`/`MEMBER`) + tenant-scoped `role_key` |
 | Tenant | Tenant status gates membership changes (future: FROZEN) |
 | Access Control | Authorize admin actions + enforce membership changes immediately on sensitive actions |
 | Audit (logging) | Traceable membership changes |
@@ -118,7 +118,7 @@ This process provides one stable orchestration for March MVP.
 
 **Steps:**
 1. Authorization gate: Access Control must ALLOW `tenant.membership.changeRole`.
-2. Validate member exists and is not ARCHIVED.
+2. Validate member exists and is not REVOKED.
 3. Validate `new_role_key` is recognized by the current RolePolicy (do not hardcode role lists in processes).
 4. Enforce governance invariant:
    - If `membership_kind = OWNER`, the role key must not be less powerful than `ADMIN` (for March: keep `role_key = ADMIN` for owners).
@@ -130,7 +130,7 @@ This process provides one stable orchestration for March MVP.
 
 ---
 
-## Flow D — Revoke Membership (Archive)
+## Flow D — Revoke Membership
 
 **Goal:** Remove access while preserving history.
 
@@ -140,9 +140,9 @@ This process provides one stable orchestration for March MVP.
 
 **Steps:**
 1. Authorization gate: Access Control must ALLOW `tenant.membership.revoke`.
-2. Validate member exists and is not already ARCHIVED.
-3. Enforce safety invariant: cannot archive the last ACTIVE `OWNER` membership for the tenant.
-4. Set membership `status = ARCHIVED`.
+2. Validate member exists and is not already REVOKED.
+3. Enforce safety invariant: cannot revoke the last ACTIVE `OWNER` membership for the tenant.
+4. Set membership `status = REVOKED`.
 5. Audit MEMBER_REVOKED.
 
 **Rule: Immediate effect**
@@ -157,7 +157,7 @@ This process provides one stable orchestration for March MVP.
 ## Enforcement Expectations (Cross-Layer)
 
 - Access Control must re-check membership status/`role_key` on sensitive actions (START_WORK, END_WORK, finalize sale, void approve, open/close cash session).
-- If a membership becomes ARCHIVED mid-session:
+- If a membership becomes REVOKED mid-session:
   - the next sensitive action must fail closed
   - the user must be able to switch to another ACTIVE tenant membership (if any)
 
@@ -169,7 +169,7 @@ This process provides one stable orchestration for March MVP.
 - TENANT_NOT_ACTIVE
 - PHONE_INVALID
 - MEMBER_NOT_FOUND
-- MEMBER_ARCHIVED
+- MEMBER_REVOKED
 - INVITE_NOT_FOUND / INVITE_EXPIRED
 - ROLE_KEY_INVALID
 - DUPLICATE_MEMBERSHIP

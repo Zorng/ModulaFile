@@ -13,7 +13,7 @@
 ## 1. Purpose
 
 Staff Management manages the business-facing representation of people who operate Modula within a tenant:
-- staff profiles and lifecycle,
+- staff profiles and operational readiness,
 - explicit branch assignments (authorization facts),
 - operational readiness of staff,
 - alignment with **Operator Seat** limits (commercial concurrency guard rail).
@@ -84,12 +84,16 @@ INVITED is a **membership** state, not a staff profile state.
 Staff profiles are created only after an invitation is accepted.
 
 **Lifecycle**
-- `ACTIVE` → `DISABLED` → `ARCHIVED`
+- `ACTIVE` ↔ `REVOKED` (via tenant membership lifecycle)
 
 ### Semantics
 - ACTIVE: staff may operate (subject to authorization and licensing)
-- DISABLED: immediate operational block; history preserved
-- ARCHIVED: removed from active UI lists; immutable historical reference
+- REVOKED: staff cannot access tenant workspace; history preserved
+
+**Design lock**
+- No separate admin actions for "disable staff" or "archive staff".
+- Access removal is modeled by tenant membership revocation.
+- If a person returns, membership can be granted again; historical records remain immutable and traceable.
 
 ---
 
@@ -105,12 +109,12 @@ Minimum fields:
 - `staff_code` (optional)
 - `job_title` (optional; display/scheduling context only)
 - `pin_hash` (optional; for quick unlock)
-- `status` = ACTIVE | DISABLED | ARCHIVED
+- `status` = ACTIVE | REVOKED
 - `created_at`, `updated_at`
 
 **Notes**
 - StaffProfile does not store login credentials.
-- Disabling staff must take effect immediately for authorization.
+- Revoked membership must take effect immediately for authorization.
 
 ---
 
@@ -146,7 +150,7 @@ The storage mechanism is an implementation detail; the definition is canonical.
 ## 5. Invariants
 
 - INV-SM1: Each StaffProfile maps 1:1 to an `auth_account_id`.
-- INV-SM2: DISABLED or ARCHIVED staff cannot perform operational actions.
+- INV-SM2: REVOKED staff cannot perform operational actions.
 - INV-SM3: Branch access requires explicit BranchAssignment.
 - INV-SM4: BranchAssignment revocation is immediate.
 - INV-SM5: Operator seat limits gate operation, not staff record creation.
@@ -209,28 +213,23 @@ Canonical process reference:
 
 ---
 
-### UC-SM3 — Disable Staff (Immediate Block)
-**Goal:** Immediately prevent staff from operating.
+### UC-SM3 — Revoke Staff Workspace Access
+**Goal:** Remove workspace access while preserving all historical records.
+
+**Canonical process reference:**
+- `BusinessLogic/4_process/20_OrgAccount/10_tenant_membership_administration_process.md` (Flow D)
 
 **Steps**
-1. Set StaffProfile status → DISABLED.
-2. Access Control must deny next operational request.
-3. Active operational sessions should be terminated if possible.
-
-**Audit**
-- STAFF_DISABLED
-
----
-
-### UC-SM4 — Archive Staff
-**Goal:** Remove staff from active operations while preserving history.
+1. Revoke tenant membership for `(tenant_id, auth_account_id)`.
+2. Access Control denies next operational request immediately.
+3. Existing historical records remain immutable and queryable.
 
 **Rules**
-- ARCHIVED staff cannot be reactivated.
-- Historical references remain valid.
+- No hard-delete of StaffProfile.
+- Restoring access is done by granting membership again (and role/branch assignment as needed), not by "unarchive/enable" toggles.
 
 **Audit**
-- STAFF_ARCHIVED
+- MEMBER_REVOKED
 
 ---
 
@@ -272,7 +271,7 @@ If limit reached:
 
 ### 8.2 What Does Not Count
 - inactive sessions
-- DISABLED / ARCHIVED staff
+- REVOKED staff
 - staff profiles without an ACTIVE attendance session
 
 ---
@@ -303,8 +302,7 @@ If limit reached:
 
 Log:
 - STAFF_ACCOUNT_CREATED
-- STAFF_DISABLED
-- STAFF_ARCHIVED
+- MEMBER_REVOKED
 - BRANCH_ACCESS_GRANTED / REVOKED
 - STAFF_LIMIT_REACHED
 
@@ -312,7 +310,7 @@ Log:
 
 ## 12. Out of Scope (March MVP)
 
-- Invite-based onboarding
+- Bulk invitation campaign automation (reminders/expiry policies)
 - Email-based login
 - Payroll / HR documents
 - Billing payment collection automation (entitlement enforcement is in-scope via Access Control)

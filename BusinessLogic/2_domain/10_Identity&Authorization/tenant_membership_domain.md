@@ -98,12 +98,12 @@ Design rule:
 Membership has a lifecycle that supports explicit invitations:
 - INVITED (pending acceptance)
 - ACTIVE
-- DISABLED
-- ARCHIVED (removed from active roster; history preserved)
+- REVOKED (removed from active roster; history preserved)
 
 Status defines whether a person is currently considered part of the tenant.
 
 Historical records remain traceable even after removal.
+If membership is granted again later, the actor may view their own historical records under current role policy and tenant scope.
 
 ---
 
@@ -133,7 +133,7 @@ A Tenant Member typically includes:
 - `auth_account_id` (link to Authentication identity)
 - `membership_kind` (`OWNER` or `MEMBER`)
 - `role_key` (`ADMIN`, `MANAGER`, `CASHIER`, ...)
-- `membership_status` (INVITED, ACTIVE, DISABLED, ARCHIVED)
+- `membership_status` (INVITED, ACTIVE, REVOKED)
 - `invited_by_member_id` (who invited them)
 - `created_at`
 - `updated_at`

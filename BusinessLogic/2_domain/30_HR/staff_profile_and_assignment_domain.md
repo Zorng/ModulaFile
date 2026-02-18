@@ -103,7 +103,7 @@ A Staff Member / Profile typically includes:
 - `display_name`
 - `staff_code` (optional)
 - `job_title` (optional)
-- `status` (ACTIVE, DISABLED, ARCHIVED)
+- `status` (ACTIVE, REVOKED)
 - `created_at`
 - `updated_at`
 
@@ -123,7 +123,7 @@ A Branch Assignment typically includes:
 - A staff member may be assigned to one or more branches.
 - A staff member’s branch assignments may change over time; history should be preservable.
 - Authentication identities are globally unique; this domain references them via `auth_account_id`.
-- Deactivating or archiving staff does not delete history (attendance and sales remain traceable).
+- Revoking staff access does not delete history (attendance and sales remain traceable).
 - Job titles and display labels are not authorization decisions.
 - Authorization role keys must not be duplicated here (source of truth is Tenant Membership).
 
@@ -139,8 +139,7 @@ Capability-aware invariants:
 For March delivery, staff lifecycle is intentionally simple:
 
 - **ACTIVE** — can work and can be scheduled
-- **DISABLED** — temporarily blocked from access (history preserved)
-- **ARCHIVED** — removed from active roster (history preserved)
+- **REVOKED** — workspace access removed; history preserved
 
 The exact transitions are process concerns, but the concept of lifecycle is owned here.
 
@@ -187,7 +186,7 @@ It only stores stable facts about people and their workplace eligibility.
 
 ### Staff Profile ↔ Attendance
 - Attendance references staff profile for actual work.
-- Attendance remains valid even if staff is later archived.
+- Attendance remains valid even if staff access is later revoked.
 
 ---
 

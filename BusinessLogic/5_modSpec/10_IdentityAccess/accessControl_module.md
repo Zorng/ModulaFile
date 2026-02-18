@@ -115,7 +115,7 @@ Needed fields:
 - `tenant_id`
 - `membership_kind` (OWNER | MEMBER)
 - `role_key` (e.g., `ADMIN`, `MANAGER`, `CASHIER`, ...)
-- `membership_status` (ACTIVE/DISABLED/ARCHIVED)
+- `membership_status` (INVITED/ACTIVE/REVOKED)
 
 ### 5.2 Branch assignment store
 Branch access is granted **only** via explicit assignments (including for Admin/Manager).

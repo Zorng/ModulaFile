@@ -101,11 +101,11 @@ Verify the user belongs to the selected tenant.
 
 Checks:
 - User is a member of the tenant.
-- Membership is ACTIVE (not archived).
+- Membership is ACTIVE (not INVITED and not REVOKED).
 
 Failure examples:
 - User removed from tenant.
-- Membership suspended.
+- Membership revoked.
 
 ---
 
