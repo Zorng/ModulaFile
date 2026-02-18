@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This process defines how a first-time tenant (with **zero branches**) activates their first paid branch and starts their billing month.
+This process defines how a first-time tenant (with **zero branches**) activates their first paid branch (first billable workspace) and starts their billing month.
 
 It exists to keep three truths consistent:
 - **No unpaid branches exist** (branch is provisioned only after payment is confirmed).
@@ -52,7 +52,7 @@ Billing constraints (March baseline):
 
 - Confirm `tenant_id` exists and is in a state that can be activated.
 - Confirm tenant currently has **zero branches**.
-- Confirm actor is allowed to activate branch capacity (Access Control).
+- Confirm actor is allowed to initiate first branch activation (Access Control).
 
 ---
 
@@ -109,6 +109,7 @@ When payment is confirmed:
 
 - Never create a branch if payment is not confirmed.
 - If provisioning fails after payment confirmation, the system must remain in a recoverable "activating" state (no duplicate charges, no duplicate branches).
+- If activation has no paid invoice, deny with payment-oriented reason codes (for example `BRANCH_ACTIVATION_PAYMENT_REQUIRED`), not slot-capacity denials.
 
 ---
 

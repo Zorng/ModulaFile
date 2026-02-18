@@ -1,13 +1,14 @@
-# 94 — Additional Branch Activation Orchestration (Buy Branch → Provision)
+# 94 — Additional Branch Activation Orchestration (Additional Branch Subscription → Provision)
 
 ## Purpose
 
-This process defines how a tenant with an existing paid branch activates **another** branch.
+This process defines how a tenant with an existing paid branch activates **another** branch as an additional billable workspace.
 
 It preserves the same core rules as first-branch activation:
 - **No unpaid branches exist** (a new branch is provisioned only after payment confirmation).
 - The tenant still has **one billing anchor date** (no new renewal date per branch).
 - New branches are `core_pos`-enabled by default; optional modules are branch-scoped.
+- Archiving/deleting a branch does **not** mint reusable free branch entitlement by default.
 
 ---
 
@@ -52,8 +53,8 @@ Constraints (March baseline):
 ### Step 1 — Validate eligibility
 
 - Confirm tenant is allowed to upgrade:
-  - if tenant is `FROZEN`, deny until paid.
-  - if tenant is `PAST_DUE`, deny upgrades until paid (avoid increasing debt).
+  - if tenant is `FROZEN`, deny until paid (`SUBSCRIPTION_UPGRADE_REQUIRED`).
+  - if tenant is `PAST_DUE`, deny upgrades until paid (avoid increasing debt; `SUBSCRIPTION_UPGRADE_REQUIRED`).
 - Confirm actor is authorized to add branches (owner/admin via Access Control).
 
 ---

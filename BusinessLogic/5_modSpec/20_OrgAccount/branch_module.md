@@ -16,8 +16,8 @@ The Branch module manages the **lifecycle state and profile** of branches under 
 - Providing branch identity as a consistent reference for branch-scoped modules
 
 **Branch provisioning is NOT user-driven.** Branch records are created by the system when:
-- A tenant activates/pays for branch capacity (first branch activation; branch provisioned after payment confirmation), and/or
-- A subscription item entitles additional branches (additional branch activation), and/or
+- A tenant completes first-branch paid activation (`branch activation`; branch provisioned after payment confirmation), and/or
+- A tenant purchases an `additional branch subscription` (additional branch activation), and/or
 - Developers/system operators provision branches manually (Capstone I temporary approach)
 
 ---
@@ -28,6 +28,7 @@ The Branch module manages the **lifecycle state and profile** of branches under 
 Branches are created by a **provisioning process**, not by Admin UI.
 - Capstone I: provisioning may be performed by developers (manual command/seed/admin tooling)
 - Capstone II: provisioning is performed automatically by Subscription/Billing
+- Billing model lock: a branch is a billable workspace unit; archive/delete does not grant reusable free branch activation by default.
 
 ### 2.2 Branch Status
 - `ACTIVE`: operations allowed

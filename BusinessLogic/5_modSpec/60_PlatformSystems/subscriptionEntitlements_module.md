@@ -42,6 +42,7 @@ Included:
 - disable branch modules/add-ons (end-of-cycle; Workforce uses `DOWNGRADE_PENDING`)
 - renewal invoices at billing anchor; `PAST_DUE` grace; `FROZEN` enforcement; recovery to `ACTIVE`
 - invoice history viewing + PDF download (read-only)
+- branch archive/delete does not create reusable free branch activation entitlement by default
 
 Excluded (explicit):
 - pricing tables and marketing plans (business artifacts live in `secrets/*`)
@@ -62,6 +63,16 @@ Excluded (explicit):
 These reads feed:
 - Access Control (deny writes when frozen; deny writes when entitlement read-only/disabled)
 - UX (display plan state + warnings without inventing rules)
+
+---
+
+## 3.1 Denial Code Direction (Billing)
+
+Use payment/subscription-oriented denial reason codes for branch monetization and upgrades:
+- `BRANCH_ACTIVATION_PAYMENT_REQUIRED`
+- `SUBSCRIPTION_UPGRADE_REQUIRED`
+
+Avoid slot-capacity denial semantics (for example `BRANCH_SLOT_LIMIT_REACHED`) in branch billing flows.
 
 ---
 

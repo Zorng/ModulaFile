@@ -49,11 +49,12 @@ This domain exists to make those expectations explicit and enforceable.
 Branch creation is **provisioning-driven**, not a typical CRUD feature.
 
 A branch record is created by the system when:
-- a tenant activates/pays for branch capacity (first branch activation; future billing engine), and/or
-- a subscription entitlement enables additional branches, and/or
+- a tenant completes first-branch paid activation (`branch activation`), and/or
+- a tenant purchases an `additional branch subscription` and payment is confirmed, and/or
 - developers/admin tooling provision branches manually (Capstone 1 practicality).
 
 **Implication:** End-users can update branch profile/configuration, but do not create branches directly in the MVP.
+**Commercial rule:** A branch is a billable workspace unit, not a reusable slot token. Archiving/deleting a branch does not mint free reusable branch entitlement unless billing policy explicitly says so.
 
 ### 2) Branch Profile (Operational Identity)
 Branch profile is the human-friendly identity of the location:
@@ -113,6 +114,7 @@ It is used only to confirm location at check-in/check-out time.
 3. **History safety:** Updating branch profile/config affects **future** receipts/operations; historical records remain unchanged.
 4. **Location configuration validity:** If workplace location is set, it must include both geo-point and radius.
 5. **Capability-gated usage:** Attendance location confirmation must only use branch workplace location if the capability is enabled for the tenant/branch.
+6. **Non-reusable activation entitlement (default):** Archiving/deleting a branch does not restore free reusable branch activation entitlement unless billing policy explicitly defines it.
 
 ---
 

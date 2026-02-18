@@ -76,6 +76,16 @@ This avoids "upload proof" workflows for March.
 
 ---
 
+### Denial-Code Direction (Locked)
+
+Payment/subscription denials must use billing-oriented reason codes, for example:
+- `BRANCH_ACTIVATION_PAYMENT_REQUIRED`
+- `SUBSCRIPTION_UPGRADE_REQUIRED`
+
+Do not introduce slot-capacity denial codes for branch monetization (for example `BRANCH_SLOT_LIMIT_REACHED`).
+
+---
+
 ## Orchestration Steps
 
 ### Step 0 — Idempotency Gate (Pay Now view)

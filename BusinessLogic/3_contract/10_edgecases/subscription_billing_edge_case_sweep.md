@@ -5,7 +5,7 @@
 - **Scope**: Subscription enforcement + entitlements gating across modules (branch-scoped pricing; tenant billing state)
 - **Primary Audience**: Backend, Frontend, QA
 - **Owner(s)**: PlatformSystems (Subscription & Entitlements), OrgAccount (Tenant/Branch), Access Control
-- **Last Updated**: 2026-02-10
+- **Last Updated**: 2026-02-18
 - **Delivery Level**:
   - **March**: must be handled or explicitly degraded safely
   - **Later**: explicitly deferred
@@ -154,11 +154,23 @@ This contract focuses on three things:
 
 ---
 
+### EC-SUB-11 — Branch Archive/Delete Does Not Restore Reusable Branch Entitlement
+- **Scenario**: Owner/admin archives or deletes an existing branch after it was activated through paid subscription flow.
+- **Trigger**: User attempts to activate another branch expecting free reuse of archived/deleted branch activation entitlement.
+- **Expected Behavior**:
+  - Archiving/deleting a branch does not mint reusable free branch entitlement by default.
+  - A new branch still requires `additional branch subscription` activation flow and payment confirmation.
+  - Reusable behavior is allowed only if explicitly defined by billing policy (outside March baseline).
+- **Owner**: Subscription/Entitlements + OrgAccount
+- **March**: Yes
+
+---
+
 ## Summary
 
 For March, subscription enforcement must be predictable:
 - warn during `PAST_DUE`,
 - freeze cleanly after grace (`FROZEN`),
 - enforce seats at `START_WORK`,
-- and never allow “unpaid branch” operations.
-
+- never allow “unpaid branch” operations,
+- and treat each additional branch as a paid activation (no implicit slot reuse).

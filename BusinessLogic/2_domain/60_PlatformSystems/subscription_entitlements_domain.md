@@ -73,7 +73,7 @@ Represents the commercial operating status of the tenant:
 An invoice is the commercial request for payment, with:
 - a stable invoice identity,
 - USD-denominated totals,
-- line-item intent (branch capacity, module enablement, seats),
+- line-item intent (first/additional branch activation, module enablement, seats),
 - and a payment confirmation state.
 
 ### Entitlement (Capability Snapshot)
@@ -99,11 +99,12 @@ Seats are consumed at `START_WORK` and released at `END_WORK`.
 - **INV-SUB-1 (Single anchor):** A tenant has exactly one billing anchor date.
 - **INV-SUB-2 (Anchor origin):** Billing anchor is set by first paid branch activation (not by signup).
 - **INV-SUB-3 (USD-only invoices for March):** Subscription invoices are denominated in USD only (no FX logic in March).
-- **INV-SUB-4 (No unpaid branches):** A branch does not exist unless paid/unlocked via subscription provisioning.
+- **INV-SUB-4 (No unpaid branches):** A branch does not exist unless activated through paid subscription provisioning.
 - **INV-SUB-5 (Capability is explicit):** Modules/capabilities are never inferred from “data exists”; they must be represented as entitlements.
 - **INV-SUB-6 (Read-only semantics):** When a module is not subscribed, it may still be visible, but writes must be blocked (enforcement is not a UI choice).
 - **INV-SUB-7 (Freeze semantics):** When subscription state is `FROZEN`, operational writes must be blocked system-wide; read-only access is allowed.
 - **INV-SUB-8 (Seat fairness):** A branch must not allow more concurrent operators than its seat limit.
+- **INV-SUB-9 (No reusable branch entitlement by default):** Archiving/deleting a branch does not create reusable free branch activation entitlement unless explicitly defined by billing policy.
 
 ---
 
