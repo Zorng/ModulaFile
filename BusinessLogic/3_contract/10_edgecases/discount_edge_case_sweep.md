@@ -5,7 +5,7 @@
 - **Scope**: Discount rule lifecycle, eligibility evaluation, branch scoping, finalize/open-ticket snapshot integrity, and reporting stability
 - **Primary Audience**: Backend, Frontend, QA
 - **Owner(s)**: Discount, Sale/Order, Finalize Sale Orchestration, Reporting, Menu, Access Control
-- **Last Updated**: 2026-02-15
+- **Last Updated**: 2026-02-18
 - **Delivery Level**:
   - **March**: must be handled or explicitly degraded safely
   - **Later**: explicitly deferred
@@ -46,7 +46,7 @@ It prevents pricing drift and "same cart, different result" behavior.
 ## Edge Case Catalog
 
 ### EC-DIS-01 — Rule Exists but Not Assigned to Active Branch
-- **Scenario**: A discount rule is active in tenant scope but not assigned to the branch where the sale is happening.
+- **Scenario**: A discount rule exists but belongs to a different branch than where the sale is happening (branch-owned rules).
 - **Trigger**: Finalize or place-order eligibility evaluation.
 - **Expected Behavior**:
   - Rule is ignored.
@@ -136,33 +136,58 @@ It prevents pricing drift and "same cart, different result" behavior.
 - **Owner**: Sale/Order + Reporting + Receipt
 - **March**: Yes
 
-### EC-DIS-11 — Item-Level Multi-Item Rule Has No Common Branch
-- **Scenario**: Admin selects multiple items that do not share any valid branch intersection.
-- **Trigger**: Create/update item-level discount rule.
+### EC-DIS-11 — Item-Level Multi-Item Rule Includes Invalid Items For Branch
+- **Scenario**: Admin selects one or more items that are not eligible targets in the rule’s branch.
+- **Trigger**: Create/update item-level discount rule (branch-owned).
 - **Expected Behavior**:
-  - Backend preflight `ResolveAvailableBranchesForItems(item_ids)` returns empty set.
-  - Rule save is rejected with explicit message ("selected items do not share common branches").
+  - Backend preflight `ResolveEligibleItemsForBranch(branch_id, item_ids)` returns invalid items (or empty eligible set).
+  - Rule save is rejected with explicit message ("some selected items are not eligible in this branch").
 - **Owner**: Discount + Menu
 - **March**: Yes
 
-### EC-DIS-12 — Item Set Change Shrinks Available Branches
-- **Scenario**: Admin edits item targets; available branch intersection becomes smaller than previously selected branches.
-- **Trigger**: Update item-level discount rule.
+### EC-DIS-12 — Item Set Update Introduces Invalid Items For Branch
+- **Scenario**: Admin edits item targets and introduces items that are not eligible targets in the rule’s branch.
+- **Trigger**: Update item-level discount rule (branch-owned).
 - **Expected Behavior**:
-  - Backend re-resolves available branches.
-  - Save is rejected unless selected branches are adjusted to valid subset.
-  - No partial save with invalid branches.
+  - Backend re-validates item eligibility via `ResolveEligibleItemsForBranch(branch_id, item_ids)`.
+  - Save is rejected until the invalid items are removed.
+  - No partial save with invalid targets.
 - **Owner**: Discount
 - **March**: Yes
 
 ### EC-DIS-13 — Later Menu/Branch Mapping Drift
-- **Scenario**: After rule was saved, menu/branch mappings change and some targeted items are no longer valid in some selected branches.
+- **Scenario**: After rule was saved, menu/branch mappings change and some targeted items are no longer valid in the rule’s branch.
 - **Trigger**: Eligibility evaluation for new sales.
 - **Expected Behavior**:
   - Existing rule record is not silently rewritten.
-  - Runtime eligibility excludes invalid targets/branches.
+  - Runtime eligibility excludes invalid targets.
   - Admin receives warning signal in management UI to review/update rule.
 - **Owner**: Discount + Menu + Frontend
+- **March**: Yes
+
+### EC-DIS-14 — Overlapping Rules at Configuration Time (Warn-Only)
+- **Scenario**: Admin configures a new discount rule that overlaps with existing rules in the same branch and schedule window (example: item-level rules overlapping on an item).
+- **Trigger**: Create/update discount rule.
+- **Expected Behavior**:
+  - Overlap is evaluated within the same `branch_id` against existing `ACTIVE` rules (ignore `INACTIVE` and `ARCHIVED`).
+  - Overlap requires both:
+    - schedule window overlap (`[start_at, end_at)` semantics), and
+    - target overlap (item intersection for item-level rules; branch-wide overlaps all items in the branch).
+  - System warns and requires explicit confirmation before saving:
+    - recommended warning code: `DISCOUNT_RULE_OVERLAP_WARNING`
+    - include conflicting rule ids so UI can show what overlaps
+  - Save is allowed after confirmation; runtime stacking remains multiplicative and deterministic.
+- **Owner**: Discount + Frontend
+- **March**: Yes
+
+### EC-DIS-15 — Attempt to Edit a Currently-Eligible Rule
+- **Scenario**: Admin attempts to edit a discount rule that is currently eligible (ACTIVE and within its schedule window).
+- **Trigger**: Update discount rule.
+- **Expected Behavior**:
+  - Reject mutation with a clear message ("deactivate first" or "rule currently active").
+  - Recommended denial code: `DISCOUNT_RULE_UPDATE_REQUIRES_EFFECTIVE_INACTIVE`.
+  - Admin can deactivate, edit, then activate.
+- **Owner**: Discount + Frontend
 - **March**: Yes
 
 ---

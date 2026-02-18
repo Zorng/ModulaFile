@@ -91,14 +91,14 @@ Common attributes:
 - value (e.g., 10% or $1.00)
 - scope: SALE | CATEGORY | ITEM
 - target_ref (category_id, item_id set) depending on scope
-- branch applicability (all branches or selected branches)
+- branch ownership (`branch_id`)
 - schedule (always-on or within time window)
 - status: ACTIVE | INACTIVE | ARCHIVED
 - priority (optional; used only if you need deterministic ordering)
 
 Item-level note (March):
 - a single item-level rule may target multiple menu items when they share the same discount properties.
-- branch assignment is still rule-level and must be validated against the selected target items.
+- discount `type/value` is rule-level (uniform for all targeted items); per-item values are out of scope for March.
 
 ### 3.2 Eligibility (Value Object)
 Defines whether the rule applies.
@@ -114,10 +114,12 @@ Future eligibility (out of scope):
 - membership tiers
 - minimum spend thresholds
 
-### 3.3 Available Branch Resolution (Validation Helper)
+### 3.3 Item Validity in Branch (Validation Helper)
+Discount rules are branch-owned.
+
 For item-level rules with multiple target items, the backend provides a validation helper:
-- `ResolveAvailableBranchesForItems(item_ids)`
-- returns the branch set where all selected items are valid for discount targeting
+- `ResolveEligibleItemsForBranch(branch_id, item_ids)`
+- returns which selected items are eligible targets in that branch (or a boolean result + invalid ids)
 
 This helper is used for rule create/update validation, not for money calculation.
 
@@ -155,8 +157,20 @@ Discount domain itself does **not** own the money calculation, but the system mu
 - INV-D4: Eligibility evaluation must be deterministic (same inputs → same eligible outputs)
 - INV-D5: Stacking policy must be explicit; no “hidden default” behavior
 - INV-D6: Applied discounts snapshot is immutable after sale finalization
-- INV-D7: For item-level multi-item rules, selected `branch_ids` must be a subset of `ResolveAvailableBranchesForItems(item_ids)`.
-- INV-D8: Existing rules are not silently rewritten when later menu/branch mappings change; runtime eligibility filters invalid targets.
+- INV-D7: Discount rules are branch-owned; `branch_id` is required and immutable after creation.
+- INV-D8: For item-level multi-item rules, all selected items must be eligible in the rule’s `branch_id` (validate via `ResolveEligibleItemsForBranch`).
+- INV-D9: Existing rules are not silently rewritten when later menu/branch mappings change; runtime eligibility filters invalid targets.
+- INV-D10: A DiscountRule is eligible only when `status == ACTIVE` and the schedule window is valid at `now`.
+- INV-D11: A DiscountRule is editable only when it is not currently eligible (effective-inactive editability).
+- INV-D12: A DiscountRule is created as `INACTIVE` and becomes `ACTIVE` only via explicit activation intent.
+
+### Effective-Inactive Editability (Locked)
+A rule is editable iff it is not currently eligible:
+- status is `INACTIVE`, or
+- status is `ACTIVE` but `now < start_at` (scheduled), or
+- status is `ACTIVE` but `now >= end_at` (expired).
+
+If a rule is currently eligible (`ACTIVE` and within its schedule window), mutation must be denied.
 
 ---
 
@@ -167,7 +181,7 @@ Self-contained commands:
 - UpdateDiscountRule
 - ActivateDiscountRule / DeactivateDiscountRule
 - ArchiveDiscountRule
-- ResolveAvailableBranchesForItems (validation helper for item-level multi-item rules)
+- ResolveEligibleItemsForBranch (validation helper for item-level multi-item rules)
 
 Cross-module consumed query (read-only):
 - GetEligibleDiscountRules(context)

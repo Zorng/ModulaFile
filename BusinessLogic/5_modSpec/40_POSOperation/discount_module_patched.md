@@ -55,7 +55,7 @@ Modula keeps discounts predictable by separating responsibilities:
 ### Included
 - Percentage-based discounts only
 - Item-level discounts (targets one or more menu items in one rule)
-- Branch-wide discounts (applies to all items sold in assigned branches)
+- Branch-wide discounts (applies to all items sold in the rule's branch)
 - Discount scheduling (start / end time)
 - Deterministic stacking rule (multiplicative)
 - Read-only visibility for Manager and Cashier
@@ -79,18 +79,26 @@ A DiscountRule defines:
 - percentage (0–100)
 - scope:
   - **Item-level** (targets one or more menu items)
-  - **Branch-wide** (targets all items sold in assigned branches)
-- assigned branches (required)
+  - **Branch-wide** (targets all items sold in the rule's branch)
+- `branch_id` (required; branch-owned rule)
 - optional schedule (active window)
 - status (ACTIVE / INACTIVE / ARCHIVED)
 
 **All discounts are evaluated in branch context.**  
-If a rule is not assigned to the active branch, it is ignored.
+If a rule's `branch_id` does not match the active branch, it is ignored.
 
 For item-level multi-item rules:
-- backend must resolve valid branch candidates from selected items before save
-- selected branches must be a subset of resolved candidates
-- if candidates are empty, rule save must be rejected
+- backend must validate all selected items are eligible targets in the rule's `branch_id`
+- if any selected items are not eligible in the branch, rule save must be rejected
+
+Locked constraint (March):
+- discount `type/value` is rule-level (uniform for all targeted items); per-item values are out of scope.
+
+### 3.1.1 Editability (Effective-Inactive)
+A rule is editable iff it is not currently eligible:
+- status is `INACTIVE`, or
+- status is `ACTIVE` but `now < start_at` (scheduled), or
+- status is `ACTIVE` but `now >= end_at` (expired).
 
 ---
 
@@ -123,11 +131,23 @@ Later changes to discount rules must not affect historical sales.
 
 ---
 
+### 3.4 Overlap Policy (Locked)
+
+Multiple discount rules may be eligible for the same cart line in the same branch and time window.
+
+Runtime behavior:
+- all eligible rules stack multiplicatively (deterministic).
+
+Admin configuration behavior:
+- overlaps are allowed, but the system should warn and require explicit confirmation on create/update when overlap is detected.
+
+---
+
 ## 4. Use Cases — Self-Contained Processes
 
 ### UC-1: View Discount Rules
 **Actors:** Admin, Manager, Cashier  
-**Flow:** list rules with name, percentage, scope, assigned branches, schedule, status  
+**Flow:** list rules with name, percentage, scope, branch, schedule, status  
 **Postconditions:** none
 
 ---
@@ -137,23 +157,24 @@ Later changes to discount rules must not affect historical sales.
 **Preconditions:**
 - at least one branch exists
 **Flow:**
-1. enter name, percentage, scope
-2. assign items (required if item-level)
-3. if item-level, call backend preflight `ResolveAvailableBranchesForItems(item_ids)`
-4. assign branches from preflight result (required)
+1. select branch (required; rule is branch-owned)
+2. enter name, percentage, scope
+3. assign items (required if item-level)
+4. if item-level, call backend preflight `ResolveEligibleItemsForBranch(branch_id, item_ids)`
 5. set schedule (optional)
-6. save
-**Postconditions:** rule can become eligible for future sales in assigned branches
+6. save (rule defaults to `INACTIVE`)
+7. activate explicitly when ready
+**Postconditions:** rule can become eligible for future sales in its branch when ACTIVE and within schedule
 
 ---
 
 ### UC-3: Update Discount Rule
 **Actors:** Admin  
-**Rules:** changes affect future sales only  
+**Rules:** changes affect future sales only; rule must be effectively-inactive to edit  
 **Flow:**
-1. edit properties
-2. if item-level target set changes, re-run `ResolveAvailableBranchesForItems(item_ids)`
-3. force branch selection to remain within resolved candidates
+1. if rule is currently eligible, deny with `DISCOUNT_RULE_UPDATE_REQUIRES_EFFECTIVE_INACTIVE`
+2. edit properties
+3. if item-level target set changes, re-run `ResolveEligibleItemsForBranch(branch_id, item_ids)`
 4. validate; save
 
 ---
@@ -167,14 +188,14 @@ Later changes to discount rules must not affect historical sales.
 
 ### UC-5: Assign / Unassign Menu Items (Item-Level Rules)
 **Actors:** Admin  
-**Flow:** select rule; add/remove menu items; resolve available branches; save
+**Flow:** select rule; add/remove menu items; validate items in branch; save
 
 ---
 
-### UC-6: Assign / Unassign Branches
+### UC-6: Change Rule Branch (Not Allowed)
 **Actors:** Admin  
-**Rules:** branch assignment is required; a rule with zero branches must be INACTIVE; selected branches must be within resolved candidates for item-level rules  
-**Flow:** add/remove branches; save
+**Rules:** rule `branch_id` is immutable after creation (branch-owned).  
+**Flow:** to move a rule to another branch, create a new rule in the target branch.
 
 ---
 
@@ -211,29 +232,31 @@ Later changes to discount rules must not affect historical sales.
 ## 6. Requirements
 
 - R1: Discounts are percentage-based only
-- R2: Discounts are scoped by branch (explicit assignment required)
+- R2: Discounts are scoped by branch (branch-owned `branch_id` required; immutable)
 - R3: Item-level discounts require explicit item assignment
-- R4: Branch-wide discounts apply to all items sold in assigned branches
+- R4: Branch-wide discounts apply to all items sold in the rule's branch
 - R5: Stacking is multiplicative (deterministic)
 - R6: Discount module does not compute totals/tax/rounding
 - R7: Only Admin can mutate discount rules
 - R8: All lifecycle actions are audit logged
 - R9: Historical sales remain immutable via snapshot lock-in
 - R10: Existing rules are not auto-rewritten when menu/branch mappings change later; runtime eligibility handles drift and admin can edit explicitly
+- R11: Rule edits are allowed only when the rule is effectively-inactive (not currently eligible).
 
 ---
 
 ## 7. Acceptance Criteria
 
-- AC-1: Discounts apply only within assigned branches
+- AC-1: Discounts apply only within their owning branch
 - AC-2: Multiple discounts stack multiplicatively as defined
 - AC-3: INACTIVE and ARCHIVED rules are never eligible
 - AC-4: Managers and Cashiers cannot edit discounts
 - AC-5: Changing rules does not change historical sales
 - AC-6: Audit log records all lifecycle events
 - AC-7: GetEligibleDiscountRules returns metadata only; Sale computes money
-- AC-8: Item-level multi-item rule save fails when selected branches are not in preflight-resolved candidates
+- AC-8: Item-level multi-item rule save fails when selected items are not eligible in the rule's branch
 - AC-9: Rule records are not silently rewritten by later menu/branch changes
+- AC-10: Attempting to edit a currently-eligible rule is denied; admin must deactivate first
 
 ---
 
