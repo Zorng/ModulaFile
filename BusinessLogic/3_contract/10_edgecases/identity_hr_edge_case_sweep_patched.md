@@ -64,7 +64,7 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 - **Scenario**: Staff leaves after months of work.
 - **Trigger**: Owner/admin removes membership.
 - **Expected Behavior**:
-  - Membership marked ARCHIVED.
+  - Membership marked REVOKED.
   - History preserved.
 - **Owner**: Tenant Membership
 - **March**: Yes
@@ -83,8 +83,8 @@ It exists to prevent silent assumptions and to keep the team aligned on what mus
 - **Owner**: Staff Profile + Access Control
 - **March**: Yes
 
-### EC-IDH-06 — Disabled / Archived Staff
-- **Scenario**: Staff is disabled/archived but tries to work.
+### EC-IDH-06 — Revoked Staff Tries to Work
+- **Scenario**: Membership and/or staff profile is REVOKED but the person tries to work.
 - **Trigger**: START_WORK attempted.
 - **Expected Behavior**: START_WORK denied.
 - **Owner**: Staff Profile + Work Start orchestration

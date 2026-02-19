@@ -46,7 +46,7 @@ They do **not** expect:
 ## Constraints & Reality
 
 - Connectivity can be unstable; some actions sync later.
-- Staff can be disabled or leave the business, but history must remain traceable.
+- Staff can leave the business (membership revoked), but history must remain traceable.
 - Multi-branch tenants need clarity on “where” an action occurred.
 
 The system cannot prevent every mistake, but it must preserve trustworthy evidence.
@@ -61,4 +61,3 @@ Modula supports this by:
 - enforcing strict tenant isolation and privileged read access (owner/admin)
 
 Audit logs support accountability and dispute resolution. They are not a substitute for reporting.
-

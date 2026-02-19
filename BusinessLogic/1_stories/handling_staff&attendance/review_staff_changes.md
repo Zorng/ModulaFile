@@ -6,8 +6,7 @@ In a real business, “who has access” is not a static fact.
 
 Roles change.
 Branch assignments change.
-People get disabled temporarily.
-People leave and are archived.
+People are invited, accept, and later get removed (membership revoked).
 
 When something goes wrong, owners and managers often ask:
 - “Who changed this?”
@@ -25,7 +24,7 @@ The owner suspects there was an access mistake or needs clarity about staff hist
 Examples:
 - a cashier says they were blocked unexpectedly
 - someone operated in a branch they should not have
-- a manager wants to confirm when a staff member was disabled
+- a manager wants to confirm when a staff member’s access was revoked
 - the roster looks different and the owner wants to know why
 
 The owner needs a way to review staff-related changes without guessing.
@@ -63,10 +62,10 @@ So the system should keep staff change history reliable and easy to consult afte
 ## How Modula Helps
 
 Modula helps by keeping a stable record of staff-related actions such as:
-- staff created
+- member invited / invite accepted
 - role changed
 - branch access granted/revoked
-- staff disabled/archived
+- membership revoked (removed from active roster)
 
 This gives owners and managers a clear source of truth when questions arise, without turning the product into a surveillance tool.
 
@@ -80,4 +79,3 @@ This gives owners and managers a clear source of truth when questions arise, wit
 - replacing human management judgment
 
 This story is only about **making staff access changes traceable and explainable**.
-

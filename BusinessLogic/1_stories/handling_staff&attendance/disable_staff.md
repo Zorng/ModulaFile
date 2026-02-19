@@ -1,4 +1,4 @@
-# Disabling a Staff Member Immediately
+# Revoking Staff Access Immediately
 
 ## Context
 
@@ -42,7 +42,7 @@ They do **not** expect:
 - to rely on staff to log out voluntarily
 - to permanently erase a person from history
 
-Disabling is about safety and control, not punishment.
+Revoking access is about safety and control, not punishment.
 
 ---
 
@@ -62,7 +62,7 @@ So the system must:
 
 ## How Modula Helps
 
-Modula supports this by making “Disable staff” a first-class action that:
+Modula supports this by making **membership revocation** take immediate effect for operational safety:
 - immediately prevents future operational actions by that person
 - keeps historical records unchanged and auditable
 - allows managers/owners to resolve responsibilities safely (without pretending they never existed)
@@ -73,10 +73,9 @@ This ensures the business can respond to real-world change without breaking syst
 
 ## What This Story Is Not About
 
-- archiving staff (roster cleanup)
+- deleting staff history
 - invitations or account signup flows
 - payroll or HR paperwork
 - detailed dispute resolution
 
 This story is only about **immediate operational blocking** when the business needs it.
-

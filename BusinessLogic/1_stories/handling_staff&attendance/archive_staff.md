@@ -1,4 +1,4 @@
-# Archiving a Staff Member (History Preserved)
+# Revoking Staff Workspace Access (History Preserved)
 
 ## Context
 
@@ -39,7 +39,7 @@ The owner expects:
 - the staff member disappears from active lists used for daily operations
 - historical records remain correct and readable
 - the system does not “rewrite the past”
-- the action is auditable (who archived, when)
+- the action is auditable (who revoked access, when)
 
 They do **not** expect:
 - to delete records manually
@@ -57,13 +57,14 @@ Staff may still have unfinished responsibilities:
 The system must avoid a dangerous illusion:
 > “This person is gone, so their responsibilities disappeared too.”
 
-Even when someone is archived, operational truth must remain intact.
+Even when someone’s access is revoked, operational truth must remain intact.
 
 ---
 
 ## How Modula Helps
 
-Modula supports archiving by:
+Modula supports access revocation by:
+- revoking tenant membership (and/or branch assignment) to remove workspace access,
 - separating “active roster visibility” from “historical existence”
 - preserving identity and history for audit and reporting
 - ensuring operational responsibilities are handled explicitly (not erased)
@@ -74,10 +75,9 @@ This keeps daily operations clean while protecting the integrity of business his
 
 ## What This Story Is Not About
 
-- disabling staff for immediate blocking (temporary access pause)
-- rehiring or reactivating policy decisions
+- deleting staff history
+- rehiring or reactivating policy decisions (this is handled as a new invite/grant of membership)
 - payroll/HR systems
 - performance evaluation
 
 This story is only about **removing someone from the active roster without deleting history**.
-

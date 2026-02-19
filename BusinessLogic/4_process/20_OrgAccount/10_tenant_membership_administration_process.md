@@ -142,8 +142,12 @@ This process provides one stable orchestration for March MVP.
 1. Authorization gate: Access Control must ALLOW `tenant.membership.revoke`.
 2. Validate member exists and is not already REVOKED.
 3. Enforce safety invariant: cannot revoke the last ACTIVE `OWNER` membership for the tenant.
-4. Set membership `status = REVOKED`.
-5. Audit MEMBER_REVOKED.
+4. March baseline safety check (recommended): do not revoke membership while the member has active operational responsibilities:
+   - active attendance session, or
+   - open cash session in any branch.
+   If present, deny with a clear reason (example: `MEMBER_HAS_ACTIVE_RESPONSIBILITIES`) and require close-out first.
+5. Set membership `status = REVOKED`.
+6. Audit MEMBER_REVOKED.
 
 **Rule: Immediate effect**
 - Access Control must deny the next sensitive request in that tenant context.

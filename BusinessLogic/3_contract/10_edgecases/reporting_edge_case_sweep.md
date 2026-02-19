@@ -127,13 +127,13 @@ It prevents "report drift" where multiple modules compute the same totals differ
 - **Owner**: Inventory (restock metadata) + Reporting (aggregation/presentation)
 - **March**: Yes
 
-### EC-REP-06 — Archived/Disabled Staff Must Not Break Attendance Reports
-- **Scenario**: A staff member is disabled or archived after leaving the business.
+### EC-REP-06 — Revoked Staff Must Not Break Attendance Reports
+- **Scenario**: A staff member’s membership is revoked after leaving the business.
 - **Trigger**: Manager views a time window that includes that staff member's history.
 - **Expected Behavior**:
   - Historical attendance and work review summaries remain visible.
   - Staff identity is preserved for reporting (at minimum: display name and stable ID).
-  - Archiving affects active rosters, not historical reporting.
+  - Revocation affects active rosters, not historical reporting.
 - **Owner**: Staff Profile & Assignment + Work Review + Reporting
 - **March**: Yes
 

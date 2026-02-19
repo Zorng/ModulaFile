@@ -91,7 +91,7 @@ These contexts reflect how cafés actually run: shift-based staffing, frequent c
 
 ### Context: Stopping Access Immediately (Safety)
 
-8. **Disabling a Staff Member Immediately**  
+8. **Revoking Staff Access Immediately**  
    File: `BusinessLogic/1_stories/handling_staff&attendance/disable_staff.md`  
    Human situation: the owner needs to block someone from operating right now without deleting history.
 
@@ -99,7 +99,7 @@ These contexts reflect how cafés actually run: shift-based staffing, frequent c
 
 ### Context: Keeping Clean History (Roster + Accountability)
 
-9. **Archiving a Staff Member (History Preserved)**  
+9. **Revoking Staff Workspace Access (History Preserved)**  
    File: `BusinessLogic/1_stories/handling_staff&attendance/archive_staff.md`  
    Human situation: remove someone from active lists while preserving traceability of past work.
 
@@ -161,16 +161,16 @@ Covers:
 
 ---
 
-### Story 8 — Disabling a Staff Member Immediately
+### Story 8 — Revoking Staff Access Immediately
 Covers:
-- UC-SM2 Disable Staff (immediate block)
+- UC-SM3 Revoke Staff Workspace Access (immediate effect)
 - Cross-module: deny semantics on next sensitive request
 
 ---
 
-### Story 9 — Archiving a Staff Member (History Preserved)
+### Story 9 — Revoking Staff Workspace Access (History Preserved)
 Covers:
-- UC-SM3 Archive Staff (remove from active roster; keep history)
+- UC-SM3 Revoke Staff Workspace Access (remove from active roster; keep history)
 
 ---
 
@@ -216,8 +216,8 @@ They should be written under the operational context where users experience them
 | Preventing Unauthorized or Excessive Work | `BusinessLogic/1_stories/handling_staff&attendance/prevent_unauthorized&excess_work.md` | ok |
 | Configuring Branch Location for Attendance Confirmation | `BusinessLogic/1_stories/handling_staff&attendance/set_branch_gps_location.md` | ok |
 | Reviewing Attendance and Time Respecting | `BusinessLogic/1_stories/handling_staff&attendance/review_attendance&time_respection.md` | ok |
-| Disabling a Staff Member Immediately | `BusinessLogic/1_stories/handling_staff&attendance/disable_staff.md` | ok |
-| Archiving a Staff Member (History Preserved) | `BusinessLogic/1_stories/handling_staff&attendance/archive_staff.md` | ok |
+| Revoking Staff Access Immediately | `BusinessLogic/1_stories/handling_staff&attendance/disable_staff.md` | ok |
+| Revoking Staff Workspace Access (History Preserved) | `BusinessLogic/1_stories/handling_staff&attendance/archive_staff.md` | ok |
 | Reviewing Staff Changes (Who Had Access, and When) | `BusinessLogic/1_stories/handling_staff&attendance/review_staff_changes.md` | ok |
 
 Gaps (stories to add later):

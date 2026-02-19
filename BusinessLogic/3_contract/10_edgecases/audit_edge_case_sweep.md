@@ -69,12 +69,12 @@ This contract locks the minimum “audit must be trustworthy” behaviors for Ma
 - **March**: Yes
 
 ### EC-AUD-04 — Actor Leaves / Is Disabled (History Must Stay Traceable)
-- **Scenario**: A staff account is disabled or membership revoked after actions were performed.
+- **Scenario**: A membership is revoked after actions were performed.
 - **Trigger**: Viewing old audit entries.
 - **Expected Behavior**:
   - Historical audit entries remain visible and immutable.
   - Audit entries must still reference the actor identity (at minimum `actor_id`), even if the user can no longer log in.
-  - UI may show “disabled user” but must preserve traceability.
+  - UI may show “revoked member” (or equivalent) but must preserve traceability.
 - **Owner**: Identity/HR + Audit
 - **March**: Yes
 
@@ -125,4 +125,3 @@ For March, Audit Logging must be:
 - idempotent under offline replay,
 - access-safe and tenant-isolated,
 - and explicit about time semantics.
-

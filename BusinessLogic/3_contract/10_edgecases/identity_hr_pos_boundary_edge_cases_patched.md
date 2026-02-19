@@ -111,7 +111,7 @@ It prevents contradictions like “staff ended work while drawer is open” and 
 - **March**: Yes (state safety)
 
 ### EC-BND-06 — Membership / Role Key Changes Mid-Shift
-- **Scenario**: Membership is disabled/archived, or `role_key` changes while staff is working.
+- **Scenario**: Membership is REVOKED, or `role_key` changes while staff is working.
 - **Trigger**: sensitive action (void, finalize sale, open drawer, etc.)
 - **Expected Behavior**:
   - Access Control re-check denies action if current facts/policy no longer allow it.
@@ -121,10 +121,10 @@ It prevents contradictions like “staff ended work while drawer is open” and 
 - **March**: Yes
 
 ### EC-BND-07 — Staff Archived While Still Working
-- **Scenario**: Owner archives staff who is checked-in and/or has open cash session.
-- **Trigger**: archive attempt.
+- **Scenario**: Owner/admin revokes membership for a staff member who is checked-in and/or has an open cash session.
+- **Trigger**: revoke attempt.
 - **Expected Behavior**:
-  - Block archive until responsibilities resolved (attendance ended, cash session closed).
+  - March baseline: block revocation until responsibilities are resolved (attendance ended, cash session closed).
 - **Signal**: UI message + audit log
 - **Owner**: Staff Management + Work Start/End orchestration + Cash Session
 - **March**: Strongly recommended
