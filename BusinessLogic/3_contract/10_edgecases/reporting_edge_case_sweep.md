@@ -75,7 +75,7 @@ It prevents "report drift" where multiple modules compute the same totals differ
 - **March**: Yes
 
 ### EC-REP-02 — VOID_PENDING Must Be Visible (Never Silently Hidden)
-- **Scenario**: A cashier requests a void and it is awaiting approval.
+- **Scenario**: A sale enters `VOID_PENDING` (awaiting approval in team mode, or reversal-in-progress during direct/approved void execution).
 - **Trigger**: User views sales totals for a window containing `VOID_PENDING` sales.
 - **Expected Behavior**:
   - `VOID_PENDING` sales appear as **provisional** in drill-down lists.

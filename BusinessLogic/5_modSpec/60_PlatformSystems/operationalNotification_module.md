@@ -76,16 +76,19 @@ Recipients are eligible viewers, not task owners.
 ## 5. Baseline Use Cases (Capstone 1)
 
 ### ON-01: Notify Approvers — Void Request Pending
-**Trigger:** Sale transitions to `VOID_PENDING` (void requested)  
+**Trigger:** Void request created with `status = PENDING` (Sale transitions to `VOID_PENDING`)  
 **Intent:** Attention  
 **Recipients:** all users eligible for `sale.void.approve` in `(tenant_id, branch_id)` (typically Manager + Admin)  
 **Deep Link:** void request detail / sale detail  
 **Dedupe key:** `VOID_APPROVAL_NEEDED:{branch_id}:{sale_id}`
 
+Solo mode note:
+- If Workforce is OFF for the branch (no approver pool), ON-01 is not emitted.
+
 ---
 
 ### ON-02: Notify Requester — Void Approved
-**Trigger:** Sale transitions to `VOIDED` (after approval + effects complete)  
+**Trigger:** Void request approved and Sale transitions to `VOIDED` (after effects complete)  
 **Intent:** Feedback  
 **Recipients:** the void requester  
 **Deep Link:** sale detail / receipt view showing VOIDED  

@@ -147,7 +147,7 @@ Receipt presentation must be consistent with Sale and Order state (e.g., void pe
 **Main Flow**
 1. User opens the order receipt.
 2. If sale is VOID_PENDING:
-   - receipt displays “Void Requested” indicator (non-destructive)
+   - receipt displays “Void Pending” indicator (covers both awaiting approval and reversal-in-progress)
 3. If sale is VOIDED:
    - receipt displays “VOIDED” watermark
    - receipt displays void reason (if available) and approval info (if available)
@@ -171,7 +171,7 @@ Receipt presentation must be consistent with Sale and Order state (e.g., void pe
 - R9: Historical receipts must remain consistent after branch profile or footer updates.
 - R10: Receipt must reflect sale status:
   - FINALIZED: normal receipt
-  - VOID_PENDING: “Void requested” indicator
+  - VOID_PENDING: “Void pending” indicator
   - VOIDED: “VOIDED” watermark + void details (where applicable)
 - R11: Receipt view/print must be read-only and must not mutate sale or order state.
 
@@ -184,7 +184,7 @@ Receipt presentation must be consistent with Sale and Order state (e.g., void pe
 - AC-3: Receipt shows all totals and discounts exactly matching the finalized sale.
 - AC-4: Admin can set footer text per branch and preview it.
 - AC-5: Updating footer affects future receipts only (historical receipts unchanged).
-- AC-6: VOID_PENDING receipts show a “Void requested” indicator.
+- AC-6: VOID_PENDING receipts show a “Void pending” indicator.
 - AC-7: VOIDED receipts show a clear “VOIDED” watermark and void metadata where available.
 - AC-8: Receipt is printable via browser print layout.
 

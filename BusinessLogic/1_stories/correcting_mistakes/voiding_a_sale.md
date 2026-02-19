@@ -40,6 +40,10 @@ They also understand that:
 - undoing a completed sale is sensitive
 - someone else may need to approve it
 
+Solo operation note:
+- If the branch is operated by a solo owner/admin (Workforce OFF), there may be no one else to approve.
+- In that case, Modula allows a direct void by an authorized actor, while still keeping the action fully auditable.
+
 They do **not** expect:
 - to quietly delete history
 - to invent workarounds

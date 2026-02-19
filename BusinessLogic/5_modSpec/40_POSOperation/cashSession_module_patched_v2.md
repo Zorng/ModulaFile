@@ -196,10 +196,12 @@ Cash movements are immutable and auditable.
 - Branch context is resolved
 - Branch is ACTIVE
 - Session OPEN
-- A refund/void approval exists (triggered by void/refund flow)
+- A void execution is authorized:
+  - team mode: a refund/void approval exists (triggered by void/refund flow), or
+  - solo mode (Workforce OFF): an Admin executes a direct void (no request/approve loop)
 
 **Main Flow:**
-1. Manager/Admin reviews refund/void approval request.
+1. Manager/Admin reviews refund/void approval request (team mode).
 2. Approves or rejects.
 3. If approved:
    - System records REFUND_CASH movement linked to sale.

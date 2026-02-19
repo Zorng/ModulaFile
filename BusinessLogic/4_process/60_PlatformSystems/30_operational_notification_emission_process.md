@@ -59,13 +59,13 @@ Each emission attempt provides:
 ## Baseline Notification Types (Capstone 1)
 
 ### ON-01: Void Request Pending (Notify Approvers)
-- **Trigger**: Sale transitions to `VOID_PENDING` (void requested)
+- **Trigger**: Void request created with `status = PENDING` (Sale transitions to `VOID_PENDING`)
 - **Recipients**: approver pool for `sale.void.approve` in `(tenant_id, branch_id)` (typically Manager + Admin)
 - **Deep Link**: sale/void request detail
 - **Dedupe key**: `VOID_APPROVAL_NEEDED:{branch_id}:{sale_id}`
 
 ### ON-02: Void Approved (Notify Requester)
-- **Trigger**: Sale transitions to `VOIDED` (after approval and effects complete)
+- **Trigger**: Void request approved and Sale transitions to `VOIDED` (after effects complete)
 - **Recipients**: void requester (actor who initiated the void request)
 - **Deep Link**: sale detail / receipt view showing VOIDED
 - **Dedupe key**: `VOID_APPROVED:{branch_id}:{sale_id}`

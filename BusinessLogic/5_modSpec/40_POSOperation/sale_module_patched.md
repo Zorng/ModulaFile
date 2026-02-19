@@ -522,6 +522,7 @@ If payment method is KHQR:
 - Sale is FINALIZED
 - Sale payment method is eligible for void workflow
 - Branch context active
+- Team mode: Workforce is enabled for the branch (a separate approver pool exists)
 
 **Main Flow**
 1. Cashier opens an order and selects “Request void”.
@@ -536,6 +537,30 @@ If payment method is KHQR:
 - Void request is recorded (PENDING)
 - Sale is VOID_PENDING
 - No reversal effects occur yet
+
+---
+
+### UC-7B — Direct Void (Solo Mode; No Approval Loop)
+**Actors:** Admin
+
+**Preconditions**
+- Sale is FINALIZED
+- Sale payment method is eligible for void workflow
+- Branch context active
+- Solo mode: Workforce is OFF for the branch (no request/approve loop)
+
+**Main Flow**
+1. Admin opens an order and selects “Void sale”.
+2. Admin provides a reason.
+3. System executes the void orchestration immediately:
+   - Sale status transitions through `VOID_PENDING` as needed for safe execution and retry handling.
+   - Cash refund movement recorded (Cash Session module).
+   - Inventory reversal executed (if inventory deduction was applied on finalize).
+4. System records void metadata for audit (actor + reason).
+
+**Postconditions**
+- Sale is `VOIDED` and effects reversed once.
+- No “waiting for approval” notification is emitted (no approver gap in solo mode).
 
 ---
 
@@ -697,7 +722,9 @@ If payment method is KHQR:
 - FR-10: Inventory deduction executes on finalize only when the sale produces `deduction_lines` (from Menu composition)
 - FR-11: Offline finalize is safe and idempotent (pay-first only)
 - FR-12: Draft carts do not pollute database
-- FR-13: Cashier can request void; Manager/Admin can approve/reject
+- FR-13: Voiding is explicit and auditable:
+  - team mode (Workforce ON): Cashier can request void; Manager/Admin approves/rejects
+  - solo mode (Workforce OFF): Admin can execute direct void (no request/approve loop)
 - FR-14: Voiding KHQR sales is blocked in Capstone I
 - FR-15: Voiding is blocked if related cash session is CLOSED
 - FR-16: Approving void marks the order VOIDED and reverses cash/inventory exactly once
@@ -717,7 +744,8 @@ If payment method is KHQR:
 - AC-7: Pay-first finalize creates an order in IN_PREP
 - AC-8: Order status can transition IN_PREP→READY→DELIVERED without changing sale totals
 - AC-9: Clicking an order opens its eReceipt
-- AC-10: Cashier can submit void request; sale shows VOID_PENDING badge
+- AC-10: Team mode: Cashier can submit void request; sale shows VOID_PENDING badge
+- AC-10B: Solo mode: Admin can void directly; no “waiting for approval” state/notification is required
 - AC-11: Manager/Admin can approve void only for CASH sales with OPEN cash session
 - AC-12: Approving void sets sale VOIDED, order VOIDED, and reverses effects; audit logged
 - AC-13: Rejecting void restores sale FINALIZED and keeps fulfillment unchanged
@@ -740,6 +768,9 @@ If payment method is KHQR:
 | Void | Logical reversal only |
 
 ---
+
+Note:
+- Void request records are created in team mode (request/approve workflow). Solo-mode direct void may record void metadata without creating a separate pending request record.
 
 ## 9. Out of Scope
 - Split payments

@@ -32,7 +32,9 @@ Related contracts:
 
 ## 2. Trigger
 
-**Primary trigger:** Manager/Admin approves a void request
+**Primary triggers:**
+- Manager/Admin approves a void request (team mode), or
+- Admin executes a direct void (solo mode; Workforce OFF)
 
 > Important:
 > - Void *request* does **not** trigger reversals
@@ -41,7 +43,8 @@ Related contracts:
 This preserves financial correctness and prevents unauthorized truth changes.
 
 OperationalNotification note:
-- When a void is requested and the Sale transitions to `VOID_PENDING`, the system should emit a best-effort in-app notification to the approver pool (see OperationalNotification process). This is a signal only; approval must still re-check current state.
+- When a void request is created in `PENDING` and the Sale transitions to `VOID_PENDING`, the system should emit a best-effort in-app notification to the approver pool (see OperationalNotification process). This is a signal only; approval must still re-check current state.
+- In solo mode, there is no "approver pool" waiting gap; ON-01 should not be emitted.
 
 ---
 
@@ -62,7 +65,7 @@ OperationalNotification note:
 
 - Sale exists
 - Sale is in `FINALIZED` or `VOID_PENDING` state
-- Void has been **explicitly approved** by an authorized role
+- Void has been **explicitly approved** by an authorized role (team mode), or the actor is authorized to execute a direct void (solo mode)
 - Sale has not already been VOIDED
 - Branch context is valid
 - March baseline business rules:
@@ -82,6 +85,11 @@ Failure to meet preconditions aborts the process with **no partial reversals**.
 No inventory or cash reversal occurs before approval.
 
 **March safety rule:** sale becomes `VOIDED` only when required compensating effects (inventory + cash) are recorded successfully.
+
+Solo mode clarification (Workforce OFF):
+- If the branch is operating in solo mode (Workforce entitlement is OFF), Modula does not require a request/approve loop.
+- An authorized actor executes a direct void and provides the void reason.
+- The system still records approval metadata (actor + reason) for audit, but there is no pending-approval waiting gap.
 
 ---
 
