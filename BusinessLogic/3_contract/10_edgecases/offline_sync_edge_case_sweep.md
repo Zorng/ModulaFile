@@ -15,6 +15,7 @@
   - `BusinessLogic/2_domain/60_PlatformSystems/policy_domain.md`
 - **Related Processes**:
   - `BusinessLogic/4_process/60_PlatformSystems/60_offline_operation_queue_process.md`
+  - `BusinessLogic/4_process/60_PlatformSystems/65_offline_sync_pull_hydration_process.md`
   - `BusinessLogic/4_process/60_PlatformSystems/70_offline_sync_replay_process.md`
 
 ---
@@ -46,6 +47,15 @@ This contract locks the minimum offline behaviors needed for March:
   - Backend applies the operation exactly once using `client_op_id`.
   - Duplicate submissions return the existing result.
 - **Owner**: Offline Sync + backend modules
+- **March**: Yes
+
+### EC-OS-01B — Client Operation ID Reused with Different Payload
+- **Scenario**: A client (bug or malicious) reuses the same `client_op_id` for a different payload.
+- **Trigger**: Replay/push receives `client_op_id` that already exists but the payload fingerprint differs.
+- **Expected Behavior**:
+  - Backend rejects deterministically (no partial apply).
+  - Return a specific reason (example: `CLIENT_OP_ID_REUSE_WITH_DIFFERENT_PAYLOAD`) so the client can surface a non-retryable error.
+- **Owner**: Offline Sync + Idempotency gate
 - **March**: Yes
 
 ### EC-OS-02 — Cached Data Is Stale (Menu / Policy / Branch Status)
@@ -97,6 +107,54 @@ This contract locks the minimum offline behaviors needed for March:
 
 ---
 
+### EC-OS-07 — Pull Cursor Invalid (Reset Required)
+- **Scenario**: Client stores a cursor but the server can no longer honor it (feed retention window, reset, or token corruption).
+- **Trigger**: Client calls pull sync with an invalid cursor.
+- **Expected Behavior**:
+  - Server rejects deterministically with a “cursor invalid / reset required” reason.
+  - Client performs a branch rehydration reset (bootstrap pull with no cursor) and then resumes incremental pulls.
+  - No silent partial hydration with missing ranges.
+- **Owner**: Offline Sync + backend feed producer
+- **March**: Yes
+
+### EC-OS-08 — Module Scope Drift (Scope Hash Mismatch)
+- **Scenario**: Client changes requested `module_scopes` (or the app version changes scope composition) but attempts to reuse the old cursor.
+- **Trigger**: Pull sync request where `cursor.module_scope_hash` != `hash(module_scopes)`.
+- **Expected Behavior**:
+  - Server rejects with “scope mismatch / reset required”.
+  - Client rehydrates using the new scope set (bootstrap) and records the new scope hash.
+- **Owner**: Offline Sync
+- **March**: Yes
+
+### EC-OS-09 — Tombstones Must Be Applied
+- **Scenario**: Server emits a TOMBSTONE (hard removal) but the client ignores it or cannot apply it.
+- **Trigger**: Pull sync returns `op_kind = TOMBSTONE`.
+- **Expected Behavior**:
+  - Client must remove the local record (or mark deleted) so the entity does not reappear in active pickers.
+  - Applying a tombstone for a missing local entity is a no-op (must not error).
+- **Owner**: Offline Sync + affected module
+- **March**: Yes
+
+### EC-OS-10 — Fan-Out Correctness (Tenant-Scoped Catalog → Branch Streams)
+- **Scenario**: A tenant-scoped catalog change (e.g., menu catalog update) must be visible for all active branches, but a device only syncs one branch stream.
+- **Trigger**: Admin updates tenant-scoped catalog data.
+- **Expected Behavior**:
+  - The change is fanned out into each active branch stream.
+  - A device syncing Branch A sees the update when pulling Branch A; it does not need to poll tenant scope separately.
+- **Owner**: Offline Sync + catalog producers (Menu/Policy/etc.)
+- **March**: Yes
+
+### EC-OS-11 — Nudge Channel Lost (Convergence Still Required)
+- **Scenario**: The device does not receive sync nudges (SSE/WebSocket), or the stream disconnects.
+- **Trigger**: Connectivity issues or background suspension.
+- **Expected Behavior**:
+  - Client still converges via pull-on-resume/reconnect and periodic pull while online.
+  - No correctness dependence on continuous streaming.
+- **Owner**: Offline Sync + client UX
+- **March**: Yes
+
+---
+
 ## Summary
 
 For March, offline sync must be:
@@ -104,4 +162,3 @@ For March, offline sync must be:
 - honest about stale data,
 - safe under tenant/branch context changes,
 - and explicit about failures.
-

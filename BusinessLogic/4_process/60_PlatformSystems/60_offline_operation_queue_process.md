@@ -38,9 +38,12 @@ Triggered when a write operation is attempted and the device is offline or the s
 - `actor_id`
 - `tenant_id`
 - `branch_id` (required for branch-scoped actions)
+- `device_id`
 - `operation_type`
 - `payload`
 - `client_op_id` (idempotency key)
+- `payload_hash` (or equivalent; used to detect client_op_id reuse with different payload)
+- `depends_on[]` (optional; explicit dependency edges for deterministic batch replay)
 - `occurred_at` (client time)
 
 ---
@@ -98,4 +101,3 @@ Local effects must not be mistaken for authoritative backend truth.
 ## Related Contracts
 
 - `BusinessLogic/3_contract/10_edgecases/offline_sync_edge_case_sweep.md`
-

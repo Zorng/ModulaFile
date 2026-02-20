@@ -16,6 +16,7 @@ It provides:
 - durable offline queueing
 - idempotent replay on reconnect
 - clear UI signals about offline/online state
+- authoritative read-model hydration (pull) so offline-first clients converge
 
 This is a resilience layer, not a business workflow.
 
@@ -25,6 +26,7 @@ Authoritative references:
 - Edge cases: `BusinessLogic/3_contract/10_edgecases/offline_sync_edge_case_sweep.md`
 - Processes:
   - `BusinessLogic/4_process/60_PlatformSystems/60_offline_operation_queue_process.md`
+  - `BusinessLogic/4_process/60_PlatformSystems/65_offline_sync_pull_hydration_process.md`
   - `BusinessLogic/4_process/60_PlatformSystems/70_offline_sync_replay_process.md`
 
 ---
@@ -36,6 +38,7 @@ Authoritative references:
 - Durable local storage of queued ops
 - Idempotent replay using `client_op_id`
 - Local cache of menu + policy + context for offline sale computation
+- Pull-based hydration of authoritative server changes into local cache
 - UI exposure of offline/online state + pending count
 
 ### This module does NOT cover (Capstone 1)
@@ -89,9 +92,68 @@ If an operation is not supported offline, the UI must block it with a clear mess
 Offline UX may continue using cached facts, but replay is the source of truth.
 Failures must be surfaced to the user.
 
+### 4.5 Two-Lane Writes (Online + Offline)
+
+Offline-first clients must support two write lanes:
+- **Direct online writes**: feature endpoints guarded by idempotency keys.
+- **Offline replay writes**: queued operations pushed as an ordered batch for deterministic replay.
+
+Both lanes must converge into the same backend truth and must be observable via pull hydration.
+
 ---
 
-## 5. Functional Requirements
+## 5. Interfaces (Conceptual)
+
+This module is an umbrella capability with two backend interfaces.
+
+### 5.1 Push Sync (Replay)
+
+`SyncPushBatch(tenant_id, device_id, operations[]) -> results[]`
+
+Where each operation includes:
+- `client_op_id` (idempotency anchor)
+- `type` (module operation kind)
+- `payload`
+- `branch_id` (when branch-scoped)
+- optional `depends_on[]` (dependency edges within a batch)
+- `payload_hash` (or equivalent) to detect client_op_id reuse with different payload
+
+Rules:
+- operations are processed in deterministic order (FIFO per device; stable order within batch),
+- duplicates are no-op (return existing result),
+- same `client_op_id` with a different payload is rejected deterministically,
+- dependency violations are reported (dependent ops must not be applied silently).
+
+### 5.2 Pull Sync (Hydration)
+
+`SyncPull(tenant_id, branch_id, device_id, cursor?, module_scopes[]) -> {changes[], next_cursor}`
+
+Where:
+- `cursor` is an opaque resume token for the branch stream,
+- `module_scopes` filters which domains/entities are included,
+- `changes[]` is ordered and includes tombstones for hard removals.
+
+Rules:
+- scope drift invalidates cursor use (client must reset/rehydrate),
+- tenant isolation must be enforced (no cross-tenant leak),
+- branch streams are the unit of sync; tenant-scoped catalog changes that affect all branches are fanned out.
+
+---
+
+## 6. Triggering Pull (Degradation-Safe)
+
+Clients must pull:
+- at bootstrap (first load of a branch),
+- on app resume / reconnect,
+- periodically while online (low frequency),
+- and optionally upon receiving a lightweight “sync nudge” signal.
+
+Important:
+- a nudge channel is a trigger only; it must not be relied upon to deliver full state.
+
+---
+
+## 7. Functional Requirements
 
 ### Queue & Storage
 - FR-1: Offline operations are stored durably and survive app restart.
@@ -113,7 +175,7 @@ Failures must be surfaced to the user.
 
 ---
 
-## 6. Use Cases (Selected)
+## 8. Use Cases (Selected)
 
 ### UC-1 — Offline Finalize Sale
 1. Cashier finalizes sale offline.
@@ -138,7 +200,7 @@ Failures must be surfaced to the user.
 
 ---
 
-## 7. Acceptance Criteria
+## 9. Acceptance Criteria
 
 - AC-1: Offline sales sync exactly once (no duplicates).
 - AC-2: Cash session open/close works offline and syncs in order.
@@ -148,7 +210,7 @@ Failures must be surfaced to the user.
 
 ---
 
-## 8. Audit Events
+## 10. Audit Events
 
 Offline Sync does not define new business audit events.
 Business modules emit audit events when operations are applied.
