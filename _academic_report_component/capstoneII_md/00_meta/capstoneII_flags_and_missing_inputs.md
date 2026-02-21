@@ -22,6 +22,7 @@ Status legend:
 | FLAG-PM-01 | You | PM | `_academic_report_component/capstoneII_md/01_introduction/1.md` | Key milestone dates (midterm checkpoint, pilot target dates) | OPEN |
 | FLAG-PM-02 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Planning changes from Capstone I → Capstone II (scope cuts, reprioritization) | OPEN |
 | FLAG-PM-03 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Capstone II team roles/responsibilities (confirm if changed) | OPEN |
+| FLAG-REF-01 | You | REF | `_academic_report_component/capstoneII_md/03_literature_review/3.md` | Add citations for offline-first sync, idempotency under retries, and outbox pattern | OPEN |
 
 ---
 
