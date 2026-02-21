@@ -25,6 +25,13 @@ Status legend:
 | FLAG-REF-01 | You | REF | `_academic_report_component/capstoneII_md/03_literature_review/3.md` | Add citations for offline-first sync, idempotency under retries, and outbox pattern | OPEN |
 | FLAG-FIG-03 | You | FIG | `_academic_report_component/capstoneII_md/04_project_analysis_and_concepts/4.md` | Updated use case diagram figure(s) for Capstone II | OPEN |
 | FLAG-FIG-04 | You | FIG | `_academic_report_component/capstoneII_md/04_project_analysis_and_concepts/4.md` | Updated activity diagram figure(s) for Capstone II | OPEN |
+| FLAG-PM-04 | You | PM | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Jira workflow description used in Capstone II | OPEN |
+| FLAG-OPS-03 | You | OPS | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Frontend hosting provider selection (or decision criteria) | OPEN |
+| FLAG-OPS-04 | You | OPS | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | OTP provider selection for account verification | OPEN |
+| FLAG-OPS-05 | You | OPS | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | CDN approach/provider for caching object storage assets | OPEN |
+| FLAG-BE-05 | You | BE | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Billing payment verification approach summary (Bakong payment gate) | OPEN |
+| FLAG-FIG-05 | You | FIG | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Updated physical architecture diagram for Capstone II | OPEN |
+| FLAG-FIG-06 | You | FIG | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Updated logical architecture diagram for Capstone II | OPEN |
 
 ---
 
