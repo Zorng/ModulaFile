@@ -33,6 +33,7 @@ Status legend:
 | FLAG-FIG-05 | You | FIG | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Updated physical architecture diagram for Capstone II | OPEN |
 | FLAG-FIG-06 | You | FIG | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Updated logical architecture diagram for Capstone II | OPEN |
 | FLAG-FIG-07 | You | FIG | `_academic_report_component/capstoneII_md/06_implementation/6.md` | Export and finalize key sequence diagrams (sync push/pull trigger; outbox; duplicate-safe retry) for Word | OPEN |
+| FLAG-EVAL-01 | You | EVAL | `_academic_report_component/capstoneII_md/07_conclusion/7.md` | Evaluation summary (tests performed, demoable flows, pilot feedback if any) | OPEN |
 
 ---
 
