@@ -32,6 +32,7 @@ Status legend:
 | FLAG-BE-05 | You | BE | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Billing payment verification approach summary (Bakong payment gate) | OPEN |
 | FLAG-FIG-05 | You | FIG | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Updated physical architecture diagram for Capstone II | OPEN |
 | FLAG-FIG-06 | You | FIG | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Updated logical architecture diagram for Capstone II | OPEN |
+| FLAG-FIG-07 | You | FIG | `_academic_report_component/capstoneII_md/06_implementation/6.md` | Export and finalize key sequence diagrams (sync push/pull trigger; outbox; duplicate-safe retry) for Word | OPEN |
 
 ---
 
