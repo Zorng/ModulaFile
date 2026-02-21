@@ -19,6 +19,7 @@ Status legend:
 
 | Flag ID | Owner | Category | Where (file / section) | What’s Missing | Status |
 |---|---|---|---|---|---|
+| FLAG-PM-01 | You | PM | `_academic_report_component/capstoneII_md/01_introduction/1.md` | Capstone II start/end dates + key milestones (midterm checkpoint, pilot target dates) | OPEN |
 
 ---
 
@@ -78,4 +79,3 @@ Status legend:
 ### REF — References
 
 - **FLAG-REF-01** — New references to add for Capstone II (offline-first replication, outbox pattern, idempotency, modular architecture), and which ones to keep from Capstone I.
-
