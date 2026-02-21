@@ -19,7 +19,9 @@ Status legend:
 
 | Flag ID | Owner | Category | Where (file / section) | What’s Missing | Status |
 |---|---|---|---|---|---|
-| FLAG-PM-01 | You | PM | `_academic_report_component/capstoneII_md/01_introduction/1.md` | Capstone II start/end dates + key milestones (midterm checkpoint, pilot target dates) | OPEN |
+| FLAG-PM-01 | You | PM | `_academic_report_component/capstoneII_md/01_introduction/1.md` | Key milestone dates (midterm checkpoint, pilot target dates) | OPEN |
+| FLAG-PM-02 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Planning changes from Capstone I → Capstone II (scope cuts, reprioritization) | OPEN |
+| FLAG-PM-03 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Capstone II team roles/responsibilities (confirm if changed) | OPEN |
 
 ---
 
