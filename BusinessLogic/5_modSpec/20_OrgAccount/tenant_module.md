@@ -17,10 +17,23 @@ The Tenant module defines the **business workspace boundary** in Modula.
 A **Tenant** represents a real business using the POS. It is the root context for:
 - data isolation (no cross-tenant access),
 - organizational configuration,
+- tenant-layer workspace entry,
 - future subscription ownership (later),
 - and authorization context (Access Control consumes tenant facts).
 
 This module is intentionally **not** a billing system and does not implement payments.
+
+### Workspace model note
+
+In the Modula workspace model:
+- login lands the user in **account layer**
+- selecting a tenant enters **tenant layer**
+- entering a branch from tenant layer enters **branch layer**
+
+Tenant layer is the workspace for:
+- tenant-scoped management,
+- branch entry,
+- and branch-targeted management actions where the affected branch is selected explicitly.
 
 ---
 
@@ -72,6 +85,17 @@ Minimum fields:
 
 **Design rule:** Membership is keyed by `auth_account_id` to keep authorization deterministic.
 
+### 3.3 Tenant Layer Workspace (Behavioral Concept)
+Tenant layer is not a separate persistence entity. It is the active tenant-scoped workspace formed by:
+- authenticated identity,
+- selected `tenant_id`,
+- ACTIVE tenant membership,
+- and role-shaped access to management surfaces and branch entry.
+
+Important:
+- tenant layer does not imply active branch context
+- branch-scoped management actions may still be initiated here, but must supply explicit `target_branch_id` or `target_branch_ids`
+
 ---
 
 ## 4. Invariants
@@ -118,6 +142,7 @@ Minimum fields:
 **Goal:** Update business-facing metadata.
 
 **Allowed fields:** business name, logo, contact info.  
+**Workspace rule:** performed in tenant layer; no branch context required.  
 **Authorization:** Access Control action `tenant.updateProfile` (typically ADMIN).  
 **Audit:** record previous + new values (or diffs).
 
@@ -196,11 +221,11 @@ Canonical process reference:
 
 ### Tenant queries
 - Get tenant by id (for headers, receipts, reports)
-- List tenants for actor (for tenant selection at login)
+- List tenants for actor (for account-layer workspace entry)
 
 ### Membership queries (critical for Access Control)
 - Get membership(`membership_kind`, `role_key`, `membership_status`) by (tenant_id, auth_account_id)
-- List memberships for tenant (admin UI)
+- List memberships for tenant (tenant-layer admin UI)
 - List tenants for actor (where membership ACTIVE)
 
 ---

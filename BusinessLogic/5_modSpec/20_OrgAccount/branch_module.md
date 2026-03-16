@@ -14,11 +14,20 @@ The Branch module manages the **lifecycle state and profile** of branches under 
 - Maintaining branch profile (name, address, contact)
 - Controlling branch operational status (ACTIVE/FROZEN)
 - Providing branch identity as a consistent reference for branch-scoped modules
+- Defining the branch-layer operational workspace entered from tenant layer
 
 **Branch provisioning is NOT user-driven.** Branch records are created by the system when:
 - A tenant completes first-branch paid activation (`branch activation`; branch provisioned after payment confirmation), and/or
 - A tenant purchases an `additional branch subscription` (additional branch activation), and/or
 - Developers/system operators provision branches manually (Capstone I temporary approach)
+
+### Workspace model note
+
+In the Modula workspace model:
+- branch entry begins from **tenant layer**
+- entering a branch activates **branch layer**
+- branch layer is used for operational workflows
+- branch-scoped management actions do not require branch entry; they may be initiated from tenant layer with explicit target branch
 
 ---
 
@@ -73,9 +82,11 @@ Any operation that creates or mutates branch-scoped operational records requires
 **Preconditions:**
 - Actor authenticated as Admin
 - Branch exists (provisioned)
+- Tenant context active
+- Target branch selected explicitly in tenant layer management flow
 
 **Main Flow:**
-1. Admin selects an existing branch.
+1. Admin selects an existing target branch from tenant layer.
 2. Admin updates branch profile fields (name/address/contact).
 3. System validates and persists.
 
@@ -94,9 +105,11 @@ Any operation that creates or mutates branch-scoped operational records requires
 **Preconditions:**
 - Actor authenticated as Admin
 - Branch exists and is `ACTIVE`
+- Tenant context active
+- Target branch selected explicitly in tenant layer management flow
 
 **Main Flow:**
-1. Admin selects branch → “Freeze branch”.
+1. Admin selects target branch → “Freeze branch”.
 2. System sets branch to `FROZEN`.
 
 **Postconditions:**
@@ -118,9 +131,11 @@ Any operation that creates or mutates branch-scoped operational records requires
 **Preconditions:**
 - Actor authenticated as Admin
 - Branch exists and is `FROZEN`
+- Tenant context active
+- Target branch selected explicitly in tenant layer management flow
 
 **Main Flow:**
-1. Admin selects branch → “Unfreeze branch”.
+1. Admin selects target branch → “Unfreeze branch”.
 2. System sets branch to `ACTIVE`.
 
 **Postconditions:**
@@ -135,7 +150,7 @@ Any operation that creates or mutates branch-scoped operational records requires
 
 **Main Flow:**
 1. System returns accessible branches:
-   - Branch selection list is derived from **explicit branch assignments** (for all roles).
+   - Branch entry list is derived from **explicit branch assignments** (for all roles).
    - Filter to branches where:
      - BranchAssignment is ACTIVE for the actor, and
      - Branch status is ACTIVE (not FROZEN)
@@ -143,6 +158,7 @@ Any operation that creates or mutates branch-scoped operational records requires
 **Acceptance Criteria:**
 - Branch visibility respects explicit assignment (no implicit “Admin can access all branches”).
 - To grant “all branches”, create assignments for every branch.
+- This list is used from tenant layer to enter branch-layer operations.
 
 ---
 

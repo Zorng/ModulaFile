@@ -1,4 +1,4 @@
-# 10 — Update Branch Policy (Branch-Scoped)
+# 10 — Update Branch Policy (Tenant-Context Management; Branch-Scoped Effect)
 
 ## Purpose
 
@@ -24,14 +24,14 @@ Derived primarily from:
 
 - Policy (configuration truth for VAT/FX/rounding)
 - Access Control (authorization to update)
-- Tenant/Branch (branch context + freeze status)
+- Tenant/Branch (tenant context + explicit target branch + freeze status)
 - Audit Logging (accountability for changes)
 
 ---
 
 ## When This Process Runs
 
-Triggered when an Admin updates tax/currency settings for a selected branch.
+Triggered when an Admin updates tax/currency settings for a selected branch from tenant layer.
 
 This is not a scheduled job for March.
 
@@ -40,17 +40,17 @@ This is not a scheduled job for March.
 ## Inputs
 
 - `tenant_id`
-- `branch_id`
+- `branch_id` (explicit target branch selected in tenant layer)
 - `policy_patch` (partial update; only changed fields provided)
 
 ---
 
 ## Orchestration Steps
 
-### Step 1 — Validate branch context + authorization
+### Step 1 — Validate tenant context + target branch authorization
 
 - Ensure `tenant_id` and `branch_id` are present.
-- Ensure the actor is authorized to update branch policies for the selected branch.
+- Ensure the actor is authorized in tenant context and allowed to update branch policies for the selected target branch.
 - If the branch is frozen, deny the update (read may still be allowed).
 
 ---
@@ -82,7 +82,8 @@ No partial writes are allowed.
 
 Write an audit event capturing:
 - actor identity
-- branch context
+- tenant context
+- target branch
 - old values and new values (for changed fields)
 
 ---

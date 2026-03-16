@@ -127,6 +127,9 @@ Examples:
 - `sale.void.approve`
 - `cashSession.open`
 - `cashSession.close`
+- `cashSession.paidIn`
+- `cashSession.paidOut`
+- `cashSession.adjust`
 - `cashSession.x.view`
 - `cashSession.z.view`
 - `inventory.receive`
@@ -149,10 +152,26 @@ Access Control classifies actions into two scopes:
   - do **not** require branch assignment
   - examples: `tenant.updateProfile`, tenant membership administration, `audit.view`, tenant-wide policy configuration (future)
 
-- **BRANCH-scoped actions**: operate on branch-scoped operational records.
+- **BRANCH-scoped actions**: operate on branch-scoped resources.
   - require `tenant_id` + `branch_id`
   - require explicit branch assignment (fail closed)
-  - examples: `sale.finalize`, `cashSession.open`, `inventory.adjust`, `reports.view`
+  - examples: `sale.finalize`, `cashSession.open`, `cashSession.paidIn`, `cashSession.paidOut`, `cashSession.adjust`, `inventory.adjust`, `reports.view`, `policy.update`
+
+Branch-scoped actions may be invoked in two workspace modes:
+- **branch-layer operational mode**
+  - active branch workspace supplies `branch_id`
+  - examples: sale, cash session, attendance
+- **tenant-layer management mode**
+  - command/UI supplies explicit target `branch_id`
+  - examples: branch policy update, branch profile update, branch-targeted inventory management, branch assignment management
+
+The authorization scope does **not** change between these modes.
+Only the way `branch_id` is supplied changes.
+
+Design note:
+- Branch-scoped authorization does not imply "session opener ownership" for cash session movement writes.
+- If a module allows the action and the actor has branch-scoped permission, the actor may operate on the branch's current OPEN session.
+- Any stricter "own session only" rule must be modeled explicitly by that module; Access Control does not infer it.
 
 Design rule:
 - If an action is BRANCH-scoped and `branch_id` is missing → deny with `BRANCH_CONTEXT_REQUIRED`.
@@ -190,7 +209,7 @@ Access Control consumes branch assignment facts:
 
 Owned by Staff Management (or a staff/organization domain), but consumed here.
 
-Branch access is **mandatory** for BRANCH-scoped operational actions.
+Branch access is **mandatory** for BRANCH-scoped actions, whether operational or tenant-layer management.
 
 ---
 
@@ -242,7 +261,7 @@ This is how Modula makes "disabled modules are read-only" enforceable without ad
 ## 4. Invariants
 
 - INV-AC0: Every authorization request must include a `tenant_id` context. `branch_id` is required only for BRANCH-scoped actions.
-- INV-AC1: Every BRANCH-scoped operational request must include a `tenant_id` and `branch_id` context.
+- INV-AC1: Every BRANCH-scoped request must include a `tenant_id` and `branch_id` context.
 - INV-AC2: A user must have an ACTIVE membership to a tenant to operate within it.
 - INV-AC3: A user must have ACTIVE branch assignment to operate within that branch (BRANCH-scoped actions only).
 - INV-AC4: If branch access cannot be verified, deny (fail closed).
@@ -311,6 +330,7 @@ If an actor is logged in and operating in a branch, and their branch assignment 
 If an actor is a valid member of a tenant but has zero branch assignments:
 - They may authenticate and select the tenant.
 - They **cannot** enter branch-scoped operational mode because no branch context can be selected.
+- They **cannot** perform tenant-layer branch-targeted management actions either, because no branch assignment can be proven.
 - They may still perform TENANT-scoped actions if permitted by role policy (example: update tenant profile).
 - Client UX: show “No branch assigned. Contact admin/manager.”
 

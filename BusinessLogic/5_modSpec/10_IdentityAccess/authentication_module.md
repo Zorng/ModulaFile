@@ -104,8 +104,8 @@ But:
 - **Identifier**: phone number (Phase 0) or email (future)
 - **Credential**: password hash + OTP verification state
 - **Session**: authenticated session (access/refresh tokens, revocation state)
-- **Tenant Context**: which tenant/workspace the user is operating in
-- **Branch Context**: which branch/location the user is operating in (if required)
+- **Tenant Context**: which tenant workspace the user is operating in
+- **Branch Context**: which branch operational workspace the user is operating in (optional until branch-layer work is entered)
 - **Membership**: link between AuthAccount and Tenant (owned by Tenant Membership)
 - **Membership Kind**: governance relationship (OWNER/MEMBER) (owned by Tenant Membership)
 - **Role Key**: tenant-scoped authorization role key (`role_key`; e.g., `ADMIN`, `MANAGER`, `CASHIER`, ...) (owned by Tenant Membership)
@@ -201,8 +201,8 @@ But:
 > These use cases exist because Modula is multi-tenant and often branch-scoped.  
 > However, this module **does not own** membership/role truth; it only checks it.
 
-#### UC-3: Select Tenant (Multi-tenant per account)
-**Goal:** Choose which tenant the user is operating in.  
+#### UC-3: Enter Tenant Workspace (Multi-tenant per account)
+**Goal:** Choose which tenant workspace the user is operating in.  
 **Main flow:**
 1. System lists tenants available to the AuthAccount (from Membership source)
 2. User selects a tenant
@@ -214,8 +214,8 @@ But:
 
 ---
 
-#### UC-4: Resolve Branch Context
-**Goal:** Choose/validate which branch the user is operating in.  
+#### UC-4: Resolve Branch Operational Context
+**Goal:** Choose/validate which branch operational workspace the user is operating in.  
 **Main flow:**
 1. System lists available branches for this user in this tenant (based on assignment rule)
 2. User selects branch
@@ -224,6 +224,8 @@ But:
 **Notes:**
 - Branch eligibility is determined by **explicit branch assignments** (no implicit "all branches" access).
 - Auth validates using assignment truth owned by Staff Management / Org domains.
+- Branch context is resolved when the user enters branch-layer operational work.
+- Tenant-layer management actions may still target branch-scoped resources without requiring active branch context in session; those commands must supply explicit target branch input.
 
 ---
 
@@ -252,6 +254,13 @@ But:
 - AuthAccount (including basic profile fields)
 - Credential state (password hash, OTP verification timestamps)
 - Session records (refresh token hash, revocation timestamp)
+
+### Session context rule (important)
+- A valid authenticated session may exist with:
+  - no tenant context yet (account layer),
+  - tenant context but no active branch context yet (tenant layer),
+  - tenant context + branch context (branch layer).
+- Authentication must not assume that every authenticated session immediately resolves to branch context.
 
 ### Stored by other modules (referenced)
 - Tenant membership, roles, branch assignments
@@ -294,7 +303,7 @@ This supports incident response and sensitive workflow accountability.
 
 ## 10. Out of Scope
 
-- Subscription payments and billing portal
+- Subscription payments and billing management
 - Plan upgrades/downgrades
 - Fine-grained permission designer / ACL editor
 - SSO / enterprise IAM

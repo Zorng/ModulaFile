@@ -28,6 +28,11 @@ During sale finalization, the **Finalize Sale** process:
 - applies them to line amounts (Sale owns money math)
 - snapshots applied discounts for audit/reporting
 
+Discount management is entered from **tenant layer**:
+- tenant context is active,
+- rule creation/editing requires explicit target branch selection,
+- branch-layer sales only consume discounts that are eligible for the active branch.
+
 ---
 
 ## Why This Exists (User Reality)
@@ -147,6 +152,7 @@ Admin configuration behavior:
 
 ### UC-1: View Discount Rules
 **Actors:** Admin, Manager, Cashier  
+**Preconditions:** tenant context active, or branch-layer read state mapped to a selected branch  
 **Flow:** list rules with name, percentage, scope, branch, schedule, status  
 **Postconditions:** none
 
@@ -156,8 +162,9 @@ Admin configuration behavior:
 **Actors:** Admin  
 **Preconditions:**
 - at least one branch exists
+- tenant context active
 **Flow:**
-1. select branch (required; rule is branch-owned)
+1. select target branch (required; rule is branch-owned)
 2. enter name, percentage, scope
 3. assign items (required if item-level)
 4. if item-level, call backend preflight `ResolveEligibleItemsForBranch(branch_id, item_ids)`
@@ -173,7 +180,7 @@ Admin configuration behavior:
 **Rules:** changes affect future sales only; rule must be effectively-inactive to edit  
 **Flow:**
 1. if rule is currently eligible, deny with `DISCOUNT_RULE_UPDATE_REQUIRES_EFFECTIVE_INACTIVE`
-2. edit properties
+2. edit properties in tenant layer for the rule's owning branch
 3. if item-level target set changes, re-run `ResolveEligibleItemsForBranch(branch_id, item_ids)`
 4. validate; save
 
@@ -181,6 +188,7 @@ Admin configuration behavior:
 
 ### UC-4: Activate / Deactivate Discount Rule
 **Actors:** Admin  
+**Preconditions:** tenant context active
 **Flow:** toggle status; save  
 **Postconditions:** eligibility updated for future sales
 
@@ -188,6 +196,7 @@ Admin configuration behavior:
 
 ### UC-5: Assign / Unassign Menu Items (Item-Level Rules)
 **Actors:** Admin  
+**Preconditions:** tenant context active
 **Flow:** select rule; add/remove menu items; validate items in branch; save
 
 ---

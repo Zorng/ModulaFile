@@ -20,6 +20,12 @@ Staff Management manages the business-facing representation of people who operat
 
 To prioritize shipping and reduce onboarding complexity, Modula adopts **explicit invite + accept** onboarding with user-owned credentials.
 
+Staff management is entered from **tenant layer**:
+- tenant context is active,
+- membership and profile management are tenant-scoped,
+- branch assignment management supplies explicit target branch information,
+- branch-layer work happens later when the user enters an assigned branch.
+
 ---
 
 ## 2. Key Boundary Clarifications
@@ -192,6 +198,7 @@ Canonical process reference:
 - Invite fails if the staff member already has an ACTIVE membership in this tenant (no duplicates).
 - Invite does not consume a concurrent staff slot.
 - StaffProfile and BranchAssignment are created only after acceptance.
+- Invite is initiated from tenant layer, not from branch-layer operations.
 
 **Audit**
 -- STAFF_INVITED
@@ -227,6 +234,7 @@ Canonical process reference:
 **Rules**
 - No hard-delete of StaffProfile.
 - Restoring access is done by granting membership again (and role/branch assignment as needed), not by "unarchive/enable" toggles.
+- This action is performed in tenant layer.
 
 **Audit**
 - MEMBER_REVOKED
@@ -239,6 +247,7 @@ Canonical process reference:
 **Goal:** Grant operational access to a branch.
 
 **Rules**
+- Tenant context is active and target branch is selected explicitly.
 - Branch must be ACTIVE.
 - Assignment is explicit and idempotent.
 
@@ -251,6 +260,7 @@ Canonical process reference:
 **Goal:** Remove operational access to a branch.
 
 **Rules**
+- Tenant context is active and target branch is selected explicitly.
 - Revocation takes effect immediately.
 - If staff is operating in that branch, next request is denied.
 

@@ -1,11 +1,11 @@
-# UX Spec — Identity, Tenant Selection, and Work Entry
+# UX Spec — Identity, Workspace Entry, and Work Entry
 
 ## Metadata
 - **Contract Type**: UX Spec
-- **Scope**: Login → tenant selection → branch selection → work entry + loss of access
+- **Scope**: Login → account layer → tenant layer → branch entry → work entry + loss of access
 - **Primary Audience**: Frontend, Backend, QA
 - **Owner(s)**: Authentication, Tenant Membership, Staff Profile & Assignment, Access Control, Work Start/End Orchestration
-- **Last Updated**: 2026-02-08
+- **Last Updated**: 2026-03-14
 - **Delivery Level**:
   - **March**: baseline behavior
   - **Later**: explicitly deferred
@@ -22,8 +22,9 @@
 
 This document defines the **UX behavior and rules** for:
 - login
-- tenant selection
-- branch selection
+- account-layer workspace entry
+- tenant-layer workspace entry
+- branch-layer workspace entry
 - loss of access
 
 It translates Identity & HR edge-case decisions into **clear UI states**, so frontend and backend stay aligned.
@@ -46,6 +47,52 @@ This spec assumes all **domain + edge-case decisions are already locked**.
 3. **Reduce friction when there is no choice**
    - Skip selection screens when only one option exists.
 
+4. **Management and operations are not the same workspace**
+   - Management actions happen in **tenant layer**.
+   - Operational actions happen in **branch layer**.
+   - Branch-scoped management still requires an explicit branch target, but does not require “entering the branch” first.
+
+---
+
+## Workspace Layer Model
+
+Modula uses three user-facing workspace layers:
+
+### Layer 1 — Account Layer
+- The user has authenticated successfully.
+- No tenant is assumed yet.
+- The user sees:
+  - invitation inbox
+  - tenants they may enter through ACTIVE memberships
+  - create business action
+
+### Layer 2 — Tenant Layer
+- The user has selected a tenant (or it was auto-selected).
+- This is the workspace for tenant-scoped management and branch entry.
+- Role shapes what is visible:
+  - `OWNER` / `ADMIN`: management surfaces + branch entry
+  - operational staff roles: branch entry only
+
+Small-screen presentation note:
+- tenant layer may be presented as a **tenant portal**
+- this is a UI shell/presentation choice, not a new business layer
+
+### Layer 3 — Branch Layer
+- The user has entered a branch workspace.
+- This is the operational workspace for:
+  - attendance check-in / check-out
+  - cash session open / close
+  - sales / checkout
+  - viewing effective branch policy / branch discount context
+
+Small-screen presentation note:
+- branch layer may be presented as a **branch portal**
+- this is a UI shell/presentation choice, not a new business layer
+
+**Important rule:**
+- Branch selection is required for **branch-layer operational work**.
+- Branch selection is **not** a mandatory universal step immediately after login.
+
 ---
 
 ## 1. Login Screen
@@ -67,7 +114,7 @@ If the user does not have an account yet:
 2. System sends OTP.
 3. User submits OTP.
 4. System verifies OTP and activates the account.
-5. User is signed in and proceeds to tenant selection.
+5. User is signed in and proceeds to the **Account layer**.
 
 ### Provisioned Staff (No Password Yet)
 Staff may be provisioned by a tenant admin before they ever log in.
@@ -85,11 +132,21 @@ Expected flow:
 
 ### Success Outcome
 - User is authenticated as an Identity.
+- User lands in the **Account layer**.
 - No tenant context is assumed yet.
 
 ---
 
-## 2. Tenant Selection Screen
+## 2. Account Layer
+
+After login or account activation, the user enters the **Account layer**.
+
+This is the workspace where the user:
+- sees accessible tenants
+- opens invitation inbox
+- creates a new business
+
+### Tenant Entry List
 
 ### When This Screen Appears
 - Identity has **more than one ACTIVE tenant membership**.
@@ -136,51 +193,95 @@ Actions:
 Provide a place for users to **accept or reject** pending tenant invites.
 
 ### When It Appears
-- From tenant selection (when no ACTIVE memberships exist)
-- As an explicit entry in tenant selection (if invites exist)
+- From account layer (when no ACTIVE memberships exist)
+- As an explicit entry in account layer (if invites exist)
 
 ### Rules
 - Each invite shows tenant name + role label.
-- Accept → membership becomes ACTIVE; re-run tenant selection.
+- Accept → membership becomes ACTIVE; re-run account layer tenant entry resolution.
 - Reject → membership remains inactive; invite is removed or marked rejected.
 
 ---
 
-## 3. Branch Selection Screen
+## 3. Tenant Layer
 
-### Special Case: Tenant Has Zero Branches
+After a tenant is selected (or auto-selected), the user enters the **Tenant layer**.
+
+This is the workspace where the user:
+- sees what they can do inside the selected tenant
+- enters a branch for operational work
+- if authorized, performs tenant management actions
+
+### 3.1 Tenant Layer Behavior by Role
+
+#### Owner / Admin
+Must be able to access:
+- tenant information
+- branch information
+- staff management (membership, shift, attendance administration)
+- inventory management
+- menu management
+- discount management
+- branch policy/configuration management
+- branch entry
+
+Management actions in this layer follow this rule:
+- tenant context is active
+- if the action affects a branch-scoped resource, the UI must require an explicit target branch (or branch set)
+
+#### Staff / Operational Roles
+Must be able to access:
+- branch entry list for branches they are assigned to
+
+They do **not** receive tenant-management surfaces by default.
+
+### 3.2 Special Case: Tenant Has Zero Branches
 
 If the selected tenant has **zero branches**:
 - Owners/Admins should see a clear call-to-action to **activate the first branch** (payment -> branch is provisioned after confirmation).
 - Non-owners should see a clear message:
   > “This business has not activated any branches yet. Contact the owner/admin.”
 
-### When This Screen Appears
-- Selected tenant has multiple branches
-- AND staff is assigned to more than one branch
+### 3.3 Branch Entry List
 
-### When Skipped
-- Only one eligible branch exists → auto-select.
-
----
-
-### Branch List Rules
-- Only branches where the staff has assignment.
+Tenant layer must provide a branch entry list derived from explicit branch assignment.
+- Only branches where the user has ACTIVE assignment are shown.
 - Optional display of branch location.
 
 ---
 
-## 4. Starting Work
+## 4. Branch Entry and Branch Selection
 
-After tenant + branch selection:
+Branch selection happens when the user attempts to enter **branch-layer operational work**.
+
+It is not a universal post-login requirement.
+
+### When Branch Selection Appears
+- Selected tenant has multiple eligible branches for the current user
+- AND the user is entering branch-layer operations
+
+### When Branch Selection Is Skipped
+- Only one eligible branch exists → auto-select
+- No eligible branches → remain in tenant layer and show no-branch-access state
+
+### Branch Selection Rules
+- Only branches where the user has ACTIVE assignment are selectable.
+- FROZEN branches must not be offered for operational entry.
+- If the user changes tenant, previously selected branch context must not be reused across tenants.
+
+---
+
+## 5. Starting Work / Entering Branch Layer
+
+After branch entry is selected:
 - System attempts **START_WORK orchestration**.
 - UI shows:
-  - success → enters POS
+  - success → enters branch layer / POS workspace
   - failure → clear reason (capacity reached, disabled, etc.)
 
 ---
 
-## 5. Membership State Changes While Logged In
+## 6. Membership State Changes While Logged In
 
 ### Scenario: Membership Becomes Disabled / Archived
 
@@ -192,12 +293,12 @@ UX behavior:
 2. Show message:
    > “Your access to this business is no longer active.”
 3. Redirect user back to:
-   - Tenant selection (if other memberships exist)
+   - Account layer (if other memberships exist)
    - Login screen otherwise
 
 ---
 
-## 6. Disabled Membership (Optional UX)
+## 7. Disabled Membership (Optional UX)
 
 If disabled memberships are supported:
 
@@ -211,19 +312,21 @@ If disabled memberships are supported:
 
 ---
 
-## 7. Security & Consistency Rules
+## 8. Security & Consistency Rules
 
-- Tenant selection is **not cached forever**.
+- Account-layer tenant list is **not cached forever**.
 - Membership validity must be re-checked:
   - on login
-  - on tenant selection
+  - on account-layer tenant entry
+  - on tenant-layer management actions where authorization matters
   - on critical actions (START_WORK, END_WORK)
 
 - UI must assume membership can change at any time.
+- Branch eligibility must be re-checked when entering branch-layer work.
 
 ---
 
-## 8. Explicit Non-Goals
+## 9. Explicit Non-Goals
 
 This UX does NOT:
 - explain why access was removed in detail
@@ -237,9 +340,11 @@ Those are organizational processes, not UI responsibilities.
 ## Summary
 
 This UX spec ensures:
-- Staff can safely work across multiple businesses.
-- Archived staff disappear cleanly.
-- No tenant can lock a person out of future work.
-- Frontend behavior stays predictable under edge cases.
+- the account / tenant / branch workspace model is explicit
+- staff can safely work across multiple businesses
+- management and operations are separated cleanly
+- archived staff disappear cleanly
+- no tenant can lock a person out of future work
+- frontend behavior stays predictable under edge cases
 
 _End of UX Spec_

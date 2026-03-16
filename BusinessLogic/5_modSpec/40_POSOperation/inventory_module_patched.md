@@ -13,6 +13,11 @@
 
 The Inventory module manages **stock items**, **stock categories**, **restock batches**, and **inventory movements** to provide a correct, auditable, and long-lived representation of stock.
 
+Inventory management is entered from **tenant layer**:
+- tenant context is active,
+- branch-targeted inventory actions supply an explicit target `branch_id`,
+- cross-module operational effects still execute in branch context.
+
 Inventory is **not CRUD stock**. It is **ledger-first**:
 - **Inventory Journal** (append-only movements) is the source of truth
 - **Branch Stock** is a **projection** used for fast reads
@@ -143,17 +148,19 @@ Inventory no longer uses global “feature toggles” to define core behavior (e
 
 ## UC-1 — Create Stock Item
 **Actor:** Admin  
-**Preconditions:** Tenant active, Admin role, quota not exceeded  
+**Preconditions:** Tenant active, tenant context active, Admin role, quota not exceeded  
 **Flow:** Create item with name + base unit; optional category/image  
 **Postconditions:** Stock item ACTIVE; available for restocking/mapping
 
 ## UC-2 — View Stock Items
 **Actor:** Admin, Manager  
-**Flow:** List items; filter by category/branch/active state  
+**Preconditions:** tenant context active
+**Flow:** List items; filter by category / target branch / active state  
 **Postconditions:** None
 
 ## UC-3 — Update Stock Item
 **Actor:** Admin  
+**Preconditions:** tenant context active
 **Rules:** Base unit immutable once referenced by any journal history or mapping  
 **Flow:** Update allowed fields (name, image, category, active flag)  
 **Postconditions:** Updated data visible everywhere
@@ -170,12 +177,13 @@ Inventory no longer uses global “feature toggles” to define core behavior (e
 
 ## UC-6 — Manage Stock Categories (CRUD + Archive)
 **Actor:** Admin  
+**Preconditions:** tenant context active
 **Flow:** Create/rename/archive categories  
 **Rules:** Archiving a category moves items to Uncategorized; items not deleted
 
 ## UC-7 — Create Restock Batch (Restock)
 **Actor:** Admin, Manager  
-**Preconditions:** Item ACTIVE; Branch ACTIVE (not frozen)  
+**Preconditions:** Item ACTIVE; tenant context active; target branch selected explicitly; Branch ACTIVE (not frozen)  
 **Flow:**
 - Enter quantity (base unit) and optional expiry date, note, supplier
 - Optional: enter purchase cost for this restock batch (total cost, March baseline captured in USD)
@@ -185,25 +193,27 @@ Inventory no longer uses global “feature toggles” to define core behavior (e
 
 ## UC-8 — View Restock Batches
 **Actor:** Admin, Manager  
+**Preconditions:** tenant context active
 **Flow:** List batches by item/branch; sort by received date/expiry (if present)  
 **Postconditions:** None
 
 ## UC-9 — Update Restock Batch Metadata
 **Actor:** Admin  
-**Preconditions:** Branch ACTIVE (not frozen)  
+**Preconditions:** tenant context active; target branch selected explicitly; Branch ACTIVE (not frozen)  
 **Flow:** Update metadata only (expiry_date, note, supplier, purchase cost)  
 **Rules:** No stock quantity change; journal unchanged  
 **Postconditions:** Updated metadata visible
 
 ## UC-10 — Archive Restock Batch
 **Actor:** Admin  
+**Preconditions:** tenant context active; target branch selected explicitly
 **Flow:** Archive batch from active views  
 **Rules:** No stock change; journal unchanged  
 **Postconditions:** Batch hidden; audit preserved
 
 ## UC-11 — Manual Inventory Adjustment (Ledger-Based)
 **Actor:** Admin  
-**Preconditions:** Item exists; Branch ACTIVE (not frozen)  
+**Preconditions:** Item exists; tenant context active; target branch selected explicitly; Branch ACTIVE (not frozen)  
 **Supported Adjustment Styles:**
 - **Set-to-count (recommended):** Admin enters counted_on_hand; system computes delta vs current Branch Stock and appends a single ADJUSTMENT movement
 - **Delta adjustment:** Admin enters +/- quantity directly
@@ -216,16 +226,19 @@ Inventory no longer uses global “feature toggles” to define core behavior (e
 
 ## UC-12 — View Inventory Journal (Audit)
 **Actor:** Admin, Manager  
+**Preconditions:** tenant context active
 **Flow:** Paginated view filtered by item/branch/date/type/source  
 **Postconditions:** None
 
 ## UC-13 — View Branch Stock (Fast Read)
 **Actor:** Admin, Manager  
+**Preconditions:** tenant context active; target branch selected explicitly
 **Flow:** Read from Branch Stock projection for selected branch  
 **Postconditions:** None
 
 ## UC-14 — View Aggregated Stock Across Branches
 **Actor:** Admin  
+**Preconditions:** tenant context active
 **Flow:** Aggregate from Branch Stock projections (sum per item across branches)  
 **Postconditions:** None
 

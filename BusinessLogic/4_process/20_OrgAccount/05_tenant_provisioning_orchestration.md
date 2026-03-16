@@ -33,7 +33,7 @@ Derived primarily from:
 ## When This Process Runs
 
 Triggered when an authenticated user chooses `Create Business`:
-- from the tenant selection screen, or
+- from the account layer tenant list, or
 - from the "no memberships" empty state after login.
 
 This process does not require an existing `tenant_id` context.
@@ -100,4 +100,3 @@ Governance rule:
 
 - If the request is retried (double tap / network retry), idempotency must prevent creating multiple tenants unintentionally.
 - If tenant provisioning succeeds but later steps fail (e.g., audit logging), the system must still return a usable `tenant_id` and remain recoverable.
-

@@ -61,7 +61,7 @@ Receipt presentation must be consistent with Sale and Order state (e.g., void pe
 - At least one finalized sale exists (order exists)
 
 **Main Flow**
-1. User opens Orders list in their portal.
+1. User opens Orders list in the branch workspace.
 2. User selects an order.
 3. System opens the eReceipt view for the sale linked to the order.
 4. eReceipt displays:

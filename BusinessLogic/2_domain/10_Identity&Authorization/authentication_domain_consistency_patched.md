@@ -83,8 +83,8 @@ Auth produces a trustworthy **actor identity** and **authenticated session**. Ot
 | Session | An authenticated session (access/refresh tokens + revocation state) |
 | Authentication | Verifying identity (login) |
 | Authorization | Deciding permissions in a tenant/branch context (owned elsewhere) |
-| Tenant Context | The selected tenant/workspace the user is operating in |
-| Branch Context | The selected branch/location the user is operating in (optional) |
+| Tenant Context | The selected tenant workspace the user is operating in |
+| Branch Context | The selected branch operational workspace the user is operating in (optional until branch-layer work is entered) |
 | Membership | Relationship that grants a user access to a tenant (owned by Tenant Membership) |
 | Revocation | Making a session/token invalid immediately |
 
@@ -92,12 +92,14 @@ Auth produces a trustworthy **actor identity** and **authenticated session**. Ot
 
 ## 3. Core Concepts
 
-## Tenant and Branch Selection UX Contract
+## Workspace Context Contract
 
 Authentication only proves **who** the person is. After login, the UI must establish a working context:
-- If the identity has multiple ACTIVE memberships, the user **selects a tenant**.
-- If the tenant has multiple eligible branches for the staff, the user **selects a branch**.
-- If there is only one eligible option, the UI may auto-select.
+- The user first lands in an **account layer** (no tenant assumed yet).
+- If the identity has multiple ACTIVE memberships, the user **selects a tenant** to enter tenant workspace.
+- If the identity has one ACTIVE membership, tenant workspace may be auto-selected.
+- Branch context is resolved only when the user enters **branch-layer operational work**.
+- If there is only one eligible branch for that tenant entry, the UI may auto-select it.
 
 Authentication stores the chosen context inside the session, but **does not own** membership validity.
 Authorization decisions remain owned by Access Control and must re-check membership on sensitive actions.
@@ -149,13 +151,18 @@ Baseline (Capstone 1):
 Notes:
 - Session revocation is required for logout and password reset.
 - Session refresh must be safe under concurrent refresh calls (token rotation recommended).
+- Session may exist in one of three workspace states:
+  - authenticated with no tenant selected yet,
+  - authenticated with tenant workspace active but no branch context selected yet,
+  - authenticated with tenant + branch operational context active.
 
 ---
 
 ### 3.4 Tenant Context & Branch Context (Session-Scope Choices)
 Auth may assist the client in selecting context:
-- Tenant context is needed when a user has multiple memberships.
+- Tenant context is needed to enter a tenant workspace.
 - Branch context is needed when operating workflows are branch-scoped.
+- Branch context is optional until branch-layer work is entered.
 
 **Important boundary:** contexts are validated against membership rules, but the truth of memberships/assignments is owned elsewhere.
 
@@ -169,6 +176,7 @@ Auth may assist the client in selecting context:
 - INV-A4: Authentication does not grant authorization; permissions are evaluated in tenant context by other domains.
 - INV-A5: Session refresh must not allow duplicated valid sessions for the same refresh token (rotation/single-use semantics).
 - INV-A6: Context selection must be validated (cannot select a tenant/branch without access).
+- INV-A7: Authentication must not assume that every authenticated session immediately has branch context.
 
 ---
 
@@ -185,8 +193,8 @@ Self-contained commands:
 - DisableAuthenticationAccount / EnableAuthenticationAccount
 
 Context helper commands (decision-style):
-- ResolveTenantContext (when multiple memberships exist)
-- ResolveBranchContext (when branch selection is required)
+- ResolveTenantContext (when tenant workspace must be entered)
+- ResolveBranchContext (when branch-layer work is entered and branch selection is required)
 
 Auth validates and records session/context choices, but does not create tenants/branches.
 
@@ -214,6 +222,8 @@ Typical read queries:
 - get account by identifier (phone/email)
 - get account status
 - get current session context (tenant_id, branch_id if selected)
+- account-layer session state is valid even when `tenant_id` is unset
+- tenant-layer session state is valid even when `branch_id` is unset
 - list accessible tenants for the user (via memberships owned elsewhere)
 - list accessible branches for the user in a tenant (via assignments owned elsewhere)
 

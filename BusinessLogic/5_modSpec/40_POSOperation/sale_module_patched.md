@@ -372,7 +372,7 @@ If payment method is KHQR:
 - Branch exists (provisioned by system; not user-created within Sale)
 
 **Main Flow**
-1. User opens their portal
+1. User enters the branch workspace
 2. Selects “Sale”
 3. Sale screen loads (menu browsing enabled)
 

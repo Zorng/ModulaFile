@@ -58,7 +58,7 @@ They do not expect:
 Modula supports this situation by:
 - allowing any authenticated identity to trigger a controlled `ProvisionTenant` flow ("Create Business")
 - creating the tenant in `ACTIVE` state and granting the creator `OWNER` membership
-- showing the business in tenant selection immediately after creation
+- showing the business in the account-layer tenant list immediately after creation
 - guiding the user into first-branch activation (payment -> branch provisioned)
 
 ---
@@ -72,4 +72,3 @@ Modula supports this situation by:
 
 This story is about the business boundary moment:
 > "I created my business workspace, now let me activate the first branch and start operating."
-

@@ -12,6 +12,11 @@
 
 The Policy module centralizes **branch-scoped configuration** that affects how sales are computed and operated.
 
+Policy records remain **branch-scoped**, but policy management is performed from **tenant layer**:
+- the actor operates in tenant context,
+- selects an explicit target branch,
+- and updates the policy values for that branch.
+
 For Capstone 1, Policy is intentionally small:
 - **Configurable (Money):** VAT, FX rate, KHR rounding
 - **Configurable (Workflow):** pay-later enablement (table service)
@@ -37,6 +42,8 @@ Authoritative references:
 Policies are **branch-scoped**.
 - A tenant may have multiple branches, and each branch has its own policy values.
 - Dependent modules resolve policies using `(tenant_id, branch_id)`.
+- Branch-scoped management does **not** require entering branch-layer operations first.
+- Tenant-layer management must supply an explicit target `branch_id`.
 
 ### 2.2 This Module Covers
 
@@ -82,6 +89,7 @@ Policies are **not creatable**. Modula ships a fixed set of keys with default va
 - Writes must be idempotent and recorded in Audit Log.
 - Reads are cached client-side per branch and refreshed on:
   - login
+  - tenant-layer target branch change
   - branch switch
   - after a policy update
 
@@ -112,9 +120,11 @@ Sale-based inventory deduction is not a policy toggle.
 
 ### UC-1: Admin views tax/currency policies for a branch
 **Actor:** Admin  
-**Preconditions:** Admin is operating inside a selected `branch_id`  
+**Preconditions:**
+- Admin is operating in tenant context
+- target `branch_id` is selected explicitly
 **Main Flow:**
-1. Admin opens Tenant Admin Portal → Settings → Tax & Currency
+1. Admin opens tenant-layer settings for a selected branch
 2. System displays the branch policy values
 **Acceptance:**
 - Branch selection affects displayed values
@@ -124,9 +134,10 @@ Sale-based inventory deduction is not a policy toggle.
 ### UC-2: Admin updates VAT policy (branch-scoped)
 **Actor:** Admin  
 **Main Flow:**
-1. Admin toggles VAT and/or sets VAT percentage
-2. System validates inputs and persists policy atomically
-3. Audit log entry is written
+1. Admin selects a target branch in tenant layer
+2. Admin toggles VAT and/or sets VAT percentage
+3. System validates inputs and persists policy atomically
+4. Audit log entry is written
 **Acceptance:**
 - Cashier/Manager cannot modify VAT
 - VAT applies only to the selected branch
@@ -136,9 +147,10 @@ Sale-based inventory deduction is not a policy toggle.
 ### UC-3: Admin updates FX rate and KHR rounding (branch-scoped)
 **Actor:** Admin  
 **Main Flow:**
-1. Admin sets FX rate (KHR per USD)
-2. Admin configures rounding enabled/mode/granularity
-3. System saves and audits changes
+1. Admin selects a target branch in tenant layer
+2. Admin sets FX rate (KHR per USD)
+3. Admin configures rounding enabled/mode/granularity
+4. System saves and audits changes
 **Acceptance:**
 - Sale UI displays USD exact + KHR rounded according to branch policy
 - KHR tender follows rounding policy
@@ -148,10 +160,11 @@ Sale-based inventory deduction is not a policy toggle.
 ### UC-4: Admin enables/disables pay-later (branch-scoped)
 **Actor:** Admin  
 **Main Flow:**
-1. Admin opens branch settings → Sale workflow
-2. Admin toggles `saleAllowPayLater`
-3. System validates and persists the policy atomically
-4. Audit log entry is written
+1. Admin selects a target branch in tenant layer
+2. Admin opens branch settings → Sale workflow
+3. Admin toggles `saleAllowPayLater`
+4. System validates and persists the policy atomically
+5. Audit log entry is written
 **Acceptance:**
 - Only Admin can change this toggle
 - Toggle applies only to the selected branch

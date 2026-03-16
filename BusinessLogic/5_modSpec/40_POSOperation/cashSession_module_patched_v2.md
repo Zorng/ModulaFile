@@ -73,6 +73,15 @@ An append-only record representing a cash change:
 
 Cash movements are immutable and auditable.
 
+### 3.3 Movement Authorization Model
+Movement writes target the branch's currently OPEN cash session.
+
+Design rules:
+- movement write access is **branch-authorized**, not session-opener-authorized
+- `opened_by_auth_account_id` preserves accountability, but does not create an exclusive write lock
+- any actor with the required branch-scoped permission may record allowed movement types on the OPEN session
+- ownership of the tenant alone is not sufficient; branch authorization still applies
+
 ---
 
 ## 4. Use Cases — Self-Contained Processes
@@ -152,6 +161,7 @@ Cash movements are immutable and auditable.
 - Branch context is resolved
 - Branch is ACTIVE
 - Session is OPEN
+- Actor is authorized for `cashSession.paidIn` in the branch
 
 **Main Flow:**
 1. User selects “Add Cash / Paid In”.
@@ -176,6 +186,7 @@ Cash movements are immutable and auditable.
 - Branch context is resolved
 - Branch is ACTIVE
 - Session OPEN
+- Actor is authorized for `cashSession.paidOut` in the branch
 
 **Main Flow:**
 1. User selects “Paid Out”.
@@ -221,14 +232,46 @@ Cash movements are immutable and auditable.
 - Branch context is resolved
 - Branch is ACTIVE
 - Session OPEN
+- Actor is authorized for `cashSession.adjust` in the branch
 
 **Main Flow:**
-1. Actor inputs adjustment (+/-) and reason.
-2. System records ADJUSTMENT movement.
+1. Actor selects adjustment direction: `Increase` or `Decrease`.
+2. Actor inputs a positive amount and reason.
+3. Frontend/backend map the direction to signed delta payload fields.
+4. System records ADJUSTMENT movement.
 
 **Postconditions:**
 - Expected cash updated.
 - Action is audit logged.
+
+**UX rule:**
+- The user must not be required to type a manual negative sign.
+- Adjustment direction is explicit in UX; signed delta fields remain a transport detail.
+
+---
+
+## 4.1 Movement Tab UX & Permission Contract
+
+The Movement tab is an operational surface for manual cash movements on the currently OPEN branch session.
+
+Visibility and behavior rules:
+- movement history may remain visible when the actor can access the branch/session context
+- write controls must be gated per movement action, not merely by session visibility
+- `Paid In` form is shown only when the actor can perform `cashSession.paidIn`
+- `Paid Out` form is shown only when the actor can perform `cashSession.paidOut`
+- `Adjustment` form is shown only when the actor can perform `cashSession.adjust`
+
+Cashier baseline:
+- may record `Paid In` and `Paid Out`
+- must not see an enabled `Adjustment` action
+
+If the actor can view the session but cannot write any movement type:
+- keep the tab read-only
+- show a short explanation that movement entry is unavailable for the current role/session context
+
+If the actor can write some movement types but not others:
+- show only the allowed forms/actions
+- do not require the frontend to expose disabled forbidden actions unless product decides that explanatory disabled state is preferable
 
 ---
 

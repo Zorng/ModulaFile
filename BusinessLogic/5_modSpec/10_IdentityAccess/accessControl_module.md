@@ -14,7 +14,7 @@
 
 This module provides a single authorization decision surface for Modula:
 
-- **Given an authenticated actor, tenant context, action, and (when required) branch context — ALLOW or DENY.**
+- **Given an authenticated actor, tenant context, action, and (when required) branch target/context — ALLOW or DENY.**
 
 It is the gatekeeper that prevents:
 - cross-branch operations
@@ -31,10 +31,14 @@ It is the gatekeeper that prevents:
 - Access Control decides what actions are allowed in a specific context.
 
 ### 2.2 Branch access is mandatory
-For BRANCH-scoped operational actions:
+For BRANCH-scoped actions, regardless of UI/workspace entry mode:
 - the request must specify `tenant_id` and `branch_id`
 - the actor must be assigned to that branch
 - if assignment cannot be proven, deny
+
+This applies to both:
+- **branch-layer operational actions**, where active branch workspace supplies `branch_id`
+- **tenant-layer management actions with branch-scoped effect**, where the UI/command supplies explicit target `branch_id`
 
 For TENANT-scoped actions (example: `tenant.updateProfile`):
 - the request specifies `tenant_id`
@@ -73,6 +77,9 @@ Decision evaluation order (fast denial first):
 - Determine:
   - action scope (`TENANT` vs `BRANCH`)
   - action effect (`READ` vs `WRITE`)
+- Determine invocation mode if relevant:
+  - branch-layer operational invocation, or
+  - tenant-layer management invocation with explicit target branch
 - If action is BRANCH-scoped and `branch_id` is missing → DENY(BRANCH_CONTEXT_REQUIRED)
 
 1) **Subscription / operational status gates**
@@ -180,13 +187,43 @@ Action metadata guidance (so tenants can recover while `FROZEN`):
 - `sale.void.approve`
 - `cashSession.open`
 - `cashSession.close`
+- `cashSession.paidIn`
+- `cashSession.paidOut`
+- `cashSession.adjust`
 - `receipt.print`
 - `order.print.kitchen` (kitchen ticket/sticker print; operational effect)
+
+Cash session movement action metadata guidance:
+- `cashSession.paidIn`, `cashSession.paidOut`, `cashSession.adjust`:
+  - scope: `BRANCH`
+  - effect: `WRITE`
+  - target: the currently OPEN cash session for the branch
+  - design rule: authorization is branch-scoped, not session-opener-scoped
 
 Printing action metadata guidance:
 - `receipt.print`, `order.print.kitchen`:
   - scope: `BRANCH`
   - effect: `READ` (printing is observational; must remain usable for history)
+
+### Branch-Targeted Management (Invoked from Tenant Layer; Still BRANCH-scoped)
+- `branch.updateProfile`
+- `branch.freeze`
+- `branch.unfreeze`
+- `policy.view`
+- `policy.update`
+- `inventory.view`
+- `inventory.receive`
+- `inventory.adjust`
+- `menu.manage`
+- `discount.manage`
+- `staff.branch.assign`
+- `staff.branch.revoke`
+
+Action metadata guidance:
+- These actions are still `BRANCH`-scoped because they affect or read a branch-scoped resource.
+- The difference is **invocation mode**, not authorization scope:
+  - branch-layer actions get `branch_id` from active branch workspace
+  - tenant-layer management actions must supply explicit target `branch_id`
 
 ### Inventory & Menu
 - `inventory.view`
@@ -208,9 +245,11 @@ Example baseline mapping (adjust as needed):
   - sale.create, sale.finalize, receipt.print
   - order.print.kitchen
   - cashSession.open, cashSession.close
+  - cashSession.paidIn, cashSession.paidOut
 - MANAGER:
   - everything CASHIER can do
   - inventory.view, inventory.receive
+  - cashSession.adjust
   - sale.void.approve
   - reports.view
 - ADMIN:
@@ -257,6 +296,7 @@ On reconnect:
 ### Edge Case B — Tenant membership but no branch assignments
 - Actor can authenticate and may select the tenant.
 - Branch selection list is empty → actor cannot operate BRANCH-scoped actions.
+- BRANCH-scoped tenant-layer management actions are also denied because no branch assignment can be proven.
 - TENANT-scoped actions may still be allowed (example: `tenant.updateProfile`) if permitted by role policy.
 - Client UX: show “No branch assigned. Contact admin/manager.”
 

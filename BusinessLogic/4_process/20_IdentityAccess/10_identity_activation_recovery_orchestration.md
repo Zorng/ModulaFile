@@ -1,11 +1,12 @@
-# Identity Activation + Recovery Orchestration (OTP + Context Selection)
+# Identity Activation + Recovery Orchestration (OTP + Workspace Context Resolution)
 
 ## Purpose
 
 This document defines the canonical behavior for:
 - activating a **provisioned** user (phone exists, no password yet)
 - password recovery (OTP reset)
-- resolving **tenant + branch context** after authentication
+- resolving **tenant workspace context** after authentication
+- resolving **branch operational context** when branch-layer work is entered
 
 This is a **behavior contract** (process layer). It does not prescribe UI layouts or screens.
 
@@ -21,7 +22,8 @@ Modula is SaaS-first:
 So we need one stable definition of how a person:
 1) proves phone ownership (OTP),
 2) sets/resets their password (self-service),
-3) selects where they are working (tenant/branch context),
+3) selects which tenant workspace they are operating in,
+4) enters branch-layer operational work when needed,
 without any tenant ever “owning” the identity’s password.
 
 ---
@@ -43,7 +45,8 @@ without any tenant ever “owning” the identity’s password.
 
 This orchestration begins when:
 - a user chooses **Activate account** (provisioned user) or **Forgot password**
-- a user successfully authenticates and must establish working context (tenant/branch)
+- a user successfully authenticates and must establish workspace context
+- a user in tenant workspace attempts to enter branch-layer operational work
 
 ---
 
@@ -66,7 +69,7 @@ This orchestration begins when:
 6. User submits OTP.
 7. Authentication verifies OTP and marks the phone as verified.
 8. Authentication issues a session for the identity.
-9. Continue to **Flow C** (tenant context resolution).
+9. Continue to **Flow C** (tenant workspace resolution).
 
 **Rules:**
 - Admins/owners never set or know passwords (credential ownership stays with the person).
@@ -87,13 +90,13 @@ This orchestration begins when:
 5. User sets a new password.
 6. Authentication revokes all active sessions for that identity (security boundary).
 7. Authentication issues a new session (or returns to login — implementation choice).
-8. Continue to **Flow C** (tenant context resolution).
+8. Continue to **Flow C** (tenant workspace resolution).
 
 ---
 
-## Flow C — Resolve Tenant Context (Post-Auth)
+## Flow C — Resolve Tenant Workspace Context (Post-Auth)
 
-**Goal:** Establish which tenant the session is operating in.
+**Goal:** Establish which tenant workspace the session is operating in.
 
 **Inputs:**
 - `auth_account_id` (from Authentication session)
@@ -109,7 +112,8 @@ This orchestration begins when:
    - **1 active membership** → auto-select tenant context.
    - **2+ active memberships** → user must choose; validate membership is still ACTIVE at selection time.
 4. Store `tenant_id` as session context (or return it as an explicit “working context” output).
-5. Continue to **Flow D** (branch context resolution).
+5. Enter the tenant workspace layer.
+6. Resolve branch operational context later only when branch-layer work is requested.
 
 **Rules:**
 - Tenant selection does not grant access; it only selects among ACTIVE memberships.
@@ -117,9 +121,9 @@ This orchestration begins when:
 
 ---
 
-## Flow D — Resolve Branch Context (Within Tenant)
+## Flow D — Resolve Branch Operational Context (Within Tenant; On Demand)
 
-**Goal:** Establish which branch the session is operating in (when branch-scoped work exists).
+**Goal:** Establish which branch the session is operating in when branch-layer operational work is requested.
 
 **Inputs:**
 - `auth_account_id`
@@ -129,11 +133,11 @@ This orchestration begins when:
 1. List branches in the selected tenant.
 2. If the tenant has **zero branches**:
    - return a `TENANT_HAS_NO_BRANCHES` state (owner/admin should be guided to first-branch activation; others should contact owner/admin).
-   - stop here (no branch context can be selected).
+   - stop here (no branch operational context can be selected).
 3. List branch assignments for this identity within the selected tenant.
 4. Filter to ACTIVE assignments and ACTIVE branches.
 5. Resolve:
-   - **0 eligible branches** → user cannot operate branch-scoped features; show a clear “no branch assigned” state.
+   - **0 eligible branches** → user cannot enter branch-layer operations; show a clear “no branch assigned” state and remain in tenant workspace.
    - **1 eligible branch** → auto-select branch context.
    - **2+ eligible branches** → user must choose.
 6. Store `branch_id` as session context (or return it as an explicit output).
@@ -141,6 +145,7 @@ This orchestration begins when:
 **Rules:**
 - Branch context is required for operational actions (sale, cash session, attendance work start/end).
 - If branch is FROZEN, it must not be selectable for operational work.
+- Management actions that affect branch-scoped resources do not require entering branch-layer operations; they run in tenant workspace with explicit target branch supplied by the command/UI.
 
 ---
 
@@ -153,7 +158,7 @@ Typical outcomes the client must support:
 - password policy violation (too weak)
 - no active tenant memberships
 - tenant not active (future: FROZEN)
-- no branch assignment for selected tenant
+- no branch assignment for selected tenant when branch-layer work is requested
 - branch not active (FROZEN)
 
 ---
@@ -162,7 +167,8 @@ Typical outcomes the client must support:
 
 - Credential ownership is always user-owned (OTP + password lifecycle is Authentication-owned).
 - Provisioning access never requires an admin-known “first password”.
-- Tenant/branch context selection is deterministic and validated against current facts.
+- Tenant workspace selection is deterministic and validated against current facts.
+- Branch operational context is resolved only when branch-layer work is entered.
 - Access can be removed mid-session; sensitive actions must re-check authorization and fail closed.
 
 ---

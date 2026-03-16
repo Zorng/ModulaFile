@@ -1,4 +1,4 @@
-# 20 — Resolve Branch Policy (Branch-Scoped)
+# 20 — Resolve Branch Policy (Branch-Scoped Read; Tenant or Branch Entry)
 
 ## Purpose
 
@@ -16,7 +16,7 @@ This is a read process. It does not mutate policy or sales.
 
 - Policy (policy values)
 - Access Control (who may read)
-- Tenant/Branch (branch context; frozen status)
+- Tenant/Branch (tenant context, branch context or explicit target branch; frozen status)
 
 ---
 
@@ -27,12 +27,16 @@ Triggered whenever the system needs policy inputs, for example:
 - sale finalization
 - admin viewing branch policy settings
 
+This process supports two invocation modes:
+- **branch-layer operational read**: active branch context already exists
+- **tenant-layer management read**: target `branch_id` is supplied explicitly
+
 ---
 
 ## Inputs
 
 - `tenant_id`
-- `branch_id`
+- `branch_id` (active branch context or explicit target branch)
 
 ---
 
@@ -41,7 +45,7 @@ Triggered whenever the system needs policy inputs, for example:
 ### Step 1 — Validate context + authorize read
 
 - Require both `tenant_id` and `branch_id`.
-- Ensure the actor is allowed to operate in the branch context.
+- Ensure the actor is allowed to read policy for the branch context or explicit target branch.
 
 Notes:
 - Read access is required for checkout display and should be allowed for roles that can sell in the branch.

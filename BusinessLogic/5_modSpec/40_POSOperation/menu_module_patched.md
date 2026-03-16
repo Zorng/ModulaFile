@@ -23,6 +23,11 @@ Stock deduction is executed by the **Finalize Sale** cross-module process. Durin
 
 This design avoids hidden rules such as “has recipe = deduct” and supports both food recipes and retail-style items.
 
+Menu management is entered from **tenant layer**:
+- tenant context is active,
+- branch visibility is managed through explicit target branch selection,
+- branch-layer operations only consume the resulting branch-visible menu.
+
 ---
 
 ## 2. Scope & Boundaries
@@ -132,6 +137,7 @@ Examples:
 
 #### Preconditions
 - Tenant exists and is active
+- Tenant context is active
 - User has Admin or Manager role
 - Menu item soft limit not exceeded
 - At least one branch exists for the tenant
@@ -168,7 +174,7 @@ Examples:
 
 #### Preconditions
 - User authenticated
-- Branch context available
+- Tenant context active
 
 #### Main Flow
 1. User opens Menu list
@@ -177,7 +183,7 @@ Examples:
    - “Uncategorized” section (if applicable)
 3. User may filter by:
    - Category
-   - Branch
+   - target branch
    - Active/Archived
 
 #### Postconditions
@@ -191,6 +197,7 @@ Examples:
 
 #### Preconditions
 - Menu item exists
+- Tenant context active
 - User has edit permission
 
 #### Main Flow
@@ -200,7 +207,7 @@ Examples:
    - Price
    - Category
    - Modifiers
-   - Branch assignment
+   - Branch assignment (explicit target branch or branch set)
    - Image
 3. System validates changes
 4. Updates are saved
@@ -223,6 +230,7 @@ Examples:
 
 #### Preconditions
 - Menu item exists
+- Tenant context active
 - Item is not currently used in an active sale session
 
 #### Main Flow
@@ -243,6 +251,7 @@ Examples:
 
 #### Preconditions
 - Item is archived
+- Tenant context active
 - Menu item soft limit not exceeded
 
 #### Main Flow

@@ -28,6 +28,17 @@ A **Branch** is the real-world store/workplace context that anchors:
 Branch is **not** “just an address record.”  
 It is the operational boundary that many workflows must reference consistently.
 
+### Workspace model note
+
+Branch is also the boundary for **branch layer** in the Modula workspace model:
+- users first enter tenant layer,
+- then enter a branch to perform operational work,
+- and branch-scoped operational commands use active branch context.
+
+Branch-scoped management does not change this ownership:
+- management may be initiated in tenant layer,
+- but the affected branch remains explicit and branch-scoped.
+
 ---
 
 ## Why Branch Exists (Story Context)
@@ -69,6 +80,20 @@ Branch has an operational status:
 - `FROZEN`: operational writes blocked (read-only still allowed)
 
 This status acts as a **cross-cutting guard** used by branch-scoped modules.
+
+### 3.1) Branch Layer (Behavioral Workspace Concept)
+Branch layer is the active operational workspace for a selected branch.
+
+It is where users perform branch-scoped operational work such as:
+- attendance check-in / check-out
+- cash session open / close
+- sales and checkout
+
+Branch layer requires:
+- authenticated identity
+- selected tenant workspace
+- explicit eligible branch selection
+- ACTIVE branch status
 
 ### 4) Workplace Location (for Attendance Confirmation)
 If attendance location confirmation is enabled, each branch can define:
@@ -162,7 +187,7 @@ These events are useful for:
 
 ### Read Model (optimized queries)
 - “Branches accessible to this user”
-- “Branch summary cards for selection UI”
+- “Branch summary cards for tenant-layer branch entry UI”
 - “Branch operational readiness status”
 - “Branch workplace location settings” (for attendance flows)
 

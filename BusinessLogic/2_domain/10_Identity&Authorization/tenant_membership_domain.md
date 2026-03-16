@@ -26,6 +26,10 @@ It exists to answer:
 
 Tenant Membership is the **foundation of “team setup”** without mixing in authentication credentials or day-to-day HR operations.
 
+It is also the foundation for workspace entry:
+- ACTIVE membership allows entry into a tenant workspace
+- branch entry happens only after tenant workspace is established and branch assignment is evaluated elsewhere
+
 ---
 
 ## Why This Exists (Story Traceability)
@@ -57,6 +61,8 @@ A tenant member may later have:
 - attendance records (reality),
 - shift planning (expectations),
 but membership is the root.
+
+Membership therefore comes **before** branch entry in the workspace model.
 
 ---
 
@@ -156,6 +162,8 @@ Optional:
 - A tenant member’s identity must be unique within tenant constraints (Authentication enforces credential uniqueness).
 - Removing membership must not delete historical records (attendance, sales, audit).
 - INVITED memberships grant **no** operational access until accepted.
+- Membership is a prerequisite for entering tenant layer.
+- Branch entry additionally requires explicit branch assignment; membership alone is not enough for branch-layer operations.
   
 Authorization-aware invariants:
 - Each ACTIVE membership must have a `role_key`.
@@ -194,6 +202,7 @@ It only defines belonging and membership relationships.
 - Staff Profile is the operational representation (who they are in day-to-day work).
 - Staff Profile exists for members who operate day-to-day in the tenant (including owners/admins if they work shifts).
 - Membership is the prerequisite; profile is the operational view.
+- Branch assignment is evaluated after tenant membership, when the user attempts to enter branch-layer work.
 
 ---
 
@@ -237,6 +246,7 @@ It provides the stable foundation that:
 - Staff Profile builds on,
 - Access Control evaluates,
 - Attendance records against,
+- tenant workspace entry depends on,
 while staying compatible with multi-tenant SaaS (one identity can belong to multiple tenants) and future subscription entitlements.
 
 ---
