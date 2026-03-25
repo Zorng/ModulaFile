@@ -3,6 +3,7 @@
 Purpose:
 - Collect all places where the Capstone II draft needs **real-world input** (you, frontend, backend) that the KB cannot supply.
 - Avoid inventing facts. We flag them explicitly and resolve them later.
+- Pair with: `_academic_report_component/capstoneII_md/00_meta/capstoneII_question_bank_and_header_map.md` for stable question IDs and chapter-by-chapter asking order.
 
 How to use:
 - When writing chapter markdown, insert `TODO_CAPSTONE2(<FLAG_ID>): <short note>` inline.
@@ -20,9 +21,9 @@ Status legend:
 | Flag ID | Owner | Category | Where (file / section) | What’s Missing | Status |
 |---|---|---|---|---|---|
 | FLAG-PM-01 | You | PM | `_academic_report_component/capstoneII_md/01_introduction/1.md` | Key milestone dates (midterm checkpoint, pilot target dates) | OPEN |
-| FLAG-PM-02 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Planning changes from Capstone I → Capstone II (scope cuts, reprioritization) | OPEN |
-| FLAG-PM-03 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Capstone II team roles/responsibilities (confirm if changed) | OPEN |
-| FLAG-REF-01 | You | REF | `_academic_report_component/capstoneII_md/03_literature_review/3.md` | Add citations for offline-first sync, idempotency under retries, and outbox pattern | OPEN |
+| FLAG-PM-02 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Planning changes from Capstone I → Capstone II (scope cuts, reprioritization) | RESOLVED |
+| FLAG-PM-03 | You | PM | `_academic_report_component/capstoneII_md/02_presentation_of_project/2.md` | Capstone II team roles/responsibilities (confirm if changed) | RESOLVED |
+| FLAG-REF-01 | You | REF | `_academic_report_component/capstoneII_md/03_literature_review/3.md` | Add citations for offline-first sync, idempotency under retries, and outbox pattern | RESOLVED |
 | FLAG-FIG-03 | You | FIG | `_academic_report_component/capstoneII_md/04_project_analysis_and_concepts/4.md` | Updated use case diagram figure(s) for Capstone II | OPEN |
 | FLAG-FIG-04 | You | FIG | `_academic_report_component/capstoneII_md/04_project_analysis_and_concepts/4.md` | Updated activity diagram figure(s) for Capstone II | OPEN |
 | FLAG-PM-04 | You | PM | `_academic_report_component/capstoneII_md/05_detail_concepts/5.md` | Jira workflow description used in Capstone II | OPEN |
@@ -55,8 +56,6 @@ Status legend:
 ### PM — Timeline and Work Coordination
 
 - **FLAG-PM-01** — Capstone II timeline dates and milestones (start/end, midterm checkpoint date, pilot date constraints).
-- **FLAG-PM-02** — What changed vs Capstone I plan (scope cuts, reprioritization) and why.
-- **FLAG-PM-03** — Team structure and division of responsibilities in Capstone II (who owns FE/BE/KB/spec).
 
 ### FE — Frontend Progress and Figures
 
